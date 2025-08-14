@@ -1,25 +1,33 @@
 #include <cute.h>
+#include <stdio.h>
+#include <cimgui.h>
+#include "lib/DebugWindow.h"
 using namespace Cute;
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
 	// Create a window with a resolution of 640 x 480.
 	int options = CF_APP_OPTIONS_WINDOW_POS_CENTERED_BIT;
 	CF_Result result = make_app("Fancy Window Title", 0, 0, 0, 640, 480, options, argv[0]);
-	if (is_error(result)) return -1;
+	cf_app_init_imgui();
+	if (is_error(result))
+		return -1;
+
+	// Create debug window
+	DebugWindow debugWindow("Debug Info aaaa");
 
 	// Set up triangle vertices (equilateral triangle)
 	v2 triangle_vertices[3] = {
-		v2(0, -50),    // top vertex
+		v2(0, -50),		// top vertex
 		v2(-43.3f, 25), // bottom left vertex
-		v2(43.3f, 25)   // bottom right vertex
+		v2(43.3f, 25)	// bottom right vertex
 	};
 
 	// Triangle positions (3 triangles in different positions)
 	v2 triangle_positions[3] = {
-		v2(-150, 0),   // left triangle
-		v2(0, 0),      // center triangle
-		v2(150, 0)     // right triangle
+		v2(-150, 0), // left triangle
+		v2(0, 0),	 // center triangle
+		v2(150, 0)	 // right triangle
 	};
 
 	// Rotation variables
@@ -29,6 +37,9 @@ int main(int argc, char* argv[])
 	while (app_is_running())
 	{
 		app_update();
+
+		// Render debug window
+		debugWindow.render();
 
 		// Update rotation
 		float dt = CF_DELTA_TIME;
@@ -48,11 +59,12 @@ int main(int argc, char* argv[])
 		// Draw the spinning triangles with rainbow colors
 		CF_SinCos sc = sincos(rotation * CF_PI / 180.0f);
 
-		for (int triangle_idx = 0; triangle_idx < 3; triangle_idx++) {
+		for (int triangle_idx = 0; triangle_idx < 3; triangle_idx++)
+		{
 			// Calculate rainbow color based on time and triangle index
-			float time = CF_SECONDS; // Use seconds since program start
+			float time = CF_SECONDS;							// Use seconds since program start
 			float hue = (time * 30.0f + triangle_idx * 120.0f); // Different hue for each triangle
-			hue = fmod(hue, 360.0f); // Keep hue in 0-360 range
+			hue = fmod(hue, 360.0f);							// Keep hue in 0-360 range
 
 			// Convert HSV to RGB for rainbow effect
 			float h = hue / 60.0f;
@@ -63,14 +75,43 @@ int main(int argc, char* argv[])
 			float t = f;
 
 			float r, g, b;
-			switch (i % 6) {
-				case 0: r = 1.0f; g = t; b = p; break;
-				case 1: r = q; g = 1.0f; b = p; break;
-				case 2: r = p; g = 1.0f; b = t; break;
-				case 3: r = p; g = q; b = 1.0f; break;
-				case 4: r = t; g = p; b = 1.0f; break;
-				case 5: r = 1.0f; g = p; b = q; break;
-				default: r = 1.0f; g = 1.0f; b = 1.0f; break;
+			switch (i % 6)
+			{
+			case 0:
+				r = 1.0f;
+				g = t;
+				b = p;
+				break;
+			case 1:
+				r = q;
+				g = 1.0f;
+				b = p;
+				break;
+			case 2:
+				r = p;
+				g = 1.0f;
+				b = t;
+				break;
+			case 3:
+				r = p;
+				g = q;
+				b = 1.0f;
+				break;
+			case 4:
+				r = t;
+				g = p;
+				b = 1.0f;
+				break;
+			case 5:
+				r = 1.0f;
+				g = p;
+				b = q;
+				break;
+			default:
+				r = 1.0f;
+				g = 1.0f;
+				b = 1.0f;
+				break;
 			}
 
 			// Create rainbow color with pulsing effect
@@ -82,7 +123,8 @@ int main(int argc, char* argv[])
 
 			// Transform vertices by rotation and position
 			v2 rotated_vertices[3];
-			for (int i = 0; i < 3; i++) {
+			for (int i = 0; i < 3; i++)
+			{
 				// First rotate the vertex
 				v2 rotated = mul(sc, triangle_vertices[i]);
 				// Then translate to the triangle's position
