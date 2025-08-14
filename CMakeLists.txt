@@ -30,12 +30,22 @@ FetchContent_Declare(
 	GIT_TAG master
 	GIT_SHALLOW
 )
-FetchContent_MakeAvailable(cute)
+
+# Add nlohmann/json library
+FetchContent_Declare(
+	nlohmann_json
+	GIT_REPOSITORY https://github.com/nlohmann/json.git
+	GIT_TAG v3.11.3
+	GIT_SHALLOW
+)
+
+FetchContent_MakeAvailable(cute nlohmann_json)
 
 # Source code for your game.
 add_executable(
 	${PROJECT_NAME}
 	src/main.cpp
+	src/lib/DataFile.cpp
 	src/lib/DebugWindow.cpp
 	src/lib/Utils.cpp
 )
@@ -55,8 +65,8 @@ if(APPLE)
 	)
 endif()
 
-# Make the game link against Cute Framework.
-target_link_libraries(${PROJECT_NAME} cute)
+# Make the game link against Cute Framework and nlohmann/json.
+target_link_libraries(${PROJECT_NAME} cute nlohmann_json::nlohmann_json)
 
 # For convenience on Windows, set MSVC debugger's working directory in the build folder.
 # Also ask MSVC to make the game the startup project.
