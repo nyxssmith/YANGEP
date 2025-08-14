@@ -1,0 +1,7 @@
+0.0.1-nyx-primatives-27f3f4f
+0.0.2-nyx-primatives-27f3f4f
+0.0.3-nyx-primatives-27f3f4f
+0.0.4-nyx-fc5d49d
+0.0.5-nyx-fc08237
+0.0.6-nyx-a709533
+0.0.7-nyx-a709533
