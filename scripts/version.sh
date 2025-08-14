@@ -41,7 +41,7 @@ case "$1" in
         ;;
 esac
 # Construct the new version string
-new_version="$major.$minor.$patch-${branch:-unknown}-${GIT_HASH:-unknown}"
+new_version="$major.$minor.$patch-${BRANCH_NAME:-unknown}-${GIT_HASH:-unknown}"
 
 echo "Updating version from $current_version to $new_version"
 
