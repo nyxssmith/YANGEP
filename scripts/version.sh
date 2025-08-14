@@ -63,3 +63,4 @@ if [[ ! -d "$version_dir" ]]; then
 fi
 # Copy the executable to the new version directory
 cp "$BUILD_DIR/$EXEC_NAME" "$version_dir/"
+cp -r "$BUILD_DIR/assets" "$version_dir/assets"

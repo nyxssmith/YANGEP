@@ -37,6 +37,7 @@ add_executable(
 	${PROJECT_NAME}
 	src/main.cpp
 	src/lib/DebugWindow.cpp
+	src/lib/Utils.cpp
 )
 
 # Our source code will be in the `src` folder.
