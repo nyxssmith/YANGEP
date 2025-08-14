@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <cimgui.h>
 #include "lib/DebugWindow.h"
+#include "lib/Utils.h"
 using namespace Cute;
 
 int main(int argc, char *argv[])
@@ -12,6 +13,9 @@ int main(int argc, char *argv[])
 	cf_app_init_imgui();
 	if (is_error(result))
 		return -1;
+
+	// Mount the assets directory for file I/O
+	mount_content_directory_as("/assets");
 
 	// Create debug window
 	DebugWindow debugWindow("Debug Info aaaa");
