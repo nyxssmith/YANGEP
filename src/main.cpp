@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <cimgui.h>
 #include "lib/DebugWindow.h"
+#include "lib/DataFileDebugWindow.h"
 #include "lib/Utils.h"
 #include "lib/DataFile.h"
 using namespace Cute;
@@ -18,20 +19,22 @@ int main(int argc, char *argv[])
 	// Mount the assets directory for file I/O
 	mount_content_directory_as("/assets");
 
-	// Load JSON data
-	nlohmann::json json_data = ReadJson("/assets/a.json");
-	printf("JSON data: %s\n", json_data.dump(4).c_str());
+	// read datafile
 	DataFile df("/assets/a.json");
 	printf("DataFile data: %s\n", df.dump(4).c_str());
-	// Create debug window
+
+	// Create debug windows
 	DebugWindow debugWindow("Debug Info aaaa");
+	DataFileDebugWindow dataFileDebugWindow("DataFile Viewer", df);
 
 	while (app_is_running())
 	{
 		app_update();
 
-		// Render debug window
+		// Render debug windows
 		debugWindow.render();
+		dataFileDebugWindow.render();
+
 		// Position text below the triangles (negative Y to go down)
 		v2 text_position = v2(0, 100); // Below the triangles
 
