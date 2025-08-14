@@ -36,6 +36,7 @@ FetchContent_MakeAvailable(cute)
 add_executable(
 	${PROJECT_NAME}
 	src/main.cpp
+	src/lib/DebugWindow.cpp
 )
 
 # Our source code will be in the `src` folder.
