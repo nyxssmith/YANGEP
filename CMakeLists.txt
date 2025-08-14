@@ -9,6 +9,17 @@ project(
 # Must have at least C++20.
 set(CMAKE_CXX_STANDARD 20)
 
+# Set default build type to Debug if not specified
+if(NOT CMAKE_BUILD_TYPE)
+	set(CMAKE_BUILD_TYPE Debug)
+endif()
+
+# Add debug flags for Debug builds
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+	set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -DDEBUG")
+	set(CMAKE_C_FLAGS_DEBUG "-g -O0 -DDEBUG")
+endif()
+
 if(CMAKE_SYSTEM_NAME MATCHES "Emscripten")
 	set(EMSCRIPTEN TRUE)
 endif()

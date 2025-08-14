@@ -8,7 +8,7 @@ else
 fi
 # initialize the build directory
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    cd "$BUILD_DIR" && cmake ..
+    cd "$BUILD_DIR" && cmake -DCMAKE_BUILD_TYPE=Debug ..
 elif [[ "$OSTYPE" == "linux"* ]]; then
-    cd "$BUILD_DIR" && cmake -DCMAKE_CXX_FLAGS="-include cstdint" ..
+    cd "$BUILD_DIR" && cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-include cstdint" ..
 fi
