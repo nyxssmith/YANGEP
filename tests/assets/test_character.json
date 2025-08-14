@@ -1,0 +1,27 @@
+{
+    "character": {
+        "name": "test_skeleton",
+        "components": {
+            "head": {
+                "texture": "HEAD_chain_armor_helmet.png",
+                "offset": [0, 0],
+                "layer": 1
+            },
+            "body": {
+                "texture": "BODY_skeleton.png",
+                "offset": [0, 0],
+                "layer": 0
+            }
+        },
+        "animations": {
+            "idle": {
+                "frames": 1,
+                "duration": 1.0
+            },
+            "walk": {
+                "frames": 4,
+                "duration": 0.8
+            }
+        }
+    }
+}
