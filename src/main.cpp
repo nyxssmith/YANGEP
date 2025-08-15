@@ -4,6 +4,7 @@
 #include "lib/DebugWindow.h"
 #include "lib/Utils.h"
 #include "lib/DataFile.h"
+#include "lib/SpriteDemo.h"
 using namespace Cute;
 
 int main(int argc, char *argv[])
@@ -23,20 +24,35 @@ int main(int argc, char *argv[])
 	printf("JSON data: %s\n", json_data.dump(4).c_str());
 	DataFile df("/assets/a.json");
 	printf("DataFile data: %s\n", df.dump(4).c_str());
+
 	// Create debug window
 	DebugWindow debugWindow("Debug Info aaaa");
+
+	// Create sprite demo
+	SpriteDemo spriteDemo;
+	if (!spriteDemo.initialize()) {
+		printf("Failed to initialize sprite demo\n");
+		return -1; // Exit if sprite demo fails to initialize
+	}
 
 	while (app_is_running())
 	{
 		app_update();
 
+		// Update sprite demo
+		spriteDemo.update(0.016f); // ~60 FPS
+
 		// Render debug window
 		debugWindow.render();
+
 		// Position text below the triangles (negative Y to go down)
 		v2 text_position = v2(0, 100); // Below the triangles
 
 		// Draw the text
 		draw_text("my girlfriend is so pretty", text_position);
+
+		// Render sprite demo
+		spriteDemo.render();
 
 		app_draw_onto_screen(true);
 	}
