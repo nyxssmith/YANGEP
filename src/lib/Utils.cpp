@@ -11,9 +11,26 @@ void mount_content_directory_as(const char *dir)
 {
     CF_Path path = fs_get_base_directory();
     path.normalize();
-    path.pop(2); // Pop out of build/debug/
+    // path.pop(1); // Pop out of build/ only, not build/debug/
     path += "/assets";
-    fs_mount(path.c_str(), dir);
+
+    // Mount the assets directory for reading
+    CF_Result mount_result = fs_mount(path.c_str(), dir);
+    if (Cute::is_error(mount_result))
+    {
+        printf("Failed to mount assets directory '%s' as '%s'\n", path.c_str(), dir);
+        return;
+    }
+
+    // Set the assets directory as the write directory to enable writing
+    CF_Result write_result = fs_set_write_directory(path.c_str());
+    if (Cute::is_error(write_result))
+    {
+        printf("Failed to set write directory to '%s'\n", path.c_str());
+        return;
+    }
+
+    printf("Successfully mounted '%s' as '%s' and set as write directory\n", path.c_str(), dir);
 }
 
 nlohmann::json ReadJson(const std::string &file_path)

@@ -7,9 +7,10 @@ class DebugWindow
 {
 public:
     DebugWindow(const std::string &title);
-    void render();
+    virtual ~DebugWindow() = default;
+    virtual void render();
 
-private:
+protected:
     std::string m_title;
     bool m_show;
 };
