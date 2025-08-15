@@ -1,4 +1,7 @@
 {
     "New Key": "New Value",
-    "key": "value"
+    "NewKey": {
+        "NewKey": "NewValue"
+    },
+    "key": []
 }

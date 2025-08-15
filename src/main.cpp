@@ -11,7 +11,7 @@ using namespace Cute;
 int main(int argc, char *argv[])
 {
 	// Create a window with a resolution of 640 x 480.
-	int options = CF_APP_OPTIONS_WINDOW_POS_CENTERED_BIT;
+	int options = CF_APP_OPTIONS_WINDOW_POS_CENTERED_BIT | CF_APP_OPTIONS_RESIZABLE_BIT;
 	CF_Result result = make_app("Fancy Window Title", 0, 0, 0, 640, 480, options, argv[0]);
 	cf_app_init_imgui();
 	if (is_error(result))
@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
 		debugWindow.render();
 		dataFileDebugWindow.render();
 		// Update sprite demo
-		spriteDemo.update(0.016f); // ~60 FPS
+		spriteDemo.update(2.116f); // ~60 FPS
 
 		// Position text below the triangles (negative Y to go down)
 		v2 text_position = v2(0, 100); // Below the triangles
