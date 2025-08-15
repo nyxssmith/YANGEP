@@ -1,5 +1,7 @@
 #include "DataFileDebugWindow.h"
 #include <stdio.h>
+#include <cimgui.h>
+#include <algorithm>
 
 DataFileDebugWindow::DataFileDebugWindow(const std::string &title, DataFile &dataFile)
     : DebugWindow(title), m_dataFile(dataFile)
@@ -8,123 +10,358 @@ DataFileDebugWindow::DataFileDebugWindow(const std::string &title, DataFile &dat
     populateFromJson();
 }
 
-void DataFileDebugWindow::addDisplayLine(const std::string &boxA, const std::string &boxB)
+void DataFileDebugWindow::addDisplayLine(const std::string &key, const std::string &value, JsonType type, int indentLevel, const std::string &parentPath)
 {
-    m_displayLines.emplace_back(boxA, boxB);
+    m_displayLines.emplace_back(key, value, type, indentLevel, parentPath);
 }
 
-void DataFileDebugWindow::updateJsonText()
+const char *DataFileDebugWindow::getTypeString(JsonType type)
 {
-    // Rebuild the JSON object from the current display lines
-    m_dataFile.clear(); // Clear existing data
-
-    for (const auto &line : m_displayLines)
+    switch (type)
     {
-        std::string key(line.boxA);
-        std::string value(line.boxB);
+    case JsonType::String:
+        return "String";
+    case JsonType::Map:
+        return "Map";
+    case JsonType::List:
+        return "List";
+    case JsonType::Float:
+        return "Float";
+    case JsonType::Boolean:
+        return "Boolean";
+    case JsonType::Integer:
+        return "Integer";
+    default:
+        return "String";
+    }
+}
 
-        // Skip empty keys
-        if (!key.empty())
+JsonType DataFileDebugWindow::getTypeFromJson(const nlohmann::json &value)
+{
+    if (value.is_string())
+        return JsonType::String;
+    if (value.is_object())
+        return JsonType::Map;
+    if (value.is_array())
+        return JsonType::List;
+    if (value.is_number_float())
+        return JsonType::Float;
+    if (value.is_boolean())
+        return JsonType::Boolean;
+    if (value.is_number_integer())
+        return JsonType::Integer;
+    return JsonType::String;
+}
+
+void DataFileDebugWindow::renderTypeCombo(const char *label, JsonType *type)
+{
+    const char *typeNames[] = {"String", "Map", "List", "Float", "Boolean", "Integer"};
+    int currentType = static_cast<int>(*type);
+
+    if (igCombo_Str_arr(label, &currentType, typeNames, 6, -1))
+    {
+        *type = static_cast<JsonType>(currentType);
+    }
+}
+
+std::string DataFileDebugWindow::getJsonPath(const std::string &parentPath, const std::string &key)
+{
+    if (parentPath.empty())
+        return key;
+    return parentPath + "." + key;
+}
+
+void DataFileDebugWindow::updateJsonFromLines()
+{
+    // Clear the existing JSON data
+    m_dataFile.clear();
+
+    // Build the JSON structure from display lines
+    buildJsonFromLines(m_dataFile, "", 0);
+}
+
+void DataFileDebugWindow::buildJsonFromLines(nlohmann::json &jsonObj, const std::string &currentPath, int currentIndent)
+{
+    for (size_t i = 0; i < m_displayLines.size(); ++i)
+    {
+        const DisplayLine &line = m_displayLines[i];
+
+        // Only process lines at the current indent level
+        if (line.indentLevel != currentIndent)
+            continue;
+
+        // Check if this line belongs to the current path
+        if (line.parentPath != currentPath)
+            continue;
+
+        std::string key(line.key);
+        std::string value(line.value);
+
+        if (key.empty())
+            continue;
+
+        // Handle different types
+        switch (line.type)
         {
-            // Try to parse the value as different types
-            if (value == "true" || value == "false")
+        case JsonType::String:
+            jsonObj[key] = value;
+            break;
+
+        case JsonType::Boolean:
+            jsonObj[key] = (value == "true");
+            break;
+
+        case JsonType::Integer:
+            try
             {
-                m_dataFile[key] = (value == "true");
+                jsonObj[key] = std::stoll(value);
             }
-            else if (value == "null")
+            catch (...)
             {
-                m_dataFile[key] = nullptr;
+                jsonObj[key] = 0;
             }
-            else
+            break;
+
+        case JsonType::Float:
+            try
             {
-                // Try to parse as number
-                try
-                {
-                    // Check if it's an integer
-                    if (value.find('.') == std::string::npos)
-                    {
-                        int64_t intValue = std::stoll(value);
-                        m_dataFile[key] = intValue;
-                    }
-                    else
-                    {
-                        double doubleValue = std::stod(value);
-                        m_dataFile[key] = doubleValue;
-                    }
-                }
-                catch (const std::exception &)
-                {
-                    // If parsing as number fails, treat as string
-                    m_dataFile[key] = value;
-                }
+                jsonObj[key] = std::stod(value);
             }
+            catch (...)
+            {
+                jsonObj[key] = 0.0;
+            }
+            break;
+
+        case JsonType::Map:
+        {
+            jsonObj[key] = nlohmann::json::object();
+            std::string newPath = getJsonPath(currentPath, key);
+            buildJsonFromLines(jsonObj[key], newPath, currentIndent + 1);
+        }
+        break;
+
+        case JsonType::List:
+        {
+            jsonObj[key] = nlohmann::json::array();
+            std::string newPath = getJsonPath(currentPath, key);
+            buildJsonArrayFromLines(jsonObj[key], newPath, currentIndent + 1);
+        }
+        break;
+        }
+    }
+}
+
+void DataFileDebugWindow::buildJsonArrayFromLines(nlohmann::json &jsonArray, const std::string &currentPath, int currentIndent)
+{
+    // Collect all array items for this path
+    std::vector<std::pair<int, const DisplayLine *>> arrayItems;
+
+    for (size_t i = 0; i < m_displayLines.size(); ++i)
+    {
+        const DisplayLine &line = m_displayLines[i];
+
+        // Only process lines at the current indent level
+        if (line.indentLevel != currentIndent)
+            continue;
+
+        // Check if this line belongs to the current path
+        if (line.parentPath != currentPath)
+            continue;
+
+        // Extract array index from key like "[0]", "[1]", etc.
+        std::string key(line.key);
+        if (key.front() == '[' && key.back() == ']')
+        {
+            try
+            {
+                int index = std::stoi(key.substr(1, key.length() - 2));
+                arrayItems.push_back({index, &line});
+            }
+            catch (...)
+            {
+                // Invalid index format, skip
+            }
+        }
+    }
+
+    // Sort by index
+    std::sort(arrayItems.begin(), arrayItems.end(),
+              [](const auto &a, const auto &b)
+              { return a.first < b.first; });
+
+    // Build array elements
+    for (const auto &[index, linePtr] : arrayItems)
+    {
+        const DisplayLine &line = *linePtr;
+        std::string value(line.value);
+
+        // Ensure array is large enough
+        while ((int)jsonArray.size() <= index)
+        {
+            jsonArray.push_back(nullptr);
+        }
+
+        switch (line.type)
+        {
+        case JsonType::String:
+            jsonArray[index] = value;
+            break;
+
+        case JsonType::Boolean:
+            jsonArray[index] = (value == "true");
+            break;
+
+        case JsonType::Integer:
+            try
+            {
+                jsonArray[index] = std::stoll(value);
+            }
+            catch (...)
+            {
+                jsonArray[index] = 0;
+            }
+            break;
+
+        case JsonType::Float:
+            try
+            {
+                jsonArray[index] = std::stod(value);
+            }
+            catch (...)
+            {
+                jsonArray[index] = 0.0;
+            }
+            break;
+
+        case JsonType::Map:
+        {
+            jsonArray[index] = nlohmann::json::object();
+            std::string newPath = currentPath + "." + std::to_string(index);
+            buildJsonFromLines(jsonArray[index], newPath, currentIndent + 1);
+        }
+        break;
+
+        case JsonType::List:
+        {
+            jsonArray[index] = nlohmann::json::array();
+            std::string newPath = currentPath + "." + std::to_string(index);
+            buildJsonArrayFromLines(jsonArray[index], newPath, currentIndent + 1);
+        }
+        break;
         }
     }
 }
 
 void DataFileDebugWindow::populateFromJson()
 {
-    // Clear existing display lines
     m_displayLines.clear();
+    populateFromJsonRecursive(m_dataFile, "", 0);
+}
 
+void DataFileDebugWindow::populateFromJsonRecursive(const nlohmann::json &jsonObj, const std::string &basePath, int indentLevel)
+{
     try
     {
-        // Check if the DataFile is an object (key-value pairs)
-        if (m_dataFile.is_object())
+        if (jsonObj.is_object())
         {
-            // Iterate through each key-value pair in the JSON object
-            for (const auto &[key, value] : m_dataFile.items())
+            for (const auto &[key, value] : jsonObj.items())
             {
-                std::string valueStr;
+                std::string currentPath = getJsonPath(basePath, key);
+                JsonType type = getTypeFromJson(value);
 
-                // Convert the value to string based on its type
-                if (value.is_string())
+                if (value.is_object())
                 {
-                    valueStr = value.get<std::string>();
+                    addDisplayLine(key, "{}", JsonType::Map, indentLevel, basePath);
+                    populateFromJsonRecursive(value, currentPath, indentLevel + 1);
                 }
-                else if (value.is_number_integer())
+                else if (value.is_array())
                 {
-                    valueStr = std::to_string(value.get<int64_t>());
-                }
-                else if (value.is_number_unsigned())
-                {
-                    valueStr = std::to_string(value.get<uint64_t>());
-                }
-                else if (value.is_number_float())
-                {
-                    valueStr = std::to_string(value.get<double>());
-                }
-                else if (value.is_boolean())
-                {
-                    valueStr = value.get<bool>() ? "true" : "false";
-                }
-                else if (value.is_null())
-                {
-                    valueStr = "null";
+                    addDisplayLine(key, "[]", JsonType::List, indentLevel, basePath);
+                    // For arrays, we'll show indices as keys
+                    for (size_t i = 0; i < value.size(); ++i)
+                    {
+                        std::string indexKey = "[" + std::to_string(i) + "]";
+                        JsonType itemType = getTypeFromJson(value[i]);
+
+                        if (value[i].is_object())
+                        {
+                            addDisplayLine(indexKey, "{}", JsonType::Map, indentLevel + 1, currentPath);
+                            populateFromJsonRecursive(value[i], currentPath + "." + std::to_string(i), indentLevel + 2);
+                        }
+                        else if (value[i].is_array())
+                        {
+                            addDisplayLine(indexKey, "[]", JsonType::List, indentLevel + 1, currentPath);
+                            populateFromJsonRecursive(value[i], currentPath + "." + std::to_string(i), indentLevel + 2);
+                        }
+                        else
+                        {
+                            std::string valueStr = getValueString(value[i]);
+                            addDisplayLine(indexKey, valueStr, itemType, indentLevel + 1, currentPath);
+                        }
+                    }
                 }
                 else
                 {
-                    // For complex types (arrays, objects), use dump() to get JSON representation
-                    valueStr = value.dump();
+                    std::string valueStr = getValueString(value);
+                    addDisplayLine(key, valueStr, type, indentLevel, basePath);
                 }
+            }
+        }
+        else if (jsonObj.is_array())
+        {
+            for (size_t i = 0; i < jsonObj.size(); ++i)
+            {
+                std::string indexKey = "[" + std::to_string(i) + "]";
+                JsonType type = getTypeFromJson(jsonObj[i]);
 
-                // Add a display line with the key and value
-                addDisplayLine(key, valueStr);
+                if (jsonObj[i].is_object())
+                {
+                    addDisplayLine(indexKey, "{}", JsonType::Map, indentLevel, basePath);
+                    populateFromJsonRecursive(jsonObj[i], basePath + "." + std::to_string(i), indentLevel + 1);
+                }
+                else if (jsonObj[i].is_array())
+                {
+                    addDisplayLine(indexKey, "[]", JsonType::List, indentLevel, basePath);
+                    populateFromJsonRecursive(jsonObj[i], basePath + "." + std::to_string(i), indentLevel + 1);
+                }
+                else
+                {
+                    std::string valueStr = getValueString(jsonObj[i]);
+                    addDisplayLine(indexKey, valueStr, type, indentLevel, basePath);
+                }
             }
         }
         else
         {
-            // If it's not an object, add a single line showing the type and value
-            std::string typeStr = "Non-object JSON";
-            std::string valueStr = m_dataFile.dump();
-            addDisplayLine(typeStr, valueStr);
+            // Single value
+            std::string valueStr = getValueString(jsonObj);
+            JsonType type = getTypeFromJson(jsonObj);
+            addDisplayLine("value", valueStr, type, 0, "");
         }
     }
     catch (const std::exception &e)
     {
-        // If there's an error, add an error display line
-        addDisplayLine("Error", std::string("Failed to parse JSON: ") + e.what());
+        addDisplayLine("Error", std::string("Failed to parse JSON: ") + e.what(), JsonType::String, 0, "");
     }
+}
+
+std::string DataFileDebugWindow::getValueString(const nlohmann::json &value)
+{
+    if (value.is_string())
+        return value.get<std::string>();
+    else if (value.is_number_integer())
+        return std::to_string(value.get<int64_t>());
+    else if (value.is_number_unsigned())
+        return std::to_string(value.get<uint64_t>());
+    else if (value.is_number_float())
+        return std::to_string(value.get<double>());
+    else if (value.is_boolean())
+        return value.get<bool>() ? "true" : "false";
+    else if (value.is_null())
+        return "null";
+    else
+        return value.dump();
 }
 
 void DataFileDebugWindow::render()
@@ -147,65 +384,139 @@ void DataFileDebugWindow::render()
         igSeparator();
 
         // Control buttons
-        if (igButton("Add Line", (ImVec2){80, 0}))
+        if (igButton("Add Root Item", (ImVec2){120, 0}))
         {
-            // Add a new key-value pair to the JSON data
-            std::string newKey = "New Key";
-            std::string newValue = "New Value";
-
-            // Ensure the key is unique by appending a number if it already exists
-            int counter = 1;
-            std::string uniqueKey = newKey;
-            while (m_dataFile.contains(uniqueKey))
-            {
-                uniqueKey = newKey + " " + std::to_string(counter);
-                counter++;
-            }
-
-            // Add the new key-value pair to the JSON
-            m_dataFile[uniqueKey] = newValue;
-
-            // Refresh the display from the updated JSON
-            populateFromJson();
+            addDisplayLine("NewKey", "NewValue", JsonType::String, 0, "");
         }
 
         igSeparator();
-        igText("Key-Value Pairs:");
+        igText("JSON Structure:");
 
-        // Render all display lines
+        // Render all display lines with nesting support
         for (size_t i = 0; i < m_displayLines.size(); ++i)
         {
+            DisplayLine &line = m_displayLines[i];
+
             // Create unique IDs for each row
-            char labelA[32], labelB[32], labelRemove[32];
-            snprintf(labelA, sizeof(labelA), "##Key%zu", i);
-            snprintf(labelB, sizeof(labelB), "##Value%zu", i);
+            char labelKey[64], labelValue[64], labelType[64], labelRemove[64], labelAdd[64];
+            snprintf(labelKey, sizeof(labelKey), "##Key%zu", i);
+            snprintf(labelValue, sizeof(labelValue), "##Value%zu", i);
+            snprintf(labelType, sizeof(labelType), "##Type%zu", i);
             snprintf(labelRemove, sizeof(labelRemove), "Remove##%zu", i);
+            snprintf(labelAdd, sizeof(labelAdd), "Add##%zu", i);
 
-            // Label for the row
-            igText("%zu:", i + 1);
-            igSameLine(0, 5);
+            // Add indentation
+            for (int indent = 0; indent < line.indentLevel; ++indent)
+            {
+                igIndent(20.0f);
+            }
 
-            // Key input box
-            igInputText(labelA, m_displayLines[i].boxA, sizeof(m_displayLines[i].boxA), 0, NULL, NULL);
+            // Row number and expand/collapse for containers
+            if (line.type == JsonType::Map || line.type == JsonType::List)
+            {
+                if (igButton(line.isExpanded ? "-" : "+", (ImVec2){20, 0}))
+                {
+                    line.isExpanded = !line.isExpanded;
+                }
+                igSameLine(0, 5);
+            }
+            else
+            {
+                igIndent(25.0f);
+            }
+
+            // Key input (limited width)
+            igPushItemWidth(150);
+            igInputText(labelKey, line.key, sizeof(line.key), 0, NULL, NULL);
+            igPopItemWidth();
 
             igSameLine(0, 10);
 
-            // Value input box
-            igInputText(labelB, m_displayLines[i].boxB, sizeof(m_displayLines[i].boxB), 0, NULL, NULL);
+            // Type selection dropdown
+            igPushItemWidth(80);
+            renderTypeCombo(labelType, &line.type);
+            igPopItemWidth();
+
+            igSameLine(0, 10);
+
+            // Value input (conditional based on type)
+            igPushItemWidth(200);
+            if (line.type == JsonType::Map)
+            {
+                igInputText(labelValue, line.value, sizeof(line.value), ImGuiInputTextFlags_ReadOnly, NULL, NULL);
+                strcpy(line.value, "{}");
+            }
+            else if (line.type == JsonType::List)
+            {
+                igInputText(labelValue, line.value, sizeof(line.value), ImGuiInputTextFlags_ReadOnly, NULL, NULL);
+                strcpy(line.value, "[]");
+            }
+            else if (line.type == JsonType::Boolean)
+            {
+                bool boolValue = (strcmp(line.value, "true") == 0);
+                if (igCheckbox(labelValue, &boolValue))
+                {
+                    strcpy(line.value, boolValue ? "true" : "false");
+                }
+            }
+            else
+            {
+                // Regular text input for String, Float, Integer
+                igInputText(labelValue, line.value, sizeof(line.value), 0, NULL, NULL);
+            }
+            igPopItemWidth();
+
+            igSameLine(0, 10);
+
+            // Add child button for containers
+            if (line.type == JsonType::Map || line.type == JsonType::List)
+            {
+                if (igButton(labelAdd, (ImVec2){50, 0}))
+                {
+                    std::string currentPath = getJsonPath(line.parentPath, std::string(line.key));
+                    if (line.type == JsonType::Map)
+                    {
+                        addDisplayLine("NewKey", "NewValue", JsonType::String, line.indentLevel + 1, currentPath);
+                    }
+                    else // List
+                    {
+                        std::string indexKey = "[" + std::to_string(0) + "]"; // Will be updated when we rebuild
+                        addDisplayLine(indexKey, "NewValue", JsonType::String, line.indentLevel + 1, currentPath);
+                    }
+                }
+                igSameLine(0, 5);
+            }
 
             // Remove button
-            igSameLine(0, 10);
             if (igButton(labelRemove, (ImVec2){60, 0}))
             {
-                // Remove the corresponding key from JSON if it exists
-                std::string keyToRemove(m_displayLines[i].boxA);
-                if (!keyToRemove.empty() && m_dataFile.contains(keyToRemove))
+                m_displayLines.erase(m_displayLines.begin() + i);
+                // Also remove any children
+                while (i < m_displayLines.size() && m_displayLines[i].indentLevel > line.indentLevel)
                 {
-                    m_dataFile.erase(keyToRemove);
+                    m_displayLines.erase(m_displayLines.begin() + i);
                 }
 
-                m_displayLines.erase(m_displayLines.begin() + i);
+                // Reset indentation
+                for (int indent = 0; indent <= line.indentLevel; ++indent)
+                {
+                    igUnindent(20.0f);
+                }
+                if (line.type != JsonType::Map && line.type != JsonType::List)
+                {
+                    igUnindent(25.0f);
+                }
                 break; // Break to avoid iterator invalidation
+            }
+
+            // Reset indentation for this line
+            for (int indent = 0; indent < line.indentLevel; ++indent)
+            {
+                igUnindent(20.0f);
+            }
+            if (line.type != JsonType::Map && line.type != JsonType::List)
+            {
+                igUnindent(25.0f);
             }
         }
 
@@ -214,7 +525,7 @@ void DataFileDebugWindow::render()
         // JSON synchronization controls
         if (igButton("Update JSON from Fields", (ImVec2){150, 0}))
         {
-            updateJsonText();
+            updateJsonFromLines();
         }
 
         igSameLine(0, 10);

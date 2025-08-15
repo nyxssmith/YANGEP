@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
 		debugWindow.render();
 		dataFileDebugWindow.render();
 		// Update sprite demo
-		spriteDemo.update(0.016f); // ~60 FPS
+		spriteDemo.update(2.116f); // ~60 FPS
 
 		// Position text below the triangles (negative Y to go down)
 		v2 text_position = v2(0, 100); // Below the triangles
