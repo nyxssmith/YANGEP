@@ -77,6 +77,8 @@ add_executable(
 	src/lib/DataFile.cpp
 	src/lib/DebugWindow.cpp
 	src/lib/Utils.cpp
+	src/lib/Sprite.cpp
+	src/lib/SpriteDemo.cpp
 )
 
 # Our source code will be in the `src` folder.
@@ -112,6 +114,8 @@ add_executable(${PROJECT_NAME}_tests
 	src/lib/DataFile.cpp
 	src/lib/DebugWindow.cpp
 	src/lib/Utils.cpp
+	src/lib/Sprite.cpp
+	src/lib/SpriteDemo.cpp
 )
 
 # Link test executable with dependencies
