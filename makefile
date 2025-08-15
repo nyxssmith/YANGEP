@@ -1,4 +1,4 @@
-.PHONY: all build run
+.PHONY: all build run test test-coverage
 
 all: build
 
@@ -11,6 +11,14 @@ build:
 run: build
 	@echo "Running "
 	./scripts/run.sh
+
+test: build
+	@echo "Running tests..."
+	./scripts/test.sh
+
+test-coverage: build
+	@echo "Running tests with coverage..."
+	./scripts/test.sh --coverage
 
 version: build
 	@echo "Saving new patch..."
