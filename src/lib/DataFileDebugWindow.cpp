@@ -15,7 +15,51 @@ void DataFileDebugWindow::addDisplayLine(const std::string &boxA, const std::str
 
 void DataFileDebugWindow::updateJsonText()
 {
-    // Implementation for updateJsonText if needed
+    // Rebuild the JSON object from the current display lines
+    m_dataFile.clear(); // Clear existing data
+
+    for (const auto &line : m_displayLines)
+    {
+        std::string key(line.boxA);
+        std::string value(line.boxB);
+
+        // Skip empty keys
+        if (!key.empty())
+        {
+            // Try to parse the value as different types
+            if (value == "true" || value == "false")
+            {
+                m_dataFile[key] = (value == "true");
+            }
+            else if (value == "null")
+            {
+                m_dataFile[key] = nullptr;
+            }
+            else
+            {
+                // Try to parse as number
+                try
+                {
+                    // Check if it's an integer
+                    if (value.find('.') == std::string::npos)
+                    {
+                        int64_t intValue = std::stoll(value);
+                        m_dataFile[key] = intValue;
+                    }
+                    else
+                    {
+                        double doubleValue = std::stod(value);
+                        m_dataFile[key] = doubleValue;
+                    }
+                }
+                catch (const std::exception &)
+                {
+                    // If parsing as number fails, treat as string
+                    m_dataFile[key] = value;
+                }
+            }
+        }
+    }
 }
 
 void DataFileDebugWindow::populateFromJson()
@@ -103,15 +147,26 @@ void DataFileDebugWindow::render()
         igSeparator();
 
         // Control buttons
-        if (igButton("Refresh from JSON", (ImVec2){120, 0}))
-        {
-            populateFromJson();
-        }
-
-        igSameLine(0, 10);
         if (igButton("Add Line", (ImVec2){80, 0}))
         {
-            addDisplayLine("New Key", "New Value");
+            // Add a new key-value pair to the JSON data
+            std::string newKey = "New Key";
+            std::string newValue = "New Value";
+
+            // Ensure the key is unique by appending a number if it already exists
+            int counter = 1;
+            std::string uniqueKey = newKey;
+            while (m_dataFile.contains(uniqueKey))
+            {
+                uniqueKey = newKey + " " + std::to_string(counter);
+                counter++;
+            }
+
+            // Add the new key-value pair to the JSON
+            m_dataFile[uniqueKey] = newValue;
+
+            // Refresh the display from the updated JSON
+            populateFromJson();
         }
 
         igSeparator();
@@ -142,9 +197,30 @@ void DataFileDebugWindow::render()
             igSameLine(0, 10);
             if (igButton(labelRemove, (ImVec2){60, 0}))
             {
+                // Remove the corresponding key from JSON if it exists
+                std::string keyToRemove(m_displayLines[i].boxA);
+                if (!keyToRemove.empty() && m_dataFile.contains(keyToRemove))
+                {
+                    m_dataFile.erase(keyToRemove);
+                }
+
                 m_displayLines.erase(m_displayLines.begin() + i);
                 break; // Break to avoid iterator invalidation
             }
+        }
+
+        igSeparator();
+
+        // JSON synchronization controls
+        if (igButton("Update JSON from Fields", (ImVec2){150, 0}))
+        {
+            updateJsonText();
+        }
+
+        igSameLine(0, 10);
+        if (igButton("Refresh from JSON", (ImVec2){120, 0}))
+        {
+            populateFromJson();
         }
 
         igSeparator();
