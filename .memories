@@ -1,0 +1,1 @@
+The user prefers that the assistant not guess code but instead read the API documentation before writing code. This is especially important for Cute Framework where the API is different from what might be expected. Always check the actual function signatures and available functions before implementing features.
