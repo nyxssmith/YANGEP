@@ -9,6 +9,17 @@ project(
 # Must have at least C++20.
 set(CMAKE_CXX_STANDARD 20)
 
+# Set default build type to Debug if not specified
+if(NOT CMAKE_BUILD_TYPE)
+	set(CMAKE_BUILD_TYPE Debug)
+endif()
+
+# Add debug flags for Debug builds
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+	set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -DDEBUG")
+	set(CMAKE_C_FLAGS_DEBUG "-g -O0 -DDEBUG")
+endif()
+
 if(CMAKE_SYSTEM_NAME MATCHES "Emscripten")
 	set(EMSCRIPTEN TRUE)
 endif()
@@ -39,7 +50,25 @@ FetchContent_Declare(
 	GIT_SHALLOW
 )
 
-FetchContent_MakeAvailable(cute nlohmann_json)
+# Add Google Test framework
+FetchContent_Declare(
+	googletest
+	GIT_REPOSITORY https://github.com/google/googletest.git
+	GIT_TAG v1.14.0
+	GIT_SHALLOW
+)
+
+# Add test coverage tools (optional but recommended)
+option(ENABLE_COVERAGE "Enable coverage reporting" OFF)
+if(ENABLE_COVERAGE)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
+	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
+endif()
+
+FetchContent_MakeAvailable(cute nlohmann_json googletest)
+
+# Enable testing
+enable_testing()
 
 # Source code for your game.
 add_executable(
@@ -67,6 +96,48 @@ endif()
 
 # Make the game link against Cute Framework and nlohmann/json.
 target_link_libraries(${PROJECT_NAME} cute nlohmann_json::nlohmann_json)
+
+# Test executable
+add_executable(${PROJECT_NAME}_tests
+	tests/main.cpp
+	tests/unit/DataFileTest.cpp
+	tests/unit/DebugWindowTest.cpp
+	tests/unit/UtilsTest.cpp
+	tests/integration/SpriteSystemTest.cpp
+	tests/unit/DataFileTest.h
+	tests/unit/DebugWindowTest.h
+	tests/unit/UtilsTest.h
+	tests/integration/SpriteSystemTest.h
+	tests/fixtures/TestFixture.hpp
+	src/lib/DataFile.cpp
+	src/lib/DebugWindow.cpp
+	src/lib/Utils.cpp
+)
+
+# Link test executable with dependencies
+target_link_libraries(${PROJECT_NAME}_tests
+	cute
+	nlohmann_json::nlohmann_json
+	gtest
+	gtest_main
+)
+
+# Include directories for tests
+target_include_directories(${PROJECT_NAME}_tests
+	PUBLIC
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/tests>
+)
+
+# Add test to CTest
+add_test(NAME ${PROJECT_NAME}_tests COMMAND ${PROJECT_NAME}_tests)
+
+# Copy test assets
+add_custom_command(TARGET ${PROJECT_NAME}_tests POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy_directory
+	${CMAKE_SOURCE_DIR}/tests/assets
+	$<TARGET_FILE_DIR:${PROJECT_NAME}_tests>/tests/assets
+)
 
 # For convenience on Windows, set MSVC debugger's working directory in the build folder.
 # Also ask MSVC to make the game the startup project.
