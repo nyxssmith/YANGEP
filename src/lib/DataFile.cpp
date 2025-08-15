@@ -56,18 +56,42 @@ bool DataFile::load()
 // Save JSON to file
 bool DataFile::save(const std::string &filename) const
 {
-    std::ofstream out(filename);
-    if (!out.is_open())
-        return false;
     try
     {
-        out << *this;
+        // Convert JSON to string
+        std::string json_string = this->dump(4); // Pretty print with 4 spaces
+
+        // For writing files, we need to use a relative path from the write directory
+        // If the filename starts with a virtual mount point like "/assets/", we need to strip it
+        std::string write_path = filename;
+        if (write_path.starts_with("/assets/"))
+        {
+            write_path = write_path.substr(8); // Remove "/assets/" prefix
+        }
+
+        // Write using Cute Framework's VFS
+        CF_Result result = cf_fs_write_entire_buffer_to_file(write_path.c_str(), json_string.c_str(), json_string.size());
+
+        if (!Cute::is_error(result))
+        {
+            // Update the stored filename after successful save
+            const_cast<DataFile *>(this)->filename = filename;
+            return true;
+        }
+        else
+        {
+            // Print error information for debugging
+            printf("DataFile::save() failed for file '%s' (write path: '%s'). Error occurred.\n", filename.c_str(), write_path.c_str());
+            printf("Make sure the write directory is set with fs_set_write_directory() before attempting to save.\n");
+        }
+
+        return false;
     }
     catch (...)
     {
+        printf("DataFile::save() caught exception for file '%s'\n", filename.c_str());
         return false;
     }
-    return true;
 }
 
 // Save JSON to stored filename
