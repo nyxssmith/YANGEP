@@ -474,15 +474,39 @@ void DataFileDebugWindow::render()
                 if (igButton(labelAdd, (ImVec2){50, 0}))
                 {
                     std::string currentPath = getJsonPath(line.parentPath, std::string(line.key));
+
+                    // Find the insertion point - after all children of this container
+                    size_t insertIndex = i + 1;
+                    while (insertIndex < m_displayLines.size() &&
+                           m_displayLines[insertIndex].indentLevel > line.indentLevel)
+                    {
+                        insertIndex++;
+                    }
+
+                    // Create the new display line
+                    DisplayLine newLine;
                     if (line.type == JsonType::Map)
                     {
-                        addDisplayLine("NewKey", "NewValue", JsonType::String, line.indentLevel + 1, currentPath);
+                        newLine = DisplayLine("NewKey", "NewValue", JsonType::String, line.indentLevel + 1, currentPath);
                     }
                     else // List
                     {
-                        std::string indexKey = "[" + std::to_string(0) + "]"; // Will be updated when we rebuild
-                        addDisplayLine(indexKey, "NewValue", JsonType::String, line.indentLevel + 1, currentPath);
+                        // Count existing array items to get the next index
+                        int arrayCount = 0;
+                        for (size_t j = i + 1; j < insertIndex; ++j)
+                        {
+                            if (m_displayLines[j].indentLevel == line.indentLevel + 1 &&
+                                m_displayLines[j].parentPath == currentPath)
+                            {
+                                arrayCount++;
+                            }
+                        }
+                        std::string indexKey = "[" + std::to_string(arrayCount) + "]";
+                        newLine = DisplayLine(indexKey, "NewValue", JsonType::String, line.indentLevel + 1, currentPath);
                     }
+
+                    // Insert at the correct position
+                    m_displayLines.insert(m_displayLines.begin() + insertIndex, newLine);
                 }
                 igSameLine(0, 5);
             }
