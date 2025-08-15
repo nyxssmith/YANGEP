@@ -76,6 +76,7 @@ add_executable(
 	src/main.cpp
 	src/lib/DataFile.cpp
 	src/lib/DebugWindow.cpp
+	src/lib/DataFileDebugWindow.cpp
 	src/lib/Utils.cpp
 	src/lib/Sprite.cpp
 	src/lib/SpriteDemo.cpp
