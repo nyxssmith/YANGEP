@@ -7,6 +7,7 @@
 #include "lib/DataFile.h"
 #include "lib/SpriteDemo.h"
 #include "lib/tsx.h"
+#include "lib/tmx.h"
 using namespace Cute;
 
 int main(int argc, char *argv[])
@@ -26,21 +27,24 @@ int main(int argc, char *argv[])
 	DataFile df("assets/DataFiles/EntityFiles/skeleton.json");
 	// printf("DataFile data: %s\n", df.dump(4).c_str());
 
-	// Create TSX parser
+	// Create TMX parser for the level
+	tmx levelMap("/assets/Art/LevelPNGs/YANGEP_ONE.tmx");
+
+	// Print debug information about the TMX file
+	levelMap.debugPrint();
+	/*
+	// For comparison, also load individual TSX parser
 	tsx levelTxs("/assets/Art/LevelPNGs/magecity.tsx");
 
-	// Print debug information about the TSX file
-	// levelTxs.debugPrint();
-
-	// Get some tile sprites to render
+	// Get some individual tile sprites to render for comparison
 	CF_Sprite tile_0_0 = levelTxs.getTile(0, 0); // First tile
 	CF_Sprite tile_1_0 = levelTxs.getTile(1, 0); // Second tile in first row
 	CF_Sprite tile_0_1 = levelTxs.getTile(0, 1); // First tile in second row
 	CF_Sprite tile_2_2 = levelTxs.getTile(2, 2); // Third tile in third row
-
+	*/
 	// Get tile dimensions for proper spacing
-	int tile_width = levelTxs.getTileWidth();
-	int tile_height = levelTxs.getTileHeight();
+	int tile_width = levelMap.getTileWidth();
+	int tile_height = levelMap.getTileHeight();
 
 	printf("Using tile dimensions: %dx%d pixels\n", tile_width, tile_height);
 
@@ -56,40 +60,19 @@ int main(int argc, char *argv[])
 		// debugWindow.render();
 		// dataFileDebugWindow.render();
 
-		// Render tiles from the TSX tileset with proper spacing
-		// Define starting position for the tile grid
-		int start_x = -200;
-		int start_y = -150;
+		// Render the TMX map layers
+		// Position the map at a reasonable location on screen
+		float map_x = -400.0f; // Left side of screen
+		float map_y = -300.0f; // Top of screen
 
-		// Draw tile (0,0) at starting position
-		cf_draw_push();
-		cf_draw_translate_v2(cf_v2(start_x, start_y));
-		cf_draw_sprite(&tile_0_0);
-		cf_draw_pop();
+		// Render all layers of the TMX map
+		levelMap.renderAllLayers(map_x, map_y);
 
-		// Draw tile (1,0) - one tile width to the right
-		cf_draw_push();
-		cf_draw_translate_v2(cf_v2(start_x + tile_width, start_y));
-		cf_draw_sprite(&tile_1_0);
-		cf_draw_pop();
-
-		// Draw tile (0,1) - one tile height below
-		cf_draw_push();
-		cf_draw_translate_v2(cf_v2(start_x, start_y + tile_height));
-		cf_draw_sprite(&tile_0_1);
-		cf_draw_pop();
-
-		// Draw tile (2,2) - two tile widths right and two tile heights down
-		cf_draw_push();
-		cf_draw_translate_v2(cf_v2(start_x + 2 * tile_width, start_y + 2 * tile_height));
-		cf_draw_sprite(&tile_2_2);
-		cf_draw_pop();
-
-		// Position text below the tiles
-		v2 text_position = cf_v2(0, 100);
+		// Position text at the bottom
+		v2 text_position1 = cf_v2(-200, 250);
 
 		// Draw the text
-		draw_text("TSX Tileset Rendering Demo", text_position);
+		draw_text("TMX Level Map (Left)", text_position1);
 
 		app_draw_onto_screen(true);
 	}

@@ -95,6 +95,7 @@ add_executable(
 	src/lib/DataFileDebugWindow.cpp
 	src/lib/Utils.cpp
 	src/lib/tsx.cpp
+	src/lib/tmx.cpp
 	src/lib/Sprite.cpp
 	src/lib/SpriteDemo.cpp
 )
@@ -132,6 +133,8 @@ add_executable(${PROJECT_NAME}_tests
 	src/lib/DataFile.cpp
 	src/lib/DebugWindow.cpp
 	src/lib/Utils.cpp
+	src/lib/tsx.cpp
+	src/lib/tmx.cpp
 	src/lib/Sprite.cpp
 	src/lib/SpriteDemo.cpp
 )
