@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
 
 		// Render the TMX layer with camera-aware culling and positioning
 		// The map will be positioned at world coordinates (0, 0)
-		levelMap.renderLayer(0, camera, 0.0f, 0.0f);
+		levelMap.renderAllLayers(camera);
 		// camera.drawViewBounds();
 
 		// Restore camera transformation
