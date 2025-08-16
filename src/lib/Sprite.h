@@ -12,16 +12,17 @@ private:
     v2 scale;              // Scale factors (x, y)
     float rotation;         // Rotation in radians
     bool visible;          // Visibility flag
+    bool texture_loaded;   // Whether a texture was successfully loaded
 
 public:
     // Constructors
     Sprite();
     Sprite(const char* texture_path);
-    ~Sprite();
+    virtual ~Sprite();
 
     // Core methods
-    void render();
-    void update(float dt);
+    virtual void render();
+    virtual void update(float dt);
 
     // Transform methods
     void setPosition(v2 pos);
@@ -45,4 +46,8 @@ public:
 
     // Utility
     bool isValid() const;
+
+    // Texture information
+    int getTextureWidth() const;
+    int getTextureHeight() const;
 };

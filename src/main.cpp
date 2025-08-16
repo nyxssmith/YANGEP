@@ -1,62 +1,55 @@
 #include <cute.h>
 #include <stdio.h>
-#include <cimgui.h>
-#include "lib/DebugWindow.h"
-#include "lib/Utils.h"
+#include <stdlib.h>
 #include "lib/DataFile.h"
-#include "lib/SpriteDemo.h"
+#include "lib/SpriteBatchDemo.h"
+
 using namespace Cute;
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
-	// Create a window with a resolution of 640 x 480.
-	int options = CF_APP_OPTIONS_WINDOW_POS_CENTERED_BIT;
-	CF_Result result = make_app("Fancy Window Title", 0, 0, 0, 640, 480, options, argv[0]);
-	cf_app_init_imgui();
-	if (is_error(result))
-		return -1;
+    // Initialize Cute Framework
+    CF_Result result = make_app("YANGEP - Yet Another New Game Engine Project", 0, 0, 0, 640, 480, 0, argv[0]);
+    if (is_error(result)) {
+        printf("Failed to create app\n");
+        return -1;
+    }
 
-	// Mount the assets directory for file I/O
-	mount_content_directory_as("/assets");
+    // Test DataFile functionality
+    DataFile dataFile;
+    if (dataFile.load("assets/a.json")) {
+        printf("JSON data: %s\n", dataFile.dump(4).c_str());
+    } else {
+        printf("DataFile data: %s\n", dataFile.dump(4).c_str());
+    }
 
-	// Load JSON data
-	nlohmann::json json_data = ReadJson("/assets/a.json");
-	printf("JSON data: %s\n", json_data.dump(4).c_str());
-	DataFile df("/assets/a.json");
-	printf("DataFile data: %s\n", df.dump(4).c_str());
+    // Initialize SpriteBatchDemo
+    SpriteBatchDemo spriteBatchDemo;
+    if (!spriteBatchDemo.initialize()) {
+        printf("Failed to initialize SpriteBatchDemo\n");
+        return -1;
+    }
 
-	// Create debug window
-	DebugWindow debugWindow("Debug Info aaaa");
+    printf("Entering main loop...\n");
 
-	// Create sprite demo
-	SpriteDemo spriteDemo;
-	if (!spriteDemo.initialize()) {
-		printf("Failed to initialize sprite demo\n");
-		return -1; // Exit if sprite demo fails to initialize
-	}
+    // Main game loop
+    while (app_is_running()) {
+        app_update();
 
-	while (app_is_running())
-	{
-		app_update();
+        // Clear the screen with dark background
+        draw_push_color(make_color(0.1f, 0.1f, 0.1f, 1.0f));
+        draw_quad_fill(make_aabb(v2(-320, -240), 640, 480), 0.0f);
+        draw_pop_color();
 
-		// Update sprite demo
-		spriteDemo.update(0.016f); // ~60 FPS
+        // Update and render the SpriteBatchDemo
+        float dt = 0.016f; // ~60 FPS for now
+        spriteBatchDemo.update(dt);
+        spriteBatchDemo.render();
 
-		// Render debug window
-		debugWindow.render();
+        app_draw_onto_screen(true);
+    }
 
-		// Position text below the triangles (negative Y to go down)
-		v2 text_position = v2(0, 100); // Below the triangles
-
-		// Draw the text
-		draw_text("my girlfriend is so pretty", text_position);
-
-		// Render sprite demo
-		spriteDemo.render();
-
-		app_draw_onto_screen(true);
-	}
-
-	destroy_app();
-	return 0;
+    printf("Exited main loop\n");
+    destroy_app();
+    return 0;
 }

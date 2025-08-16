@@ -7,6 +7,7 @@ Sprite::Sprite()
     , scale(v2(1, 1))
     , rotation(0.0f)
     , visible(true)
+    , texture_loaded(false)
 {
     // Initialize with empty sprite
     sprite = cf_sprite_defaults();
@@ -21,9 +22,13 @@ Sprite::Sprite(const char* texture_path)
     sprite = cf_make_easy_sprite_from_png(texture_path, &result);
 
     if (Cute::is_error(result)) {
-        printf("Failed to load sprite: %s\n", texture_path);
-        sprite = cf_sprite_defaults();
+        printf("FATAL ERROR: Failed to load sprite: %s\n", texture_path);
+        printf("Asset loading failure is fatal. Exiting program.\n");
+        exit(1);  // Exit with error code 1
     }
+
+    // If we reach here, texture loading was successful
+    texture_loaded = true;
 }
 
 // Destructor
@@ -111,5 +116,20 @@ void Sprite::setVisible(bool visible) {
 
 // Utility
 bool Sprite::isValid() const {
-    return sprite.name != nullptr;
+    // Default sprites (no texture) are valid for basic operations
+    // Sprites with loaded textures are also valid
+    return true;
+}
+
+// Texture information
+int Sprite::getTextureWidth() const {
+    if (!texture_loaded) return 0;
+    // Cast away const for the Cute Framework API call
+    return cf_sprite_width(const_cast<CF_Sprite*>(&sprite));
+}
+
+int Sprite::getTextureHeight() const {
+    if (!texture_loaded) return 0;
+    // Cast away const for the Cute Framework API call
+    return cf_sprite_height(const_cast<CF_Sprite*>(&sprite));
 }
