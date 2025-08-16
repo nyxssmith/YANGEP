@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
 	// printf("DataFile data: %s\n", df.dump(4).c_str());
 
 	// Create TMX parser for the level
-	tmx levelMap("/assets/Art/LevelPNGs/YANGEP_ONE.tmx");
+	tmx levelMap("/assets/Levels/test_one/test_one.tmx");
 
 	// Print debug information about the TMX file
 	levelMap.debugPrint();

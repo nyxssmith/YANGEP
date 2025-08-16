@@ -489,8 +489,11 @@ CF_Sprite TMXTileset::getSpriteForGID(int gid) const
     {
         return cf_sprite_defaults();
     }
-
+    // lock tile x and y to 0,0
+    tile_x = 2;
+    tile_y = 1;
     // Create the sprite using TSX
+    printf("Creating sprite for GID %d at tile coords (%d, %d)\n", gid, tile_x, tile_y);
     CF_Sprite sprite = tsx_data->getTile(tile_x, tile_y);
 
     // Cache the sprite for future use
