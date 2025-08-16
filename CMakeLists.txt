@@ -66,6 +66,14 @@ FetchContent_Declare(
 	GIT_SHALLOW
 )
 
+# Add libspng library
+FetchContent_Declare(
+	libspng
+	GIT_REPOSITORY https://github.com/randy408/libspng.git
+	GIT_TAG v0.7.4
+	GIT_SHALLOW
+)
+
 # Add test coverage tools (optional but recommended)
 option(ENABLE_COVERAGE "Enable coverage reporting" OFF)
 if(ENABLE_COVERAGE)
@@ -73,7 +81,7 @@ if(ENABLE_COVERAGE)
 	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
 endif()
 
-FetchContent_MakeAvailable(cute nlohmann_json googletest pugixml)
+FetchContent_MakeAvailable(cute nlohmann_json googletest pugixml libspng)
 
 # Enable testing
 enable_testing()
@@ -107,7 +115,7 @@ if(APPLE)
 endif()
 
 # Make the game link against Cute Framework and nlohmann/json.
-target_link_libraries(${PROJECT_NAME} cute nlohmann_json::nlohmann_json pugixml)
+target_link_libraries(${PROJECT_NAME} cute nlohmann_json::nlohmann_json pugixml spng_static)
 
 # Test executable
 add_executable(${PROJECT_NAME}_tests
@@ -133,6 +141,7 @@ target_link_libraries(${PROJECT_NAME}_tests
 	cute
 	nlohmann_json::nlohmann_json
 	pugixml
+	spng_static
 	gtest
 	gtest_main
 )
