@@ -231,6 +231,10 @@ CF_Sprite tsx::cropTileFromPNG(const std::string &image_path, int tile_x, int ti
     // Create sprite from pixel data using Cute Framework
     CF_Sprite tile_sprite = cf_make_easy_sprite_from_pixels(tile_pixels.data(), tile_width, tile_height);
 
+    // Set the sprite to use nearest neighbor filtering to prevent seams
+    // This prevents the GPU from interpolating between neighboring texels
+    // cf_sprite_set_filter(&tile_sprite, CF_FILTER_NEAREST);
+
     printf("Successfully cropped tile (%d, %d) -> pixel region (%d, %d) size (%dx%d)\n",
            tile_x, tile_y, pixel_x, pixel_y, tile_width, tile_height);
 
