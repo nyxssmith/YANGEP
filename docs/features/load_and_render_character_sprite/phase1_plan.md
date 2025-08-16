@@ -86,19 +86,269 @@
 
 ---
 
-## Phase 1.2: Character Animation System 📋 PLANNED
+## Phase 1.2: Character Animation System 📋 IN PROGRESS
 
-### Planned Features
-- [ ] Frame-based animation support
-- [ ] Animation state management
-- [ ] Transition between animation states
-- [ ] Animation timing and speed control
+### Current Status: Issues Identified
+- [x] Basic animation classes implemented (`Animation.h/cpp`, `AnimatedSprite.h/cpp`)
+- [x] Animation demo integrated into main application
+- [ ] **CRITICAL ISSUE**: Sprite positioning not working correctly - sprites appear in wrong location
+- [ ] **CRITICAL ISSUE**: Text positioning needs adjustment for lower-left corner
+- [ ] **CRITICAL ISSUE**: Build errors in test files due to missing includes
+
+### Animation Sheet Support (NEW REQUIREMENT)
+- [ ] **Directional Sprite Sheets**: Support for 4-direction sprites (UP, LEFT, DOWN, RIGHT)
+- [ ] **Sheet Layout**: Each row represents a direction, each column represents animation frames
+- [ ] **Automatic Direction Detection**: Parse sprite sheet dimensions to determine frame layout
+- [ ] **Direction Switching**: Smooth transitions between directional animations
+
+### Animation Sheet Format Specification
+```
+Sprite Sheet Layout:
+- Width: N frames × frame_width (e.g., 9 frames × 64px = 576px)
+- Height: 4 directions × frame_height (e.g., 4 × 256px = 1024px)
+
+Direction Mapping:
+- Row 0: UP direction
+- Row 1: LEFT direction
+- Row 2: DOWN direction
+- Row 3: RIGHT direction
+
+Frame Layout:
+- Column 0: Frame 0 (idle/start)
+- Column 1: Frame 1 (animation frame)
+- Column N: Frame N (last animation frame)
+```
 
 ### Implementation Tasks
-- [ ] Extend Sprite class with animation capabilities
-- [ ] Create Animation class for managing frame sequences
-- [ ] Implement animation state machine
-- [ ] Add animation blending and transitions
+- [ ] Fix sprite positioning issues in current implementation
+- [ ] Fix text positioning for lower-left corner display
+- [ ] Extend Animation class to support directional frame sequences
+- [ ] Add direction-aware animation switching
+- [ ] Implement automatic sprite sheet parsing for direction detection
+- [ ] Add animation state machine for smooth direction transitions
+- [ ] Create animation blending between directions
+
+### Technical Requirements
+- [ ] Support for variable frame counts per direction
+- [ ] Configurable frame durations and timing
+- [ ] Direction-aware UV coordinate calculation
+- [ ] Animation loop control per direction
+- [ ] Performance optimization for multiple animated sprites
+
+### Asset Requirements
+- [ ] **Idle Animation Sheets**: Single frame per direction (64×1024px)
+- [ ] **Walk Cycle Sheets**: Multiple frames per direction (576×1024px for 9-frame walk)
+- [ ] **JSON Configuration**: Define frame counts, timing, and direction mapping
+- [ ] **Texture Atlasing**: Efficient memory usage for multiple animation sheets
+
+---
+
+## Phase 1.2.1: Animation Sheet Implementation Details 📋 PLANNED
+
+### Current Animation Implementation Analysis ✅
+The existing Animation class already provides a solid foundation for sprite sheets:
+
+#### ✅ What's Already Working
+- **Sprite Sheet Properties**: `frameSize` and `sheetSize` properties
+- **UV Coordinate Calculation**: `getCurrentFrameUV()` method for frame rendering
+- **Frame Management**: `addFrameSequence()` and `addWalkCycleForDirection()` methods
+- **Direction Support**: Basic direction enum and frame positioning
+- **Current Usage**: AnimationDemo successfully uses sprite sheets for idle and walk cycles
+
+#### 🔧 What Needs Enhancement
+- **Direction-Aware Frame Management**: Current system treats each direction as separate frames
+- **Automatic Sheet Parsing**: No automatic detection of frame counts per direction
+- **Efficient Direction Switching**: Current system recreates animations when direction changes
+- **Memory Optimization**: Better organization for directional animation sheets
+
+### Implementation Strategy: Enhance Existing Classes
+
+#### Current Animation Class (Enhanced)
+```cpp
+class Animation {
+    // EXISTING properties (already working)
+    std::string name;
+    std::vector<AnimationFrame> frames;
+    v2 frameSize;
+    v2 sheetSize;
+
+    // NEW: Directional frame organization
+    std::map<SkeletonDirection, std::vector<AnimationFrame>> directionalFrames;
+
+    // NEW: Automatic sheet parsing
+    void parseDirectionalSheet(v2 frameSize, v2 sheetSize);
+    v2 getFrameUV(SkeletonDirection direction, int frameIndex);
+
+    // NEW: Direction switching
+    void switchDirection(SkeletonDirection newDirection);
+    bool hasDirection(SkeletonDirection direction) const;
+};
+```
+
+### Migration Path: From Current to Enhanced
+
+#### Current Usage (AnimationDemo.cpp)
+```cpp
+// OLD: Manual setup for each direction
+void AnimationDemo::setupAnimations() {
+    // Idle animation (single frame for current direction)
+    Animation idle_body("idle");
+    idle_body.setFrameSize(v2(64, 256));
+    idle_body.setSheetSize(v2(64, 256));
+    idle_body.addFrame(0, static_cast<int>(currentDirection), 0.5f, "idle_frame");
+
+    // Walk cycle animation for current direction
+    Animation walk_body("walk");
+    walk_body.setFrameSize(v2(64, 256));
+    walk_body.setSheetSize(v2(576, 256)); // 9 frames × 4 directions
+    walk_body.addWalkCycleForDirection(currentDirection, 0.1f);
+}
+```
+
+#### Enhanced Usage (Future)
+```cpp
+// NEW: Automatic directional sheet parsing
+void AnimationDemo::setupAnimations() {
+    // Idle animation sheet (automatically parses 4 directions)
+    Animation idle_body("idle");
+    idle_body.parseDirectionalSheet(v2(64, 256), v2(64, 1024));
+    // Automatically detects: 1 frame × 4 directions
+
+    // Walk cycle sheet (automatically parses 9 frames × 4 directions)
+    Animation walk_body("walk");
+    walk_body.parseDirectionalSheet(v2(64, 256), v2(576, 1024));
+    // Automatically detects: 9 frames × 4 directions
+}
+```
+
+### Technical Implementation Details
+
+#### Enhanced UV Coordinate Calculation
+```cpp
+v2 Animation::getFrameUV(SkeletonDirection direction, int frameIndex) {
+    if (directionalFrames.count(direction) == 0 ||
+        frameIndex >= directionalFrames[direction].size()) {
+        return v2(0, 0);
+    }
+
+    // Calculate UV coordinates for the specific direction and frame
+    int directionRow = static_cast<int>(direction);
+    float u = (frameIndex * frameSize.x) / sheetSize.x;
+    float v = (directionRow * frameSize.y) / sheetSize.y;
+    return v2(u, v);
+}
+```
+
+#### Automatic Directional Sheet Parsing
+```cpp
+void Animation::parseDirectionalSheet(v2 frameSize, v2 sheetSize) {
+    this->frameSize = frameSize;
+    this->sheetSize = sheetSize;
+
+    // Calculate frame counts automatically
+    int framesPerDirection = static_cast<int>(sheetSize.x / frameSize.x);
+    int directionCount = static_cast<int>(sheetSize.y / frameSize.y);
+
+    // Validate direction count (should be 4 for UP, LEFT, DOWN, RIGHT)
+    if (directionCount != 4) {
+        printf("Warning: Expected 4 directions, got %d\n", directionCount);
+    }
+
+    // Create frames for each direction
+    for (int dir = 0; dir < directionCount; dir++) {
+        SkeletonDirection direction = static_cast<SkeletonDirection>(dir);
+        std::vector<AnimationFrame> directionFrames;
+
+        for (int frame = 0; frame < framesPerDirection; frame++) {
+            AnimationFrame animFrame(frame, dir, 0.1f,
+                "frame_" + std::to_string(frame) + "_dir_" + std::to_string(dir));
+            directionFrames.push_back(animFrame);
+        }
+
+        directionalFrames[direction] = directionFrames;
+    }
+
+    // Set default frames to current direction (DOWN = 2)
+    frames = directionalFrames[SkeletonDirection::DOWN];
+}
+```
+
+### Implementation Priority
+1. **Phase 1**: Enhance existing Animation class with directional support
+2. **Phase 2**: Update AnimatedSprite to use directional animations
+3. **Phase 3**: Modify AnimationDemo to use enhanced system
+4. **Phase 4**: Add JSON configuration support
+5. **Phase 5**: Performance optimization and testing
+
+### JSON Configuration Format
+```json
+{
+  "animation_sheets": {
+    "idle": {
+      "file": "assets/skeleton/idle_sheet.png",
+      "frame_size": [64, 256],
+      "sheet_size": [64, 1024],
+      "directions": ["UP", "LEFT", "DOWN", "RIGHT"],
+      "frame_count": 1,
+      "frame_duration": 0.5
+    },
+    "walk_cycle": {
+      "file": "assets/skeleton/walk_sheet.png",
+      "frame_size": [64, 256],
+      "sheet_size": [576, 1024],
+      "directions": ["UP", "LEFT", "DOWN", "RIGHT"],
+      "frame_count": 9,
+      "frame_duration": 0.1
+    }
+  }
+}
+```
+
+### Testing Strategy
+- **Unit Tests**: Test UV coordinate calculation for each direction
+- **Integration Tests**: Test direction switching and animation playback
+- **Performance Tests**: Measure frame rate with multiple directional sprites
+- **Asset Tests**: Validate sprite sheet loading and parsing
+- **Migration Tests**: Ensure existing animations continue to work
+
+### Performance Considerations
+- **Texture Caching**: Cache loaded animation sheets to avoid repeated loading
+- **Frame Precalculation**: Pre-calculate UV coordinates for all frames/directions
+- **Batch Rendering**: Group sprites by animation state for efficient rendering
+- **Memory Management**: Implement texture atlasing for multiple animation sheets
+- **Direction Switching**: Avoid recreating animations, reuse existing frame data
+
+---
+
+## Phase 1.3: SpriteStack Implementation 📋 PLANNED
+
+### Overview
+Implement a new `SpriteStack` class that extends the base `Sprite` class to handle directional character sprites with stacked animation frames. This will provide the foundation for the directional animation system.
+
+### Design Goals
+- **Extend Base Sprite**: Inherit from `Sprite` for compatibility with existing code
+- **Directional Support**: Handle UP, LEFT, DOWN, RIGHT directions
+- **Frame Management**: Support multiple frames per direction
+- **Easy Integration**: Simple API for direction switching and frame selection
+
+### Implementation Plan
+- [ ] **Create SpriteStack.h**: Header with Direction enum and class definition
+- [ ] **Create SpriteStack.cpp**: Implementation with UV coordinate calculation
+- [ ] **Direction Enum**: UP=0, LEFT=1, DOWN=2, RIGHT=3
+- [ ] **Core Methods**: `setDirection()`, `setFrame()`, `getFrameUV()`
+- [ ] **Asset Support**: Test with existing skeleton assets
+- [ ] **Unit Tests**: Comprehensive testing of all functionality
+
+### Technical Details
+- **UV Calculation**: Automatic frame size detection and UV coordinate generation
+- **Memory Efficiency**: Single texture load for all directions
+- **JSON Configuration**: Frame counts, timing, and direction mapping
+- **Performance**: Optimized rendering with minimal overhead
+
+### Integration Points
+- **Animation System**: Will use SpriteStack for directional animations
+- **Character System**: Will compose multiple SpriteStacks for body parts
+- **Existing Code**: Maintains compatibility with current Sprite-based systems
 
 ---
 
@@ -169,22 +419,38 @@
 
 **Phase 1.0**: ✅ COMPLETED - Testing infrastructure fully operational
 **Phase 1.1**: ✅ COMPLETED - Sprite class and demo fully implemented
-**Phase 1.2**: 📋 PLANNED - Ready to begin character animation system
+**Phase 1.2**: 🚨 IN PROGRESS - Animation system implemented but has critical positioning issues
 **Phase 1.3**: 📋 PLANNED - Character layer system design ready
 
 **Overall Progress**: 2/4 phases completed (50%)
-**Testing Status**: 17 tests passing, 100% success rate
-**Build Status**: ✅ All targets compile successfully
-**Demo Status**: ✅ Interactive sprite demo available
+**Testing Status**: ⚠️ Build errors in test files, main executable compiles
+**Build Status**: ⚠️ Main executable builds, test executable has compilation errors
+**Demo Status**: ⚠️ Animation demo integrated but sprites appear in wrong location
 
 ---
 
 ## Immediate Next Steps
 
-1. **✅ Demo Testing Complete**: Sprite demo runs successfully with keyboard input
-2. **🚀 Ready for Phase 1.2**: Begin implementing character animation system
-3. **📋 Animation Tests**: Extend test suite for new animation features
-4. **📋 Performance Testing**: Measure rendering performance with multiple sprites
+1. **🚨 CRITICAL FIXES NEEDED**:
+   - Fix sprite positioning issues (sprites appearing in upper-right instead of center)
+   - Fix text positioning for lower-left corner display
+   - Fix test compilation errors due to missing includes
+
+2. **📋 Animation Sheet Implementation**:
+   - **Phase 1**: Enhance existing Animation class with directional support (builds on current working foundation)
+   - **Phase 2**: Add automatic sprite sheet parsing for direction detection
+   - **Phase 3**: Implement direction-aware animation switching system
+
+3. **🧪 Testing and Validation**:
+   - Fix test compilation issues
+   - Validate sprite positioning fixes
+   - Test enhanced directional animation system
+   - Ensure existing animations continue to work (backward compatibility)
+
+4. **📋 Performance and Optimization**:
+   - Measure rendering performance with multiple animated sprites
+   - Implement texture atlasing for animation sheets
+   - Optimize direction switching performance
 
 ---
 

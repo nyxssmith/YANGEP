@@ -23,7 +23,44 @@ The project already has character art assets organized as:
   - Z-ordering support
   - Basic transform operations (translate, rotate, scale)
 
-### 1.2 Texture Management
+### 1.2 SpriteStack Class Implementation (NEW)
+- **File**: `src/lib/SpriteStack.h` and `src/lib/SpriteStack.cpp`
+- **Purpose**: Handle directional character sprites with stacked animation frames
+- **Features**:
+  - **Directional Support**: UP, LEFT, DOWN, RIGHT enumerated states
+  - **Stacked Frame Layout**: Long vertical images with frames stacked by direction
+  - **Direction Switching**: Methods to change current direction and update rendering
+  - **UV Coordinate Management**: Automatic calculation for each direction's frame
+  - **Inheritance**: Extends base `Sprite` class for compatibility
+  - **Frame Selection**: Methods to select specific direction and frame combination
+
+#### SpriteStack Design
+```cpp
+enum class Direction {
+    UP = 0,
+    LEFT = 1,
+    DOWN = 2,
+    RIGHT = 3
+};
+
+class SpriteStack : public Sprite {
+    Direction currentDirection;
+    int frameCount;
+    v2 frameSize;
+
+    void setDirection(Direction dir);
+    void setFrame(int frameIndex);
+    v2 getFrameUV(int frameIndex, Direction dir);
+};
+```
+
+#### Asset Layout Support
+- **Vertical Stack Layout**: Each row represents a direction (UP=0, LEFT=1, DOWN=2, RIGHT=3)
+- **Frame Dimensions**: Automatic detection of frame size and count
+- **JSON Configuration**: Define frame counts, timing, and direction mapping per asset
+- **Memory Efficiency**: Single texture load for all directions
+
+### 1.3 Texture Management
 - **File**: `src/lib/TextureManager.h` and `src/lib/TextureManager.cpp`
 - **Features**:
   - Texture loading and caching
@@ -71,6 +108,30 @@ The project already has character art assets organized as:
   - Frame metadata (duration, events, etc.)
   - Support for irregular frame layouts
 
+### 3.3 Directional Animation Sheets (NEW REQUIREMENT)
+- **File**: Enhanced `src/lib/Animation.h` and `src/lib/AnimatedSprite.h`
+- **Features**:
+  - **4-Direction Support**: UP, LEFT, DOWN, RIGHT directional sprites
+  - **Automatic Sheet Parsing**: Parse sprite sheet dimensions for direction detection
+  - **Direction Switching**: Smooth transitions between directional animations
+  - **UV Coordinate Management**: Automatic calculation for each direction/frame
+  - **JSON Configuration**: Define sheet layouts, frame counts, and timing per direction
+
+#### Directional Sheet Layout
+```
+Standard Layout:
+- Width: N frames × frame_width (e.g., 9 frames × 64px = 576px)
+- Height: 4 directions × frame_height (e.g., 4 × 256px = 1024px)
+- Row 0: UP direction, Row 1: LEFT, Row 2: DOWN, Row 3: RIGHT
+- Each row contains all animation frames for that direction
+```
+
+#### Asset Requirements
+- **Idle Sheets**: Single frame per direction (64×1024px)
+- **Walk Cycle Sheets**: Multiple frames per direction (576×1024px for 9-frame walk)
+- **JSON Configuration**: Define frame counts, timing, and direction mapping
+- **Texture Atlasing**: Efficient memory usage for multiple animation sheets
+
 ## Phase 4: Advanced Features (Priority: Low)
 
 ### 4.1 Performance Optimizations
@@ -96,6 +157,7 @@ The project already has character art assets organized as:
 ```
 src/lib/
 ├── Sprite.h/cpp              # Basic sprite functionality
+├── SpriteStack.h/cpp         # Directional sprite stack support (NEW)
 ├── TextureManager.h/cpp      # Texture management
 ├── Character.h/cpp           # Character component system
 ├── CharacterRenderer.h/cpp   # Character rendering
@@ -118,6 +180,7 @@ assets/
 
 ### Unit Tests
 - Sprite creation and manipulation
+- **SpriteStack directional support and frame selection**
 - Texture loading and caching
 - Animation frame calculation
 - Character component assembly
@@ -140,6 +203,9 @@ assets/
 - [ ] Basic sprites render correctly on screen
 - [ ] Texture loading works without memory leaks
 - [ ] Sprite transforms (position, scale, rotation) function properly
+- [ ] **SpriteStack Support**: Directional sprites (UP, LEFT, DOWN, RIGHT) render correctly
+- [ ] **Direction Switching**: SpriteStack direction changes update rendering immediately
+- [ ] **Frame Selection**: Individual frames can be selected from directional stacks
 - [ ] Performance: 1000+ sprites at 60 FPS
 
 ### Phase 2 Success
@@ -152,6 +218,10 @@ assets/
 - [ ] Animations play smoothly
 - [ ] Animation transitions work correctly
 - [ ] Sprite sheet parsing is accurate
+- [ ] **Directional Animation Support**: 4-direction sprites work correctly (UP, LEFT, DOWN, RIGHT)
+- [ ] **Automatic Sheet Parsing**: Sprite sheet dimensions automatically detected and parsed
+- [ ] **Direction Switching**: Smooth transitions between directional animations
+- [ ] **UV Coordinate Accuracy**: Correct frame rendering for each direction and frame
 - [ ] Performance: 50+ animated characters at 60 FPS
 
 ## Risk Assessment
@@ -168,19 +238,40 @@ assets/
 
 ## Timeline Estimate
 
-- **Phase 1**: 2-3 weeks
+- **Phase 1**: 3-4 weeks (increased for SpriteStack implementation)
 - **Phase 2**: 2-3 weeks
-- **Phase 3**: 3-4 weeks
+- **Phase 3**: 4-5 weeks (increased due to directional animation sheet complexity)
 - **Phase 4**: 2-3 weeks
-- **Total**: 9-13 weeks
+- **Total**: 11-15 weeks (increased by 1 week for SpriteStack, 1 week for directional animation sheets)
 
 ## Next Steps
 
-1. **Immediate**: Set up basic Sprite class structure
-2. **Week 1**: Implement texture loading and basic sprite rendering
-3. **Week 2**: Add sprite transforms and basic camera system
+1. **Immediate (Critical Fixes)**:
+   - Fix sprite positioning issues in current implementation
+   - Fix text positioning for lower-left corner display
+   - Fix test compilation errors due to missing includes
+
+2. **Week 1**: Implement SpriteStack class for directional sprites
+   - Create `SpriteStack.h/cpp` extending base `Sprite` class
+   - Implement Direction enum (UP, LEFT, DOWN, RIGHT)
+   - Add direction switching and frame selection methods
+   - Create unit tests for SpriteStack functionality
+
+3. **Week 2**: Integrate SpriteStack with existing assets
+   - Test with current skeleton assets (idle and walkcycle)
+   - Implement automatic frame size detection
+   - Add JSON configuration support for frame counts and timing
+   - Create integration tests with real assets
+
 4. **Week 3**: Begin character component system design
+   - Design multi-layer character rendering system
+   - Plan equipment attachment system
+   - Create layer animation coordination
+
 5. **Week 4**: Implement character rendering pipeline
+   - Build character component system
+   - Integrate with SpriteStack system
+   - Add performance optimization and testing
 
 ## Dependencies on Existing Code
 

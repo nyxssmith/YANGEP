@@ -71,81 +71,97 @@ FetchContent_MakeAvailable(cute nlohmann_json googletest)
 enable_testing()
 
 # Source code for your game.
-add_executable(
-	${PROJECT_NAME}
-	src/main.cpp
-	src/lib/DataFile.cpp
-	src/lib/DebugWindow.cpp
-	src/lib/Utils.cpp
-	src/lib/Sprite.cpp
-	src/lib/SpriteDemo.cpp
+# YANGEP executable
+add_executable(yangep
+    src/main.cpp
+    src/lib/SpriteBatch.cpp
+    src/lib/SpriteBatchDemo.cpp
+    src/lib/Sprite.cpp
+    src/lib/DataFile.cpp
+    src/lib/Utils.cpp
 )
 
 # Our source code will be in the `src` folder.
-target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)
+target_include_directories(yangep PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)
 
 # Some basic information needed for CMake to generate your Info.plist file.
 # This is necessary for e.g. iOS builds.
 if(APPLE)
-	set_target_properties(
-		${PROJECT_NAME}
-		PROPERTIES
-		MACOSX_BUNDLE_GUI_IDENTIFIER "com.myteam.${PROJECT_NAME}"
-		MACOSX_BUNDLE_BUNDLE_VERSION "1.0.0"
-		MACOSX_BUNDLE_SHORT_VERSION_STRING "1.0.0"
-	)
+    set_target_properties(
+        yangep
+        PROPERTIES
+        MACOSX_BUNDLE_GUI_IDENTIFIER "com.myteam.yangep"
+        MACOSX_BUNDLE_BUNDLE_VERSION "1.0.0"
+        MACOSX_BUNDLE_SHORT_VERSION_STRING "1.0.0"
+    )
 endif()
 
 # Make the game link against Cute Framework and nlohmann/json.
-target_link_libraries(${PROJECT_NAME} cute nlohmann_json::nlohmann_json)
+target_link_libraries(yangep cute nlohmann_json::nlohmann_json)
 
 # Test executable
-add_executable(${PROJECT_NAME}_tests
-	tests/main.cpp
-	tests/unit/DataFileTest.cpp
-	tests/unit/DebugWindowTest.cpp
-	tests/unit/UtilsTest.cpp
-	tests/integration/SpriteSystemTest.cpp
-	tests/unit/DataFileTest.h
-	tests/unit/DebugWindowTest.h
-	tests/unit/UtilsTest.h
-	tests/integration/SpriteSystemTest.h
-	tests/fixtures/TestFixture.hpp
-	src/lib/DataFile.cpp
-	src/lib/DebugWindow.cpp
-	src/lib/Utils.cpp
-	src/lib/Sprite.cpp
-	src/lib/SpriteDemo.cpp
+add_executable(
+    yangep_tests
+    tests/main.cpp
+    tests/unit/DataFileTest.cpp
+    tests/unit/UtilsTest.cpp
+    tests/unit/SpriteTest.cpp
+    tests/integration/SpriteSystemTest.cpp
+    tests/integration/AssetLoadingTest.cpp
+    tests/unit/SpriteBatchTest.cpp
+    src/lib/DataFile.cpp
+    src/lib/Utils.cpp
+    src/lib/Sprite.cpp
+    src/lib/SpriteBatch.cpp
+    src/lib/SpriteBatchDemo.cpp
 )
 
 # Link test executable with dependencies
-target_link_libraries(${PROJECT_NAME}_tests
-	cute
-	nlohmann_json::nlohmann_json
-	gtest
-	gtest_main
+target_link_libraries(yangep_tests
+    cute
+    nlohmann_json::nlohmann_json
+    gtest
+    gtest_main
 )
 
 # Include directories for tests
-target_include_directories(${PROJECT_NAME}_tests
-	PUBLIC
-	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
-	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/tests>
+target_include_directories(yangep_tests
+    PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/tests>
 )
 
 # Add test to CTest
-add_test(NAME ${PROJECT_NAME}_tests COMMAND ${PROJECT_NAME}_tests)
+add_test(NAME yangep_tests COMMAND yangep_tests)
+
+# Asset loading test executable (separate from main tests)
+add_executable(yangep_asset_loading_test
+    tests/integration/test_asset_loading.cpp
+    src/lib/Sprite.cpp
+)
+
+# Link asset loading test with dependencies
+target_link_libraries(yangep_asset_loading_test
+    cute
+    nlohmann_json::nlohmann_json
+)
+
+# Include directories for asset loading test
+target_include_directories(yangep_asset_loading_test
+    PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+)
 
 # Copy test assets
-add_custom_command(TARGET ${PROJECT_NAME}_tests POST_BUILD
-	COMMAND ${CMAKE_COMMAND} -E copy_directory
-	${CMAKE_SOURCE_DIR}/tests/assets
-	$<TARGET_FILE_DIR:${PROJECT_NAME}_tests>/tests/assets
+add_custom_command(TARGET yangep_tests POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_SOURCE_DIR}/tests/assets
+    $<TARGET_FILE_DIR:yangep_tests>/tests/assets
 )
 
 # For convenience on Windows, set MSVC debugger's working directory in the build folder.
 # Also ask MSVC to make the game the startup project.
 if (MSVC)
-	set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY $<TARGET_FILE_DIR:${PROJECT_NAME}>)
-	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
+    set_property(TARGET yangep PROPERTY VS_DEBUGGER_WORKING_DIRECTORY $<TARGET_FILE_DIR:yangep>)
+    set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT yangep)
 endif()
