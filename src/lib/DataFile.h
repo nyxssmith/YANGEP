@@ -6,21 +6,21 @@
 class DataFile : public nlohmann::json
 {
 private:
-    std::string filename;
+    std::string path;
 
 public:
     DataFile() = default;
-    DataFile(const std::string &filename);
+    DataFile(const std::string &path);
 
     // Load JSON from file
-    bool load(const std::string &filename);
-    bool load(); // Load from stored filename
+    bool load(const std::string &path);
+    bool load(); // Load from stored path
 
     // Save JSON to file
-    bool save(const std::string &filename) const;
-    bool save() const; // Save to stored filename
+    bool save(const std::string &path) const;
+    bool save() const; // Save to stored path
 
-    // Get/Set filename
-    const std::string &getFilename() const;
-    void setFilename(const std::string &filename);
+    // Get/Set path
+    const std::string &getpath() const;
+    void setpath(const std::string &path);
 };

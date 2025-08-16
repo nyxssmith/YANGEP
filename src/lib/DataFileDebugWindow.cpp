@@ -370,11 +370,11 @@ void DataFileDebugWindow::render()
     {
         igBegin(m_title.c_str(), &m_show, 0);
 
-        // Display filename if available
-        const std::string &filename = m_dataFile.getFilename();
-        if (!filename.empty())
+        // Display path if available
+        const std::string &path = m_dataFile.getpath();
+        if (!path.empty())
         {
-            igText("File: %s", filename.c_str());
+            igText("File: %s", path.c_str());
         }
         else
         {
