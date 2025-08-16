@@ -239,7 +239,8 @@ CF_Sprite tsx::cropTileFromPNG(const std::string &image_path, int tile_x, int ti
 
 CF_Sprite tsx::getTile(int tile_x, int tile_y) const
 {
-    // Return default sprite if document is empty
+    // x and y coords are from top left is 0,0 and higher y is down, higher x is right
+    //  Return default sprite if document is empty
     if (empty())
     {
         printf("TSX document is empty, returning default sprite\n");
