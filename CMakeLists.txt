@@ -58,6 +58,22 @@ FetchContent_Declare(
 	GIT_SHALLOW
 )
 
+# Add pugixml library
+FetchContent_Declare(
+	pugixml
+	GIT_REPOSITORY https://github.com/zeux/pugixml.git
+	GIT_TAG v1.14
+	GIT_SHALLOW
+)
+
+# Add libspng library
+FetchContent_Declare(
+	libspng
+	GIT_REPOSITORY https://github.com/randy408/libspng.git
+	GIT_TAG v0.7.4
+	GIT_SHALLOW
+)
+
 # Add test coverage tools (optional but recommended)
 option(ENABLE_COVERAGE "Enable coverage reporting" OFF)
 if(ENABLE_COVERAGE)
@@ -65,19 +81,24 @@ if(ENABLE_COVERAGE)
 	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
 endif()
 
-FetchContent_MakeAvailable(cute nlohmann_json googletest)
+FetchContent_MakeAvailable(cute nlohmann_json googletest pugixml libspng)
 
 # Enable testing
 enable_testing()
 
 # Source code for your game.
-# YANGEP executable
-# Main executable
-add_executable(yangep
-    src/main.cpp
-    src/lib/PNGSprite.cpp
-    src/lib/PNGSpriteDemo.cpp
-    src/lib/SpriteSheetSplitter.cpp
+add_executable(
+	${PROJECT_NAME}
+	src/main.cpp
+	src/lib/DataFile.cpp
+	src/lib/DebugWindow.cpp
+	src/lib/DataFileDebugWindow.cpp
+	src/lib/Utils.cpp
+	src/lib/tsx.cpp
+	src/lib/tmx.cpp
+	src/lib/Sprite.cpp
+	src/lib/SpriteDemo.cpp
+	src/lib/Camera.cpp
 )
 
 # Our source code will be in the `src` folder.
@@ -96,7 +117,60 @@ if(APPLE)
 endif()
 
 # Make the game link against Cute Framework and nlohmann/json.
+<<<<<<< HEAD
 target_link_libraries(yangep cute nlohmann_json::nlohmann_json)
+=======
+target_link_libraries(${PROJECT_NAME} cute nlohmann_json::nlohmann_json pugixml spng_static)
+
+# Test executable
+add_executable(${PROJECT_NAME}_tests
+	tests/main.cpp
+	tests/unit/DataFileTest.cpp
+	tests/unit/DebugWindowTest.cpp
+	tests/unit/UtilsTest.cpp
+	tests/integration/SpriteSystemTest.cpp
+	tests/unit/DataFileTest.h
+	tests/unit/DebugWindowTest.h
+	tests/unit/UtilsTest.h
+	tests/integration/SpriteSystemTest.h
+	tests/fixtures/TestFixture.hpp
+	src/lib/DataFile.cpp
+	src/lib/DebugWindow.cpp
+	src/lib/Utils.cpp
+	src/lib/tsx.cpp
+	src/lib/tmx.cpp
+	src/lib/Sprite.cpp
+	src/lib/SpriteDemo.cpp
+	src/lib/Camera.cpp
+)
+
+# Link test executable with dependencies
+target_link_libraries(${PROJECT_NAME}_tests
+	cute
+	nlohmann_json::nlohmann_json
+	pugixml
+	spng_static
+	gtest
+	gtest_main
+)
+
+# Include directories for tests
+target_include_directories(${PROJECT_NAME}_tests
+	PUBLIC
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/tests>
+)
+
+# Add test to CTest
+add_test(NAME ${PROJECT_NAME}_tests COMMAND ${PROJECT_NAME}_tests)
+
+# Copy test assets
+add_custom_command(TARGET ${PROJECT_NAME}_tests POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy_directory
+	${CMAKE_SOURCE_DIR}/tests/assets
+	$<TARGET_FILE_DIR:${PROJECT_NAME}_tests>/tests/assets
+)
+>>>>>>> origin/level-load-2
 
 # For convenience on Windows, set MSVC debugger's working directory in the build folder.
 # Also ask MSVC to make the game the startup project.

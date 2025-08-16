@@ -33,16 +33,16 @@ public:
 
     // Load a sprite sheet and extract individual frames as PNGs
     bool loadSpriteSheet(const char* path, int frameWidth, int frameHeight, int framesPerDirection);
-    
+
     // Get a specific frame as an in-memory PNG
     ExtractedFrame getFrame(Direction direction, int frameIndex = 0);
-    
+
     // Get all frames for a specific direction
     std::vector<ExtractedFrame> getAllFramesForDirection(Direction direction);
-    
+
     // Check if the extractor is ready
     bool isReady() const;
-    
+
     // Get frame dimensions
     int getFrameWidth() const;
     int getFrameHeight() const;
@@ -55,15 +55,15 @@ private:
     // Original sprite sheet data
     CF_Png originalPng;
     bool loaded;
-    
+
     // Frame configuration
     int frameWidth;
     int frameHeight;
     int framesPerDirection;
-    
+
     // Extracted frames
     std::vector<ExtractedFrame> extractedFrames;
-    
+
     // Private methods
     void extractAllFrames();
     ExtractedFrame extractFrame(Direction direction, int frameIndex);
