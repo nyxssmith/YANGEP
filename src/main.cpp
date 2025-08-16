@@ -1,55 +1,58 @@
 #include <cute.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cute_app.h>
+#include <cute_draw.h>
+#include <cute_input.h>
+#include <cute_math.h>
+#include "lib/PNGSpriteDemo.h"
 #include "lib/DataFile.h"
-#include "lib/SpriteBatchDemo.h"
 
 using namespace Cute;
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
     // Initialize Cute Framework
-    CF_Result result = make_app("YANGEP - Yet Another New Game Engine Project", 0, 0, 0, 640, 480, 0, argv[0]);
-    if (is_error(result)) {
-        printf("Failed to create app\n");
+    CF_Result result = make_app("YANGEP - PNG Sprite Demo", 0, 50, 50, 1280, 720, 0, argv[0]);
+    if (cf_is_error(result)) {
+        printf("Failed to create app: %s\n", result.details ? result.details : "Unknown error");
         return -1;
     }
 
-    // Test DataFile functionality
-    DataFile dataFile;
-    if (dataFile.load("assets/a.json")) {
-        printf("JSON data: %s\n", dataFile.dump(4).c_str());
-    } else {
-        printf("DataFile data: %s\n", dataFile.dump(4).c_str());
-    }
-
-    // Initialize SpriteBatchDemo
-    SpriteBatchDemo spriteBatchDemo;
-    if (!spriteBatchDemo.initialize()) {
-        printf("Failed to initialize SpriteBatchDemo\n");
+    // Create demo
+    PNGSpriteDemo demo;
+    if (!demo.initialize()) {
+        printf("Failed to initialize demo\n");
+        destroy_app();
         return -1;
     }
 
-    printf("Entering main loop...\n");
+    printf("YANGEP started successfully\n");
 
     // Main game loop
     while (app_is_running()) {
+        // Update
+        float dt = 0.016f; // Fixed timestep for now
+        demo.update(dt);
+
+        // Draw
+        app_draw_onto_screen();
+
+        // Clear background
+        cf_draw_push_color(make_color(0.1f, 0.1f, 0.1f, 1.0f));
+        cf_draw_quad_fill(make_aabb(v2(0, 0), 1280, 720), 0.0f);
+        cf_draw_pop_color();
+
+        // Render demo
+        demo.render();
+
+        // Render demo information
+        demo.renderDemoInfo();
+
+        // Update app
         app_update();
-
-        // Clear the screen with dark background
-        draw_push_color(make_color(0.1f, 0.1f, 0.1f, 1.0f));
-        draw_quad_fill(make_aabb(v2(-320, -240), 640, 480), 0.0f);
-        draw_pop_color();
-
-        // Update and render the SpriteBatchDemo
-        float dt = 0.016f; // ~60 FPS for now
-        spriteBatchDemo.update(dt);
-        spriteBatchDemo.render();
-
-        app_draw_onto_screen(true);
     }
 
-    printf("Exited main loop\n");
+    // Cleanup
     destroy_app();
+    printf("YANGEP shutdown complete\n");
+
     return 0;
 }
