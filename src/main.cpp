@@ -22,43 +22,64 @@ int main(int argc, char *argv[])
 	mount_content_directory_as("/assets");
 
 	// read datafile
-	DataFile df("/assets/a.json");
-	// DataFile df("assets/DataFiles/EntityFiles/skeleton.json");
-	printf("DataFile data: %s\n", df.dump(4).c_str());
+	// DataFile df("/assets/a.json");
+	DataFile df("assets/DataFiles/EntityFiles/skeleton.json");
+	// printf("DataFile data: %s\n", df.dump(4).c_str());
 
 	// Create TSX parser
 	tsx levelTxs("/assets/Art/LevelPNGs/magecity.tsx");
 
+	// Print debug information about the TSX file
+	// levelTxs.debugPrint();
+
+	// Get some tile sprites to render
+	CF_Sprite tile_0_0 = levelTxs.getTile(0, 0); // First tile
+	CF_Sprite tile_1_0 = levelTxs.getTile(1, 0); // Second tile in first row
+	CF_Sprite tile_0_1 = levelTxs.getTile(0, 1); // First tile in second row
+	CF_Sprite tile_2_2 = levelTxs.getTile(2, 2); // Third tile in third row
+
 	// Create debug window
 	DebugWindow debugWindow("Debug Info aaaa");
 	DataFileDebugWindow dataFileDebugWindow("DataFile Viewer", df);
-
-	// Create sprite demo
-	SpriteDemo spriteDemo;
-	if (!spriteDemo.initialize())
-	{
-		printf("Failed to initialize sprite demo\n");
-		return -1; // Exit if sprite demo fails to initialize
-	}
 
 	while (app_is_running())
 	{
 		app_update();
 
 		// Render debug windows
-		debugWindow.render();
-		dataFileDebugWindow.render();
-		// Update sprite demo
-		spriteDemo.update(2.116f); // ~60 FPS
+		// debugWindow.render();
+		// dataFileDebugWindow.render();
 
-		// Position text below the triangles (negative Y to go down)
-		v2 text_position = v2(0, 100); // Below the triangles
+		// Render tiles from the TSX tileset
+		// Draw tile at position (-200, -150)
+		cf_draw_push();
+		cf_draw_translate_v2(cf_v2(-200, -150));
+		cf_draw_sprite(&tile_0_0);
+		cf_draw_pop();
+
+		// Draw tile at position (-100, -150)
+		cf_draw_push();
+		cf_draw_translate_v2(cf_v2(-100, -150));
+		cf_draw_sprite(&tile_1_0);
+		cf_draw_pop();
+
+		// Draw tile at position (-200, -50)
+		cf_draw_push();
+		cf_draw_translate_v2(cf_v2(-200, -50));
+		cf_draw_sprite(&tile_0_1);
+		cf_draw_pop();
+
+		// Draw tile at position (-100, -50)
+		cf_draw_push();
+		cf_draw_translate_v2(cf_v2(-100, -50));
+		cf_draw_sprite(&tile_2_2);
+		cf_draw_pop();
+
+		// Position text below the tiles
+		v2 text_position = cf_v2(0, 100);
 
 		// Draw the text
-		draw_text("my girlfriend is so pretty", text_position);
-
-		// Render sprite demo
-		spriteDemo.render();
+		draw_text("TSX Tileset Rendering Demo", text_position);
 
 		app_draw_onto_screen(true);
 	}
