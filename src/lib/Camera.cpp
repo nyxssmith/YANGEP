@@ -541,32 +541,30 @@ void Camera::fitToView(CF_Aabb world_bounds, float padding)
 }
 
 // Debug helpers
-void Camera::drawDebugInfo() const
+void Camera::drawDebugInfo(float x, float y) const
 {
-    // Calculate bottom-left positioning
-    float text_y_base = m_viewport_size.y - 70.0f; // Start from bottom with some padding
-
-    // Draw camera info text
+    // Draw camera info text at specified (x, y)
     char info[256];
     snprintf(info, sizeof(info), "Camera: (%.1f, %.1f) Zoom: %.2f Rot: %.2f°",
              m_position.x, m_position.y, m_zoom, m_rotation * 180.0f / CF_PI);
 
-    draw_text(info, cf_v2(10, text_y_base));
-
+    draw_text(info, cf_v2(x, y));
+    /*
     // Draw target info if following
     if (m_target_ptr || m_has_static_target)
     {
         v2 target = getCurrentTarget();
         snprintf(info, sizeof(info), "Target: (%.1f, %.1f)", target.x, target.y);
-        draw_text(info, cf_v2(10, text_y_base + 20.0f));
+        draw_text(info, cf_v2(x, y + 20.0f));
     }
 
     // Draw shake info if shaking
     if (m_shake_intensity > 0.0f)
     {
         snprintf(info, sizeof(info), "Shake: %.2f (%.2fs)", m_shake_intensity, m_shake_duration);
-        draw_text(info, cf_v2(10, text_y_base + 40.0f));
+        draw_text(info, cf_v2(x, y + 40.0f));
     }
+    */
 }
 
 void Camera::drawViewBounds() const

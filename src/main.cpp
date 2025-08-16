@@ -62,6 +62,13 @@ int main(int argc, char *argv[])
 	camera.setFollowSpeed(2.0f);				   // Smooth following
 	camera.setFollowDeadzone(cf_v2(50.0f, 50.0f)); // Deadzone around target
 
+	// get height and width of window for where to draw debug info
+	int window_width = cf_app_get_width();
+	int window_height = cf_app_get_height();
+	float bottom_left_x = -1.0f * (window_width / 2.0f);
+	float bottom_left_y = -1.0f * (window_height / 2.0f);
+	// printf("Window size: %dx%d, bottom-left at (%.1f, %.1f)\n", window_width, window_height, bottom_left_x, bottom_left_y);
+
 	while (app_is_running())
 	{
 		app_update();
@@ -130,7 +137,7 @@ int main(int argc, char *argv[])
 		camera.restore();
 
 		// Draw camera debug info
-		camera.drawDebugInfo();
+		camera.drawDebugInfo(bottom_left_x, bottom_left_y + 20.0f);
 
 		app_draw_onto_screen(true);
 	}

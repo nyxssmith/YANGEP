@@ -108,8 +108,8 @@ public:
     void fitToView(CF_Aabb world_bounds, float padding = 0.1f); // Adjust zoom to fit bounds
 
     // Debug helpers
-    void drawDebugInfo() const;  // Draw camera bounds and info
-    void drawViewBounds() const; // Draw world-space view bounds
+    void drawDebugInfo(float x, float y) const; // Draw camera bounds and info
+    void drawViewBounds() const;                // Draw world-space view bounds
 
 private:
     // Core camera state
