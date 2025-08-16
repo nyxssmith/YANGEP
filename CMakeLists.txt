@@ -72,13 +72,12 @@ enable_testing()
 
 # Source code for your game.
 # YANGEP executable
+# Main executable
 add_executable(yangep
     src/main.cpp
-    src/lib/SpriteBatch.cpp
-    src/lib/SpriteBatchDemo.cpp
-    src/lib/Sprite.cpp
-    src/lib/DataFile.cpp
-    src/lib/Utils.cpp
+    src/lib/PNGSprite.cpp
+    src/lib/PNGSpriteDemo.cpp
+    src/lib/SpriteSheetSplitter.cpp
 )
 
 # Our source code will be in the `src` folder.
@@ -99,69 +98,27 @@ endif()
 # Make the game link against Cute Framework and nlohmann/json.
 target_link_libraries(yangep cute nlohmann_json::nlohmann_json)
 
-# Test executable
-add_executable(
-    yangep_tests
-    tests/main.cpp
-    tests/unit/DataFileTest.cpp
-    tests/unit/UtilsTest.cpp
-    tests/unit/SpriteTest.cpp
-    tests/integration/SpriteSystemTest.cpp
-    tests/integration/AssetLoadingTest.cpp
-    tests/unit/SpriteBatchTest.cpp
-    src/lib/DataFile.cpp
-    src/lib/Utils.cpp
-    src/lib/Sprite.cpp
-    src/lib/SpriteBatch.cpp
-    src/lib/SpriteBatchDemo.cpp
-)
-
-# Link test executable with dependencies
-target_link_libraries(yangep_tests
-    cute
-    nlohmann_json::nlohmann_json
-    gtest
-    gtest_main
-)
-
-# Include directories for tests
-target_include_directories(yangep_tests
-    PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/tests>
-)
-
-# Add test to CTest
-add_test(NAME yangep_tests COMMAND yangep_tests)
-
-# Asset loading test executable (separate from main tests)
-add_executable(yangep_asset_loading_test
-    tests/integration/test_asset_loading.cpp
-    src/lib/Sprite.cpp
-)
-
-# Link asset loading test with dependencies
-target_link_libraries(yangep_asset_loading_test
-    cute
-    nlohmann_json::nlohmann_json
-)
-
-# Include directories for asset loading test
-target_include_directories(yangep_asset_loading_test
-    PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
-)
-
-# Copy test assets
-add_custom_command(TARGET yangep_tests POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_SOURCE_DIR}/tests/assets
-    $<TARGET_FILE_DIR:yangep_tests>/tests/assets
-)
-
 # For convenience on Windows, set MSVC debugger's working directory in the build folder.
 # Also ask MSVC to make the game the startup project.
 if (MSVC)
     set_property(TARGET yangep PROPERTY VS_DEBUGGER_WORKING_DIRECTORY $<TARGET_FILE_DIR:yangep>)
     set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT yangep)
 endif()
+
+# Runtime test executable (simple test to show CF_ASSERT failure)
+add_executable(yangep_runtime_test
+    src/lib/PNGSpriteRuntimeTest.cpp
+)
+
+target_link_libraries(yangep_runtime_test cute)
+
+# Test executable
+add_executable(yangep_tests
+    tests/main.cpp
+    tests/unit/PNGSpriteTest.cpp
+    tests/integration/SpriteSystemIntegrationTest.cpp
+    src/lib/PNGSprite.cpp
+    src/lib/SpriteSheetSplitter.cpp
+)
+
+target_link_libraries(yangep_tests gtest gtest_main cute)
