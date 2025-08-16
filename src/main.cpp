@@ -38,6 +38,12 @@ int main(int argc, char *argv[])
 	CF_Sprite tile_0_1 = levelTxs.getTile(0, 1); // First tile in second row
 	CF_Sprite tile_2_2 = levelTxs.getTile(2, 2); // Third tile in third row
 
+	// Get tile dimensions for proper spacing
+	int tile_width = levelTxs.getTileWidth();
+	int tile_height = levelTxs.getTileHeight();
+
+	printf("Using tile dimensions: %dx%d pixels\n", tile_width, tile_height);
+
 	// Create debug window
 	DebugWindow debugWindow("Debug Info aaaa");
 	DataFileDebugWindow dataFileDebugWindow("DataFile Viewer", df);
@@ -50,28 +56,32 @@ int main(int argc, char *argv[])
 		// debugWindow.render();
 		// dataFileDebugWindow.render();
 
-		// Render tiles from the TSX tileset
-		// Draw tile at position (-200, -150)
+		// Render tiles from the TSX tileset with proper spacing
+		// Define starting position for the tile grid
+		int start_x = -200;
+		int start_y = -150;
+
+		// Draw tile (0,0) at starting position
 		cf_draw_push();
-		cf_draw_translate_v2(cf_v2(-200, -150));
+		cf_draw_translate_v2(cf_v2(start_x, start_y));
 		cf_draw_sprite(&tile_0_0);
 		cf_draw_pop();
 
-		// Draw tile at position (-100, -150)
+		// Draw tile (1,0) - one tile width to the right
 		cf_draw_push();
-		cf_draw_translate_v2(cf_v2(-100, -150));
+		cf_draw_translate_v2(cf_v2(start_x + tile_width, start_y));
 		cf_draw_sprite(&tile_1_0);
 		cf_draw_pop();
 
-		// Draw tile at position (-200, -50)
+		// Draw tile (0,1) - one tile height below
 		cf_draw_push();
-		cf_draw_translate_v2(cf_v2(-200, -50));
+		cf_draw_translate_v2(cf_v2(start_x, start_y + tile_height));
 		cf_draw_sprite(&tile_0_1);
 		cf_draw_pop();
 
-		// Draw tile at position (-100, -50)
+		// Draw tile (2,2) - two tile widths right and two tile heights down
 		cf_draw_push();
-		cf_draw_translate_v2(cf_v2(-100, -50));
+		cf_draw_translate_v2(cf_v2(start_x + 2 * tile_width, start_y + 2 * tile_height));
 		cf_draw_sprite(&tile_2_2);
 		cf_draw_pop();
 

@@ -9,6 +9,9 @@ class tsx : public pugi::xml_document
 private:
     std::string path;
 
+    // Helper function to crop a tile from PNG data
+    CF_Sprite cropTileFromPNG(const std::string &image_path, int tile_x, int tile_y, int tile_width, int tile_height) const;
+
 public:
     tsx() = default;
     tsx(const std::string &path);
@@ -20,6 +23,9 @@ public:
     void debugPrint() const;
 
     // Get a tile sprite by tile coordinates (x, y in tile units)
-    // Note: Currently returns full tileset image, tile cropping to be implemented
     CF_Sprite getTile(int tile_x, int tile_y) const;
+
+    // Get tile dimensions
+    int getTileWidth() const;
+    int getTileHeight() const;
 };
