@@ -31,3 +31,7 @@ minor_version: build
 major_version: build
 	@echo "Saving new major version..."
 	./scripts/version.sh major
+
+update_assests_from_debug_build:
+	@echo "Updating assets from debug build..."
+	./scripts/update_assets_from_debug_build.sh

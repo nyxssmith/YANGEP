@@ -51,18 +51,18 @@ private:
     CF_Mesh quadMesh;               // Simple quad mesh for rendering
     CF_Material spriteMaterial;     // Material with sprite sheet texture
     CF_Shader uvClippingShader;     // Custom shader for frame clipping
-    
+
     // Frame UV data
     struct FrameUV {
         float u1, v1, u2, v2;  // UV coordinates for frame
     };
     std::map<std::string, FrameUV> frameUVs;  // Animation name -> UV coords
-    
+
     // Current state
     std::string currentAnimation;
     Direction currentDirection;
     int currentFrame;
-    
+
 public:
     bool loadAnimations(const char* idle_path, const char* walkcycle_path);
     void render();  // Render current frame with UV clipping
