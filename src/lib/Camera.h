@@ -33,7 +33,7 @@ public:
     void update(float dt);
     void apply();
     void restore();
-
+    void drawDebugGrid();
     // Position control
     void setPosition(v2 position);
     void setPosition(float x, float y);

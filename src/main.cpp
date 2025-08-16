@@ -118,48 +118,16 @@ int main(int argc, char *argv[])
 
 		// Apply camera transformation for world-space rendering
 		camera.apply();
+		// draw debug grid
+		camera.drawDebugGrid();
 
-		// Draw debug objects in world space
-		// Main reference square at origin
-		draw_quad(CF_Aabb{cf_v2(-50.0f, -50.0f), cf_v2(50.0f, 50.0f)}, 2.0f, 0.0f);
-
-		// Grid of smaller squares to show camera movement
-		for (int x = -5; x <= 5; x++)
-		{
-			for (int y = -5; y <= 5; y++)
-			{
-				if (x == 0 && y == 0)
-					continue; // Skip the center square
-
-				float square_x = x * 150.0f;
-				float square_y = y * 150.0f;
-				CF_Color color = cf_color_blue();
-
-				// Make some squares different colors for reference
-				if (x == 0 || y == 0)
-					color = cf_color_green(); // Axis squares
-				if (std::abs(x) == 1 && std::abs(y) == 1)
-					color = cf_color_yellow(); // Corner squares
-
-				draw_quad(CF_Aabb{cf_v2(square_x - 25.0f, square_y - 25.0f),
-								  cf_v2(square_x + 25.0f, square_y + 25.0f)},
-						  2.0f, 0.0f);
-			}
-		}
-
-		// Draw coordinate axes
-		// X-axis (horizontal red line)
-		draw_line(cf_v2(-4000.0f, 0.0f), cf_v2(4000.0f, 0.0f), 3.0f);
-		// Y-axis (vertical green line)
-		draw_line(cf_v2(0.0f, -4000.0f), cf_v2(0.0f, 4000.0f), 3.0f);
+		// WORLD space drawing here
+		// put text at 0,0
+		v2 text_position1 = cf_v2(-0, 0);
+		draw_text("TMX Level Map (Camera Controlled)", text_position1);
 
 		// Restore camera transformation
 		camera.restore();
-
-		// Draw UI elements (not affected by camera)
-		// Position text at the bottom in screen space
-		v2 text_position1 = cf_v2(-200, 250);
-		draw_text("TMX Level Map (Camera Controlled)", text_position1);
 
 		// Draw camera debug info
 		camera.drawDebugInfo();

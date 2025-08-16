@@ -74,6 +74,44 @@ void Camera::update(float dt)
     }
 }
 
+void Camera::drawDebugGrid()
+{
+
+    // Draw debug objects in world space
+    // Main reference square at origin
+    draw_quad(CF_Aabb{cf_v2(-50.0f, -50.0f), cf_v2(50.0f, 50.0f)}, 2.0f, 0.0f);
+
+    // Grid of smaller squares to show camera movement
+    for (int x = -5; x <= 5; x++)
+    {
+        for (int y = -5; y <= 5; y++)
+        {
+            if (x == 0 && y == 0)
+                continue; // Skip the center square
+
+            float square_x = x * 150.0f;
+            float square_y = y * 150.0f;
+            CF_Color color = cf_color_blue();
+
+            // Make some squares different colors for reference
+            if (x == 0 || y == 0)
+                color = cf_color_green(); // Axis squares
+            if (std::abs(x) == 1 && std::abs(y) == 1)
+                color = cf_color_yellow(); // Corner squares
+
+            draw_quad(CF_Aabb{cf_v2(square_x - 25.0f, square_y - 25.0f),
+                              cf_v2(square_x + 25.0f, square_y + 25.0f)},
+                      2.0f, 0.0f);
+        }
+    }
+
+    // Draw coordinate axes
+    // X-axis (horizontal red line)
+    draw_line(cf_v2(-4000.0f, 0.0f), cf_v2(4000.0f, 0.0f), 3.0f);
+    // Y-axis (vertical green line)
+    draw_line(cf_v2(0.0f, -4000.0f), cf_v2(0.0f, 4000.0f), 3.0f);
+}
+
 // Apply camera transformation to Cute Framework
 void Camera::apply()
 {
@@ -505,26 +543,29 @@ void Camera::fitToView(CF_Aabb world_bounds, float padding)
 // Debug helpers
 void Camera::drawDebugInfo() const
 {
+    // Calculate bottom-left positioning
+    float text_y_base = m_viewport_size.y - 70.0f; // Start from bottom with some padding
+
     // Draw camera info text
     char info[256];
     snprintf(info, sizeof(info), "Camera: (%.1f, %.1f) Zoom: %.2f Rot: %.2f°",
              m_position.x, m_position.y, m_zoom, m_rotation * 180.0f / CF_PI);
 
-    draw_text(info, cf_v2(10, 10));
+    draw_text(info, cf_v2(10, text_y_base));
 
     // Draw target info if following
     if (m_target_ptr || m_has_static_target)
     {
         v2 target = getCurrentTarget();
         snprintf(info, sizeof(info), "Target: (%.1f, %.1f)", target.x, target.y);
-        draw_text(info, cf_v2(10, 30));
+        draw_text(info, cf_v2(10, text_y_base + 20.0f));
     }
 
     // Draw shake info if shaking
     if (m_shake_intensity > 0.0f)
     {
         snprintf(info, sizeof(info), "Shake: %.2f (%.2fs)", m_shake_intensity, m_shake_duration);
-        draw_text(info, cf_v2(10, 50));
+        draw_text(info, cf_v2(10, text_y_base + 40.0f));
     }
 }
 
