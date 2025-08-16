@@ -6,6 +6,7 @@
 #include "lib/Utils.h"
 #include "lib/DataFile.h"
 #include "lib/SpriteDemo.h"
+#include "lib/tsx.h"
 using namespace Cute;
 
 int main(int argc, char *argv[])
@@ -22,7 +23,11 @@ int main(int argc, char *argv[])
 
 	// read datafile
 	DataFile df("/assets/a.json");
+	// DataFile df("assets/DataFiles/EntityFiles/skeleton.json");
 	printf("DataFile data: %s\n", df.dump(4).c_str());
+
+	// Create TSX parser
+	tsx levelTxs("/assets/Art/LevelPNGs/magecity.tsx");
 
 	// Create debug window
 	DebugWindow debugWindow("Debug Info aaaa");
