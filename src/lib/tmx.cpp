@@ -379,9 +379,9 @@ void tmx::renderLayer(int layer_index, float world_x, float world_y) const
             CF_Sprite sprite = tileset->getSpriteForGID(gid);
 
             // Calculate world position for this tile
-            // Coordinate system: (0,0) is top-left, +X goes right, +Y goes down
+            // Convert from TMX coordinate system (0,0 top-left, Y down) to rendering system (Y up)
             float tile_world_x = world_x + (x * tile_width);
-            float tile_world_y = world_y + (y * tile_height);
+            float tile_world_y = world_y + ((layer->height - 1 - y) * tile_height);
 
             // Debug: Print first few tile positions to verify coordinate system
             if (x < 3 && y < 3)
@@ -445,17 +445,25 @@ void tmx::renderLayer(int layer_index, const Camera &camera, float world_x, floa
     //        layer_index, layer->name.c_str(), layer->width, layer->height, world_x, world_y);
 
     // Calculate which tiles are potentially visible
+    // For X: standard left-to-right calculation
     int start_x = std::max(0, (int)((view_bounds.min.x - world_x) / tile_width) - 1);
     int end_x = std::min(layer->width - 1, (int)((view_bounds.max.x - world_x) / tile_width) + 1);
-    int start_y = std::max(0, (int)((view_bounds.min.y - world_y) / tile_height) - 1);
-    int end_y = std::min(layer->height - 1, (int)((view_bounds.max.y - world_y) / tile_height) + 1);
+
+    // For Y: need to account for coordinate system flip (TMX Y-down vs Rendering Y-up)
+    // Convert view bounds from world coordinates (Y up) to TMX layer coordinates (Y down)
+    float layer_bottom_world = world_y;                              // Bottom of layer in world coordinates
+    float layer_top_world = world_y + (layer->height * tile_height); // Top of layer in world coordinates
+
+    // Map view bounds to TMX layer tile coordinates (flipped Y)
+    int start_y_tmx = std::max(0, (int)((layer_top_world - view_bounds.max.y) / tile_height) - 1);
+    int end_y_tmx = std::min(layer->height - 1, (int)((layer_top_world - view_bounds.min.y) / tile_height) + 1);
 
     // printf("  Culling to tiles: x[%d-%d], y[%d-%d] (camera bounds: %.1f,%.1f to %.1f,%.1f)\n",
-    //        start_x, end_x, start_y, end_y,
+    //        start_x, end_x, start_y_tmx, end_y_tmx,
     //        view_bounds.min.x, view_bounds.min.y, view_bounds.max.x, view_bounds.max.y);
 
     int tiles_rendered = 0;
-    for (int y = start_y; y <= end_y; y++)
+    for (int y = start_y_tmx; y <= end_y_tmx; y++)
     {
         for (int x = start_x; x <= end_x; x++)
         {
@@ -470,9 +478,9 @@ void tmx::renderLayer(int layer_index, const Camera &camera, float world_x, floa
             CF_Sprite sprite = tileset->getSpriteForGID(gid);
 
             // Calculate world position for this tile
-            // Coordinate system: (0,0) is top-left, +X goes right, +Y goes down
+            // Convert from TMX coordinate system (0,0 top-left, Y down) to rendering system (Y up)
             float tile_world_x = world_x + (x * tile_width);
-            float tile_world_y = world_y + (y * tile_height);
+            float tile_world_y = world_y + ((layer->height - 1 - y) * tile_height);
 
             // Create tile bounds for more precise visibility check
             CF_Aabb tile_bounds = make_aabb(
@@ -541,9 +549,9 @@ void tmx::clearAllSpriteCaches()
 
 void tmx::mapToWorldCoords(int map_x, int map_y, float world_x, float world_y, float &tile_world_x, float &tile_world_y) const
 {
-    // Coordinate system: (0,0) is top-left, +X goes right, +Y goes down
+    // Convert from TMX coordinate system (0,0 top-left, Y down) to rendering system (Y up)
     tile_world_x = world_x + (map_x * tile_width);
-    tile_world_y = world_y + (map_y * tile_height);
+    tile_world_y = world_y + ((map_height - 1 - map_y) * tile_height);
 }
 
 bool tmx::worldToMapCoords(float world_x, float world_y, float base_world_x, float base_world_y, int &map_x, int &map_y) const
@@ -553,7 +561,10 @@ bool tmx::worldToMapCoords(float world_x, float world_y, float base_world_x, flo
     float relative_y = world_y - base_world_y;
 
     map_x = static_cast<int>(relative_x / tile_width);
-    map_y = static_cast<int>(relative_y / tile_height);
+
+    // Convert from rendering system (Y up) back to TMX coordinate system (Y down)
+    int rendered_map_y = static_cast<int>(relative_y / tile_height);
+    map_y = map_height - 1 - rendered_map_y;
 
     // Check if the coordinates are within the map bounds
     return (map_x >= 0 && map_x < map_width && map_y >= 0 && map_y < map_height);
