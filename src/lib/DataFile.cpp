@@ -2,18 +2,18 @@
 #include <fstream>
 #include <cute.h>
 
-// Constructor with filename
-DataFile::DataFile(const std::string &filename) : filename(filename)
+// Constructor with path
+DataFile::DataFile(const std::string &path) : path(path)
 {
-    load(filename);
+    load(path);
 }
 
 // Load JSON from file
-bool DataFile::load(const std::string &filename)
+bool DataFile::load(const std::string &path)
 {
     // Read the entire file using Cute Framework's VFS
     size_t file_size = 0;
-    void *file_data = cf_fs_read_entire_file_to_memory(filename.c_str(), &file_size);
+    void *file_data = cf_fs_read_entire_file_to_memory(path.c_str(), &file_size);
 
     if (file_data == nullptr || file_size == 0)
         return false;
@@ -24,8 +24,8 @@ bool DataFile::load(const std::string &filename)
         std::string json_string(static_cast<char *>(file_data), file_size);
         nlohmann::json::operator=(nlohmann::json::parse(json_string));
 
-        // Store the filename after successful loading
-        this->filename = filename;
+        // Store the path after successful loading
+        this->path = path;
     }
     catch (const nlohmann::json::parse_error &e)
     {
@@ -45,16 +45,16 @@ bool DataFile::load(const std::string &filename)
     return true;
 }
 
-// Load JSON from stored filename
+// Load JSON from stored path
 bool DataFile::load()
 {
-    if (filename.empty())
+    if (path.empty())
         return false;
-    return load(filename);
+    return load(path);
 }
 
 // Save JSON to file
-bool DataFile::save(const std::string &filename) const
+bool DataFile::save(const std::string &path) const
 {
     try
     {
@@ -62,8 +62,8 @@ bool DataFile::save(const std::string &filename) const
         std::string json_string = this->dump(4); // Pretty print with 4 spaces
 
         // For writing files, we need to use a relative path from the write directory
-        // If the filename starts with a virtual mount point like "/assets/", we need to strip it
-        std::string write_path = filename;
+        // If the path starts with a virtual mount point like "/assets/", we need to strip it
+        std::string write_path = path;
         if (write_path.starts_with("/assets/"))
         {
             write_path = write_path.substr(8); // Remove "/assets/" prefix
@@ -74,14 +74,14 @@ bool DataFile::save(const std::string &filename) const
 
         if (!Cute::is_error(result))
         {
-            // Update the stored filename after successful save
-            const_cast<DataFile *>(this)->filename = filename;
+            // Update the stored path after successful save
+            const_cast<DataFile *>(this)->path = path;
             return true;
         }
         else
         {
             // Print error information for debugging
-            printf("DataFile::save() failed for file '%s' (write path: '%s'). Error occurred.\n", filename.c_str(), write_path.c_str());
+            printf("DataFile::save() failed for file '%s' (write path: '%s'). Error occurred.\n", path.c_str(), write_path.c_str());
             printf("Make sure the write directory is set with fs_set_write_directory() before attempting to save.\n");
         }
 
@@ -89,27 +89,27 @@ bool DataFile::save(const std::string &filename) const
     }
     catch (...)
     {
-        printf("DataFile::save() caught exception for file '%s'\n", filename.c_str());
+        printf("DataFile::save() caught exception for file '%s'\n", path.c_str());
         return false;
     }
 }
 
-// Save JSON to stored filename
+// Save JSON to stored path
 bool DataFile::save() const
 {
-    if (filename.empty())
+    if (path.empty())
         return false;
-    return save(filename);
+    return save(path);
 }
 
-// Get filename
-const std::string &DataFile::getFilename() const
+// Get path
+const std::string &DataFile::getpath() const
 {
-    return filename;
+    return path;
 }
 
-// Set filename
-void DataFile::setFilename(const std::string &filename)
+// Set path
+void DataFile::setpath(const std::string &path)
 {
-    this->filename = filename;
+    this->path = path;
 }
