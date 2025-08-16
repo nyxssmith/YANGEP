@@ -11,6 +11,7 @@
 // Forward declarations
 struct TMXTileset;
 struct TMXLayer;
+class Camera;
 
 class tmx : public pugi::xml_document
 {
@@ -79,8 +80,15 @@ public:
     void renderLayer(int layer_index, float world_x, float world_y) const;
     void renderLayer(const std::string &layer_name, float world_x, float world_y) const;
 
+    // Render entire layer with camera-aware culling and positioning
+    void renderLayer(int layer_index, const class Camera &camera, float world_x = 0.0f, float world_y = 0.0f) const;
+    void renderLayer(const std::string &layer_name, const class Camera &camera, float world_x = 0.0f, float world_y = 0.0f) const;
+
     // Render all layers at given position
     void renderAllLayers(float world_x, float world_y) const;
+
+    // Render all layers with camera-aware culling and positioning
+    void renderAllLayers(const class Camera &camera, float world_x = 0.0f, float world_y = 0.0f) const;
 
     // Cache management
     void clearAllSpriteCaches();

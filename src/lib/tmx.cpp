@@ -1,4 +1,5 @@
 #include "tmx.h"
+#include "Camera.h"
 #include <cute.h>
 #include <functional>
 #include <sstream>
@@ -429,6 +430,103 @@ void tmx::renderAllLayers(float world_x, float world_y) const
     }
 }
 
+void tmx::renderLayer(int layer_index, const Camera &camera, float world_x, float world_y) const
+{
+    auto layer = getLayer(layer_index);
+    if (!layer || !layer->visible)
+    {
+        return;
+    }
+
+    // Get camera view bounds for culling
+    CF_Aabb view_bounds = camera.getViewBounds();
+
+    // printf("Rendering layer %d: '%s' with %dx%d tiles at world position (%.1f, %.1f) with camera culling\n",
+    //        layer_index, layer->name.c_str(), layer->width, layer->height, world_x, world_y);
+
+    // Calculate which tiles are potentially visible
+    int start_x = std::max(0, (int)((view_bounds.min.x - world_x) / tile_width) - 1);
+    int end_x = std::min(layer->width - 1, (int)((view_bounds.max.x - world_x) / tile_width) + 1);
+    int start_y = std::max(0, (int)((view_bounds.min.y - world_y) / tile_height) - 1);
+    int end_y = std::min(layer->height - 1, (int)((view_bounds.max.y - world_y) / tile_height) + 1);
+
+    // printf("  Culling to tiles: x[%d-%d], y[%d-%d] (camera bounds: %.1f,%.1f to %.1f,%.1f)\n",
+    //        start_x, end_x, start_y, end_y,
+    //        view_bounds.min.x, view_bounds.min.y, view_bounds.max.x, view_bounds.max.y);
+
+    int tiles_rendered = 0;
+    for (int y = start_y; y <= end_y; y++)
+    {
+        for (int x = start_x; x <= end_x; x++)
+        {
+            int gid = layer->getTileGID(x, y);
+            if (gid == 0)
+                continue; // Skip empty tiles
+
+            auto tileset = findTilesetForGID(gid);
+            if (!tileset)
+                continue;
+            // printf("Found tileset '%s' for GID %d\n", tileset->name.c_str(), gid);
+            CF_Sprite sprite = tileset->getSpriteForGID(gid);
+
+            // Calculate world position for this tile
+            // Coordinate system: (0,0) is top-left, +X goes right, +Y goes down
+            float tile_world_x = world_x + (x * tile_width);
+            float tile_world_y = world_y + (y * tile_height);
+
+            // Create tile bounds for more precise visibility check
+            CF_Aabb tile_bounds = make_aabb(
+                cf_v2(tile_world_x, tile_world_y),
+                cf_v2(tile_world_x + tile_width, tile_world_y + tile_height));
+
+            // Check if this specific tile is visible
+            if (!camera.isVisible(tile_bounds))
+                continue;
+
+            // Draw the sprite at the tile position
+            cf_draw_push();
+            cf_draw_translate_v2(cf_v2(tile_world_x, tile_world_y));
+            if (layer->opacity < 1.0f)
+            {
+                // TODO: Apply opacity if needed
+            }
+            cf_draw_sprite(&sprite);
+            cf_draw_pop();
+
+            tiles_rendered++;
+        }
+    }
+
+    // printf("  Rendered %d tiles (culled %d tiles)\n", tiles_rendered, layer->width * layer->height - tiles_rendered);
+}
+
+void tmx::renderLayer(const std::string &layer_name, const Camera &camera, float world_x, float world_y) const
+{
+    auto layer = getLayer(layer_name);
+    if (!layer)
+    {
+        return;
+    }
+
+    // Find layer index and use the index-based render function
+    for (size_t i = 0; i < layers.size(); i++)
+    {
+        if (layers[i] == layer)
+        {
+            renderLayer(static_cast<int>(i), camera, world_x, world_y);
+            return;
+        }
+    }
+}
+
+void tmx::renderAllLayers(const Camera &camera, float world_x, float world_y) const
+{
+    for (int i = 0; i < static_cast<int>(layers.size()); i++)
+    {
+        renderLayer(i, camera, world_x, world_y);
+    }
+}
+
 void tmx::clearAllSpriteCaches()
 {
     printf("Clearing all sprite caches for TMX map '%s'\n", path.c_str());
@@ -486,16 +584,15 @@ bool TMXTileset::getLocalTileCoords(int gid, int &tile_x, int &tile_y) const
     // Calculate tile coordinates based on tileset layout
     // This assumes a standard grid layout
     int tileset_width = tsx_data->getTileWidth();
+    int source_width = tsx_data->getSourceWidth();
     if (tileset_width <= 0)
         return false;
 
-    // For now, assume a simple row-based layout
-    // In a real implementation, you'd need to know the tileset image dimensions
-    int tiles_per_row = 32; // This should be calculated from the tileset image width
+    int tiles_per_row = source_width / tileset_width;
 
     tile_x = local_id % tiles_per_row;
     tile_y = local_id / tiles_per_row;
-
+    printf("Local tile coords for GID %d: (%d, %d)\n", gid, tile_x, tile_y);
     return true;
 }
 
@@ -515,6 +612,7 @@ CF_Sprite TMXTileset::getSpriteForGID(int gid) const
     }
 
     // Not in cache, need to create the sprite
+    printf("Creating sprite for GID %d\n", gid);
     int tile_x, tile_y;
     if (!getLocalTileCoords(gid, tile_x, tile_y))
     {
