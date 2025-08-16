@@ -310,3 +310,157 @@ int tsx::getTileHeight() const
     pugi::xml_node root = document_element();
     return root.attribute("tileheight").as_int(32);
 }
+
+int tsx::getSourceWidth() const
+{
+    if (empty())
+    {
+        return 0; // Default when no document is loaded
+    }
+
+    // Find the image node
+    pugi::xml_node root = document_element();
+    pugi::xml_node image_node = root.child("image");
+    if (!image_node)
+    {
+        return 0; // No image node found
+    }
+
+    // Get image source path
+    std::string image_source = image_node.attribute("source").value();
+    if (image_source.empty())
+    {
+        return 0; // No image source found
+    }
+
+    // Construct full path to image (relative to TSX file location)
+    std::string image_path;
+    size_t last_slash = path.find_last_of("/\\");
+    if (last_slash != std::string::npos)
+    {
+        image_path = path.substr(0, last_slash + 1) + image_source;
+    }
+    else
+    {
+        image_path = image_source;
+    }
+
+    // Read the PNG file and get dimensions using libspng
+    size_t file_size = 0;
+    void *file_data = cf_fs_read_entire_file_to_memory(image_path.c_str(), &file_size);
+
+    if (file_data == nullptr)
+    {
+        return 0; // Failed to read file
+    }
+
+    // Initialize libspng context
+    spng_ctx *ctx = spng_ctx_new(0);
+    if (ctx == nullptr)
+    {
+        cf_free(file_data);
+        return 0; // Failed to create context
+    }
+
+    // Set PNG data
+    int ret = spng_set_png_buffer(ctx, file_data, file_size);
+    if (ret != 0)
+    {
+        spng_ctx_free(ctx);
+        cf_free(file_data);
+        return 0; // Failed to set PNG buffer
+    }
+
+    // Get image header
+    struct spng_ihdr ihdr;
+    ret = spng_get_ihdr(ctx, &ihdr);
+    if (ret != 0)
+    {
+        spng_ctx_free(ctx);
+        cf_free(file_data);
+        return 0; // Failed to get header
+    }
+
+    // Clean up resources
+    spng_ctx_free(ctx);
+    cf_free(file_data);
+
+    return static_cast<int>(ihdr.width);
+}
+
+int tsx::getSourceHeight() const
+{
+    if (empty())
+    {
+        return 0; // Default when no document is loaded
+    }
+
+    // Find the image node
+    pugi::xml_node root = document_element();
+    pugi::xml_node image_node = root.child("image");
+    if (!image_node)
+    {
+        return 0; // No image node found
+    }
+
+    // Get image source path
+    std::string image_source = image_node.attribute("source").value();
+    if (image_source.empty())
+    {
+        return 0; // No image source found
+    }
+
+    // Construct full path to image (relative to TSX file location)
+    std::string image_path;
+    size_t last_slash = path.find_last_of("/\\");
+    if (last_slash != std::string::npos)
+    {
+        image_path = path.substr(0, last_slash + 1) + image_source;
+    }
+    else
+    {
+        image_path = image_source;
+    }
+
+    // Read the PNG file and get dimensions using libspng
+    size_t file_size = 0;
+    void *file_data = cf_fs_read_entire_file_to_memory(image_path.c_str(), &file_size);
+
+    if (file_data == nullptr)
+    {
+        return 0; // Failed to read file
+    }
+
+    // Initialize libspng context
+    spng_ctx *ctx = spng_ctx_new(0);
+    if (ctx == nullptr)
+    {
+        cf_free(file_data);
+        return 0; // Failed to create context
+    }
+
+    // Set PNG data
+    int ret = spng_set_png_buffer(ctx, file_data, file_size);
+    if (ret != 0)
+    {
+        spng_ctx_free(ctx);
+        cf_free(file_data);
+        return 0; // Failed to set PNG buffer
+    }
+
+    // Get image header
+    struct spng_ihdr ihdr;
+    ret = spng_get_ihdr(ctx, &ihdr);
+    if (ret != 0)
+    {
+        spng_ctx_free(ctx);
+        cf_free(file_data);
+        return 0; // Failed to get header
+    }
+
+    // Clean up resources
+    spng_ctx_free(ctx);
+    cf_free(file_data);
+
+    return static_cast<int>(ihdr.height);
+}

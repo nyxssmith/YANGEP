@@ -133,12 +133,16 @@ int main(int argc, char *argv[])
 		v2 text_position1 = cf_v2(-0, 0);
 		draw_text("TMX Level Map (Camera Controlled)", text_position1);
 
+		// Render the TMX layer with camera-aware culling and positioning
+		// The map will be positioned at world coordinates (0, 0)
+		levelMap.renderLayer(0, camera, 0.0f, 0.0f);
+		// camera.drawViewBounds();
+
 		// Restore camera transformation
 		camera.restore();
 
 		// Draw camera debug info
 		camera.drawDebugInfo(bottom_left_x, bottom_left_y + 20.0f);
-
 		app_draw_onto_screen(true);
 	}
 
