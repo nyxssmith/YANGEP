@@ -360,6 +360,9 @@ void tmx::renderLayer(int layer_index, float world_x, float world_y) const
         return;
     }
 
+    printf("Rendering layer %d: '%s' with %dx%d tiles at world position (%.1f, %.1f)\n",
+           layer_index, layer->name.c_str(), layer->width, layer->height, world_x, world_y);
+
     for (int y = 0; y < layer->height; y++)
     {
         for (int x = 0; x < layer->width; x++)
@@ -375,8 +378,16 @@ void tmx::renderLayer(int layer_index, float world_x, float world_y) const
             CF_Sprite sprite = tileset->getSpriteForGID(gid);
 
             // Calculate world position for this tile
+            // Coordinate system: (0,0) is top-left, +X goes right, +Y goes down
             float tile_world_x = world_x + (x * tile_width);
             float tile_world_y = world_y + (y * tile_height);
+
+            // Debug: Print first few tile positions to verify coordinate system
+            if (x < 3 && y < 3)
+            {
+                printf("  Tile[%d][%d] GID=%d at world position (%.1f, %.1f)\n",
+                       x, y, gid, tile_world_x, tile_world_y);
+            }
 
             // Draw the sprite at the tile position
             cf_draw_push();
@@ -430,6 +441,26 @@ void tmx::clearAllSpriteCaches()
     }
 }
 
+void tmx::mapToWorldCoords(int map_x, int map_y, float world_x, float world_y, float &tile_world_x, float &tile_world_y) const
+{
+    // Coordinate system: (0,0) is top-left, +X goes right, +Y goes down
+    tile_world_x = world_x + (map_x * tile_width);
+    tile_world_y = world_y + (map_y * tile_height);
+}
+
+bool tmx::worldToMapCoords(float world_x, float world_y, float base_world_x, float base_world_y, int &map_x, int &map_y) const
+{
+    // Convert world coordinates back to map tile coordinates
+    float relative_x = world_x - base_world_x;
+    float relative_y = world_y - base_world_y;
+
+    map_x = static_cast<int>(relative_x / tile_width);
+    map_y = static_cast<int>(relative_y / tile_height);
+
+    // Check if the coordinates are within the map bounds
+    return (map_x >= 0 && map_x < map_width && map_y >= 0 && map_y < map_height);
+}
+
 // TMXTileset implementation
 bool TMXTileset::containsGID(int gid) const
 {
@@ -460,7 +491,7 @@ bool TMXTileset::getLocalTileCoords(int gid, int &tile_x, int &tile_y) const
 
     // For now, assume a simple row-based layout
     // In a real implementation, you'd need to know the tileset image dimensions
-    int tiles_per_row = 16; // This should be calculated from the tileset image width
+    int tiles_per_row = 32; // This should be calculated from the tileset image width
 
     tile_x = local_id % tiles_per_row;
     tile_y = local_id / tiles_per_row;
@@ -490,8 +521,8 @@ CF_Sprite TMXTileset::getSpriteForGID(int gid) const
         return cf_sprite_defaults();
     }
     // lock tile x and y to 0,0
-    tile_x = 2;
-    tile_y = 1;
+    // tile_x = 2;
+    // tile_y = 1;
     // Create the sprite using TSX
     printf("Creating sprite for GID %d at tile coords (%d, %d)\n", gid, tile_x, tile_y);
     CF_Sprite sprite = tsx_data->getTile(tile_x, tile_y);
@@ -514,11 +545,14 @@ void TMXTileset::clearCache()
 // TMXLayer implementation
 int TMXLayer::getTileGID(int x, int y) const
 {
+    // Coordinate system: (0,0) is top-left, +X goes right, +Y goes down
     if (!isValidCoordinate(x, y))
     {
         return 0;
     }
 
+    // Calculate linear index: row-major order (y * width + x)
+    // This ensures (0,0) is top-left and Y increases downward
     int index = y * width + x;
     if (index >= 0 && index < static_cast<int>(data.size()))
     {
@@ -530,5 +564,6 @@ int TMXLayer::getTileGID(int x, int y) const
 
 bool TMXLayer::isValidCoordinate(int x, int y) const
 {
+    // Valid coordinates are within bounds: 0 <= x < width, 0 <= y < height
     return x >= 0 && x < width && y >= 0 && y < height;
 }

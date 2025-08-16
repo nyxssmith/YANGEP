@@ -61,8 +61,19 @@ public:
     std::shared_ptr<TMXTileset> getTileset(int index) const;
 
     // Get a tile sprite at specific layer and map coordinates
+    // Coordinate system: (0,0) is top-left, +X goes right, +Y goes down
     CF_Sprite getTileAt(int layer_index, int map_x, int map_y) const;
     CF_Sprite getTileAt(const std::string &layer_name, int map_x, int map_y) const;
+
+    // Convert map coordinates to world coordinates
+    // map_x, map_y: tile coordinates in the map (0,0 = top-left tile)
+    // world_x, world_y: base world position offset
+    // Returns: actual world position for the specified tile
+    void mapToWorldCoords(int map_x, int map_y, float world_x, float world_y, float &tile_world_x, float &tile_world_y) const;
+
+    // Convert world coordinates to map coordinates
+    // Returns true if the world coordinates correspond to a valid map tile
+    bool worldToMapCoords(float world_x, float world_y, float base_world_x, float base_world_y, int &map_x, int &map_y) const;
 
     // Render entire layer at given position
     void renderLayer(int layer_index, float world_x, float world_y) const;
@@ -102,6 +113,7 @@ struct TMXTileset
 };
 
 // Structure to represent a layer in the TMX
+// Coordinate system: (0,0) is top-left tile, +X goes right, +Y goes down
 struct TMXLayer
 {
     int id;                // Layer ID
@@ -110,11 +122,13 @@ struct TMXLayer
     int height;            // Layer height in tiles
     bool visible;          // Layer visibility
     float opacity;         // Layer opacity (0.0 - 1.0)
-    std::vector<int> data; // Tile data (global IDs)
+    std::vector<int> data; // Tile data (global IDs) in row-major order
 
     TMXLayer() : id(0), width(0), height(0), visible(true), opacity(1.0f) {}
 
     // Get tile global ID at specific layer coordinates
+    // x: horizontal position (0 = leftmost)
+    // y: vertical position (0 = topmost)
     int getTileGID(int x, int y) const;
 
     // Check if coordinates are within layer bounds
