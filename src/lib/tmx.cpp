@@ -383,6 +383,13 @@ void tmx::renderLayer(int layer_index, float world_x, float world_y) const
             float tile_world_x = world_x + (x * tile_width);
             float tile_world_y = world_y + ((layer->height - 1 - y) * tile_height);
 
+            // Round world coordinates to integer pixel coordinates to prevent seams
+            // Also round the base world position to ensure alignment
+            float rounded_world_x = roundf(world_x);
+            float rounded_world_y = roundf(world_y);
+            tile_world_x = rounded_world_x + (x * tile_width);
+            tile_world_y = rounded_world_y + ((layer->height - 1 - y) * tile_height);
+
             // Debug: Print first few tile positions to verify coordinate system
             if (x < 3 && y < 3)
             {
@@ -390,9 +397,15 @@ void tmx::renderLayer(int layer_index, float world_x, float world_y) const
                        x, y, gid, tile_world_x, tile_world_y);
             }
 
-            // Draw the sprite at the tile position
+            // Draw the sprite at the tile position with slight overlap to prevent seams
             cf_draw_push();
             cf_draw_translate_v2(cf_v2(tile_world_x, tile_world_y));
+
+            // Add a tiny scale factor to create overlap between tiles (prevents seams)
+            // This makes each tile slightly larger to ensure no gaps appear
+            const float overlap_scale = 1.001f; // 0.1% overlap
+            cf_draw_scale(overlap_scale, overlap_scale);
+
             if (layer->opacity < 1.0f)
             {
                 // TODO: Apply opacity if needed
@@ -482,6 +495,30 @@ void tmx::renderLayer(int layer_index, const Camera &camera, float world_x, floa
             float tile_world_x = world_x + (x * tile_width);
             float tile_world_y = world_y + ((layer->height - 1 - y) * tile_height);
 
+            // Round world coordinates to zoom-aware pixel boundaries to prevent seams
+            // This ensures tiles align properly at any zoom level
+            float camera_zoom = camera.getZoom();
+            if (camera_zoom != 1.0f)
+            {
+                // Round to zoom-adjusted pixel boundaries
+                float rounded_world_x = roundf(world_x * camera_zoom) / camera_zoom;
+                float rounded_world_y = roundf(world_y * camera_zoom) / camera_zoom;
+                tile_world_x = rounded_world_x + (x * tile_width);
+                tile_world_y = rounded_world_y + ((layer->height - 1 - y) * tile_height);
+
+                // Also round the final tile position
+                tile_world_x = roundf(tile_world_x * camera_zoom) / camera_zoom;
+                tile_world_y = roundf(tile_world_y * camera_zoom) / camera_zoom;
+            }
+            else
+            {
+                // At 1x zoom, just round to integer pixels
+                float rounded_world_x = roundf(world_x);
+                float rounded_world_y = roundf(world_y);
+                tile_world_x = rounded_world_x + (x * tile_width);
+                tile_world_y = rounded_world_y + ((layer->height - 1 - y) * tile_height);
+            }
+
             // Create tile bounds for more precise visibility check
             CF_Aabb tile_bounds = make_aabb(
                 cf_v2(tile_world_x, tile_world_y),
@@ -491,9 +528,32 @@ void tmx::renderLayer(int layer_index, const Camera &camera, float world_x, floa
             if (!camera.isVisible(tile_bounds))
                 continue;
 
-            // Draw the sprite at the tile position
+            // Draw the sprite at the tile position with zoom-dependent overlap to prevent seams
             cf_draw_push();
             cf_draw_translate_v2(cf_v2(tile_world_x, tile_world_y));
+
+            // Calculate overlap based on zoom level to prevent seams at any zoom
+            // Higher zoom needs much more overlap to compensate for precision issues
+            // Reuse camera_zoom variable from above
+            float overlap_scale;
+            if (camera_zoom >= 4.0f)
+            {
+                overlap_scale = 1.05f; // 5% overlap for very high zoom
+            }
+            else if (camera_zoom >= 2.0f)
+            {
+                overlap_scale = 1.03f; // 3% overlap for high zoom
+            }
+            else if (camera_zoom >= 1.5f)
+            {
+                overlap_scale = 1.015f; // 1.5% overlap for medium zoom
+            }
+            else
+            {
+                overlap_scale = 1.01f; // 1% overlap for low zoom (increased from 0.2%)
+            }
+            cf_draw_scale(overlap_scale, overlap_scale);
+
             if (layer->opacity < 1.0f)
             {
                 // TODO: Apply opacity if needed
