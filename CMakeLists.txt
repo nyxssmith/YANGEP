@@ -98,6 +98,7 @@ add_executable(
 	src/lib/tmx.cpp
 	src/lib/Sprite.cpp
 	src/lib/SpriteDemo.cpp
+	src/lib/Camera.cpp
 )
 
 # Our source code will be in the `src` folder.
@@ -137,6 +138,7 @@ add_executable(${PROJECT_NAME}_tests
 	src/lib/tmx.cpp
 	src/lib/Sprite.cpp
 	src/lib/SpriteDemo.cpp
+	src/lib/Camera.cpp
 )
 
 # Link test executable with dependencies

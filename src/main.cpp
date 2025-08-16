@@ -8,6 +8,7 @@
 #include "lib/SpriteDemo.h"
 #include "lib/tsx.h"
 #include "lib/tmx.h"
+#include "lib/Camera.h"
 using namespace Cute;
 
 int main(int argc, char *argv[])
@@ -52,52 +53,81 @@ int main(int argc, char *argv[])
 	DebugWindow debugWindow("Debug Info aaaa");
 	DataFileDebugWindow dataFileDebugWindow("DataFile Viewer", df);
 
+	// Create camera for handling view transformations
+	Camera camera(cf_v2(0.0f, 0.0f), 1.0f); // Start at origin with normal zoom
+
+	// Set up camera with some nice settings
+	camera.setZoomRange(0.25f, 4.0f);			   // Allow 1/4x to 4x zoom
+	camera.setFollowSpeed(2.0f);				   // Smooth following
+	camera.setFollowDeadzone(cf_v2(50.0f, 50.0f)); // Deadzone around target
+
 	while (app_is_running())
 	{
 		app_update();
+
+		// Handle camera input (WASD for movement, mouse wheel for zoom)
+		float camera_speed = 200.0f; // pixels per second
+		float dt = CF_DELTA_TIME;
+
+		if (key_down(CF_KEY_W) || key_down(CF_KEY_UP))
+		{
+			camera.translate(0.0f, -camera_speed * dt);
+		}
+		if (key_down(CF_KEY_S) || key_down(CF_KEY_DOWN))
+		{
+			camera.translate(0.0f, camera_speed * dt);
+		}
+		if (key_down(CF_KEY_A) || key_down(CF_KEY_LEFT))
+		{
+			camera.translate(-camera_speed * dt, 0.0f);
+		}
+		if (key_down(CF_KEY_D) || key_down(CF_KEY_RIGHT))
+		{
+			camera.translate(camera_speed * dt, 0.0f);
+		}
+
+		// Zoom with Q/E keys
+		if (key_just_pressed(CF_KEY_Q))
+		{
+			camera.zoomOut(1.2f);
+		}
+		if (key_just_pressed(CF_KEY_E))
+		{
+			camera.zoomIn(1.2f);
+		}
+
+		// Reset camera with R key
+		if (key_just_pressed(CF_KEY_R))
+		{
+			camera.reset();
+		}
+
+		// Camera shake with SPACE
+		if (key_just_pressed(CF_KEY_SPACE))
+		{
+			camera.shake(20.0f, 0.5f);
+		}
+
+		// Update camera
+		camera.update(dt);
 
 		// Render debug windows
 		// debugWindow.render();
 		// dataFileDebugWindow.render();
 
-		// Render the TMX map layers
-		// Position the map at top-left area of screen
-		// Coordinate system: (0,0) is top-left, +X goes right, +Y goes down
-		float map_x = -300.0f; // Left side of screen
-		float map_y = -200.0f; // Near top of screen
+		// Apply camera transformation for world-space rendering
+		camera.apply();
 
-		// Render all layers of the TMX map
-		levelMap.renderAllLayers(map_x, map_y);
+		// Restore camera transformation
+		camera.restore();
 
-		// Demonstrate coordinate system with some debug info
-		// Show what tile is at map coordinates (0,0), (1,0), (0,1)
-		static bool debug_printed = false;
-		if (!debug_printed)
-		{
-			printf("\n=== Coordinate System Demo ===\n");
-			printf("Map positioned at world coordinates (%.1f, %.1f)\n", map_x, map_y);
-
-			// Calculate world positions for some example tiles
-			float tile_world_x, tile_world_y;
-			levelMap.mapToWorldCoords(0, 0, map_x, map_y, tile_world_x, tile_world_y);
-			printf("Map tile (0,0) -> World position (%.1f, %.1f)\n", tile_world_x, tile_world_y);
-
-			levelMap.mapToWorldCoords(1, 0, map_x, map_y, tile_world_x, tile_world_y);
-			printf("Map tile (1,0) -> World position (%.1f, %.1f)\n", tile_world_x, tile_world_y);
-
-			levelMap.mapToWorldCoords(0, 1, map_x, map_y, tile_world_x, tile_world_y);
-			printf("Map tile (0,1) -> World position (%.1f, %.1f)\n", tile_world_x, tile_world_y);
-
-			printf("Coordinate system: (0,0) = top-left, +X = right, +Y = down\n");
-			printf("==============================\n\n");
-			debug_printed = true;
-		}
-
-		// Position text at the bottom
+		// Draw UI elements (not affected by camera)
+		// Position text at the bottom in screen space
 		v2 text_position1 = cf_v2(-200, 250);
+		draw_text("TMX Level Map (Camera Controlled)", text_position1);
 
-		// Draw the text
-		draw_text("TMX Level Map (Left)", text_position1);
+		// Draw camera debug info
+		camera.drawDebugInfo();
 
 		app_draw_onto_screen(true);
 	}
