@@ -61,12 +61,37 @@ int main(int argc, char *argv[])
 		// dataFileDebugWindow.render();
 
 		// Render the TMX map layers
-		// Position the map at a reasonable location on screen
-		float map_x = -400.0f; // Left side of screen
-		float map_y = -300.0f; // Top of screen
+		// Position the map at top-left area of screen
+		// Coordinate system: (0,0) is top-left, +X goes right, +Y goes down
+		float map_x = -300.0f; // Left side of screen
+		float map_y = -200.0f; // Near top of screen
 
 		// Render all layers of the TMX map
 		levelMap.renderAllLayers(map_x, map_y);
+
+		// Demonstrate coordinate system with some debug info
+		// Show what tile is at map coordinates (0,0), (1,0), (0,1)
+		static bool debug_printed = false;
+		if (!debug_printed)
+		{
+			printf("\n=== Coordinate System Demo ===\n");
+			printf("Map positioned at world coordinates (%.1f, %.1f)\n", map_x, map_y);
+
+			// Calculate world positions for some example tiles
+			float tile_world_x, tile_world_y;
+			levelMap.mapToWorldCoords(0, 0, map_x, map_y, tile_world_x, tile_world_y);
+			printf("Map tile (0,0) -> World position (%.1f, %.1f)\n", tile_world_x, tile_world_y);
+
+			levelMap.mapToWorldCoords(1, 0, map_x, map_y, tile_world_x, tile_world_y);
+			printf("Map tile (1,0) -> World position (%.1f, %.1f)\n", tile_world_x, tile_world_y);
+
+			levelMap.mapToWorldCoords(0, 1, map_x, map_y, tile_world_x, tile_world_y);
+			printf("Map tile (0,1) -> World position (%.1f, %.1f)\n", tile_world_x, tile_world_y);
+
+			printf("Coordinate system: (0,0) = top-left, +X = right, +Y = down\n");
+			printf("==============================\n\n");
+			debug_printed = true;
+		}
 
 		// Position text at the bottom
 		v2 text_position1 = cf_v2(-200, 250);
