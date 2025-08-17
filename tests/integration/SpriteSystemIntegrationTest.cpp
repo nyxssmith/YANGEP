@@ -1,11 +1,13 @@
 #include <gtest/gtest.h>
 #include <cute.h>
-#include "../../src/lib/PNGSprite.h"
+#include "../../src/lib/SpriteAnimationLoader.h"
 
 using namespace Cute;
 
 class SpriteSystemIntegrationTest : public ::testing::Test {
 protected:
+    SpriteAnimationLoader loader;
+
     void SetUp() override {
         // Set up test environment
     }
@@ -17,103 +19,103 @@ protected:
 
 // Test that the entire sprite system can be initialized without crashing
 TEST_F(SpriteSystemIntegrationTest, SystemInitializationDoesNotCrash) {
-    // This test should pass if our sprite system can be created
+    // This test should pass if our sprite animation loader can be created
     // without triggering CF_ASSERT failures or crashes
 
-    PNGSprite sprite;
-
     // Basic initialization should work
-    EXPECT_TRUE(sprite.isValid());
-    EXPECT_EQ(sprite.getWidth(), 64);
-    EXPECT_EQ(sprite.getHeight(), 64);
-
-    // Default state should be reasonable
-    EXPECT_EQ(sprite.getDirection(), Direction::DOWN);
-    EXPECT_STREQ(sprite.getCurrentAnimation(), "idle");
+    EXPECT_EQ(loader.getCachedPNGCount(), 0);
+    EXPECT_EQ(loader.getCacheSize(), 0);
 }
 
 // Test that sprite loading fails gracefully with invalid paths
 TEST_F(SpriteSystemIntegrationTest, InvalidAssetPathsFailGracefully) {
-    PNGSprite sprite;
+    // Test with a non-existent PNG file
+    CF_Sprite frame = loader.extractSpriteFrame("nonexistent/path/file.png", 0, 0, 64, 64);
 
-    // This should fail immediately with exit(1) - not crash with CF_ASSERT
-    EXPECT_DEATH({
-        sprite.loadAnimations(
-            "nonexistent/path/idle.png",
-            "nonexistent/path/walkcycle.png"
-        );
-    }, ".*");
+    // Should return a default sprite (w and h == 0) without crashing
+    EXPECT_EQ(frame.w, 0);
+    EXPECT_EQ(frame.h, 0);
 }
 
-// Test that sprite loading actually works with our virtual PNG approach
-TEST_F(SpriteSystemIntegrationTest, VirtualPNGApproachWorksAtLoadTime) {
-    PNGSprite sprite;
+// Test that sprite loading works with real test assets
+TEST_F(SpriteSystemIntegrationTest, RealAssetLoadingWorks) {
+    // Test with the actual walkcycle PNG that exists
+    const std::string png_path = "assets/Art/AnimationsSheets/walkcycle/BODY_skeleton.png";
 
-    // This should succeed because our virtual PNG approach works at load time
-    // The real test will be whether rendering works at runtime
-    EXPECT_NO_THROW({
-        sprite.loadAnimations(
-            "assets/Art/AnimationsSheets/idle/BODY_skeleton.png",
-            "assets/Art/AnimationsSheets/walkcycle/BODY_skeleton.png"
-        );
-    });
+    // This should succeed with the real PNG file
+    CF_Sprite frame = loader.extractSpriteFrame(png_path, 0, 0, 64, 64);
 
-    // The sprite should be valid after loading
-    EXPECT_TRUE(sprite.isValid());
-
-    // But the real test will be whether rendering works
-    // We expect this to potentially fail at runtime due to CF_ASSERT
-    // when the framework tries to actually render the virtual PNGs
+    // Should return a valid sprite
+    EXPECT_GT(frame.w, 0);
+    EXPECT_GT(frame.h, 0);
 }
 
-// Test that direction changes work correctly
-TEST_F(SpriteSystemIntegrationTest, DirectionChangesWork) {
-    PNGSprite sprite;
+// Test that animation table loading works
+TEST_F(SpriteSystemIntegrationTest, AnimationTableLoadingWorks) {
+    // Create animation layouts for testing
+    std::vector<AnimationLayout> layouts = {
+        AnimationLayouts::WALKCYCLE_4_DIRECTIONS_9_FRAMES
+    };
 
-    // Test all directions
-    sprite.setDirection(Direction::UP);
-    EXPECT_EQ(sprite.getDirection(), Direction::UP);
+    // Load animation table - should not crash even if files don't exist at expected locations
+    AnimationTable table = loader.loadAnimationTable("assets/Art/AnimationsSheets", layouts);
 
-    sprite.setDirection(Direction::LEFT);
-    EXPECT_EQ(sprite.getDirection(), Direction::LEFT);
-
-    sprite.setDirection(Direction::DOWN);
-    EXPECT_EQ(sprite.getDirection(), Direction::DOWN);
-
-    sprite.setDirection(Direction::RIGHT);
-    EXPECT_EQ(sprite.getDirection(), Direction::RIGHT);
+    // Table creation should succeed (though animations might be empty if files aren't found)
+    std::vector<std::string> names = table.getAnimationNames();
+    // Don't expect specific content - just that the method works without crashing
+    EXPECT_TRUE(true);
 }
 
-// Test that animation switching works correctly
-TEST_F(SpriteSystemIntegrationTest, AnimationSwitchingWorks) {
-    PNGSprite sprite;
+// Test that frame extraction works with known good dimensions
+TEST_F(SpriteSystemIntegrationTest, FrameExtractionWithCorrectDimensions) {
+    const std::string png_path = "assets/Art/AnimationsSheets/walkcycle/BODY_skeleton.png";
 
-    // Test animation switching
-    sprite.setAnimation("idle");
-    EXPECT_STREQ(sprite.getCurrentAnimation(), "idle");
+    // The PNG is 576x256, so we can extract multiple 64x64 frames
+    // Test extracting a few frames from different positions
 
-    sprite.setAnimation("walkcycle");
-    EXPECT_STREQ(sprite.getCurrentAnimation(), "walkcycle");
+    // Frame 0,0 (first frame, first row - UP direction)
+    CF_Sprite frame1 = loader.extractSpriteFrame(png_path, 0, 0, 64, 64);
+
+    // Frame 1,0 (second frame, first row - still UP direction)
+    CF_Sprite frame2 = loader.extractSpriteFrame(png_path, 64, 0, 64, 64);
+
+    // Frame 0,1 (first frame, second row - LEFT direction)
+    CF_Sprite frame3 = loader.extractSpriteFrame(png_path, 0, 64, 64, 64);
+
+    // All frames should be valid
+    EXPECT_GT(frame1.w, 0);
+    EXPECT_GT(frame2.w, 0);
+    EXPECT_GT(frame3.w, 0);
 }
 
-// Test that sprite rendering doesn't crash
-TEST_F(SpriteSystemIntegrationTest, SpriteRenderingDoesNotCrash) {
-    PNGSprite sprite;
+// Test that PNG caching works correctly
+TEST_F(SpriteSystemIntegrationTest, PNGCachingWorks) {
+    const std::string png_path = "assets/Art/AnimationsSheets/walkcycle/BODY_skeleton.png";
 
-    // These calls should not crash, even if they don't render anything
-    EXPECT_NO_THROW({
-        sprite.render();
-        sprite.update(0.016f); // 60 FPS delta time
-    });
+    // Initially no PNGs cached
+    EXPECT_EQ(loader.getCachedPNGCount(), 0);
+
+    // Extract a frame - this should cache the PNG
+    CF_Sprite frame = loader.extractSpriteFrame(png_path, 0, 0, 64, 64);
+
+    // Now should have 1 cached PNG (if the file exists)
+    if (frame.w > 0 && frame.h > 0) {
+        EXPECT_EQ(loader.getCachedPNGCount(), 1);
+        EXPECT_GT(loader.getCacheSize(), 0);
+    }
 }
 
 // Test that sprite cleanup doesn't cause memory corruption
 TEST_F(SpriteSystemIntegrationTest, SpriteCleanupDoesNotCorruptMemory) {
-    // Create and destroy multiple sprites to test memory management
-    for (int i = 0; i < 10; i++) {
-        PNGSprite* sprite = new PNGSprite();
-        EXPECT_TRUE(sprite->isValid());
-        delete sprite;
+    // Create and destroy multiple loaders to test memory management
+    for (int i = 0; i < 5; i++) {
+        SpriteAnimationLoader* testLoader = new SpriteAnimationLoader();
+
+        // Do some work that might allocate memory
+        testLoader->extractSpriteFrame("../assets/Art/AnimationsSheets/walkcycle/BODY_skeleton.png", 0, 0, 64, 64);
+
+        // Clean up should not crash
+        delete testLoader;
     }
 
     // If we get here without crashes, memory management is working

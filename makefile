@@ -12,6 +12,10 @@ run: build
 	@echo "Running "
 	./scripts/run.sh
 
+animation_demo: build
+	@echo "Running Animation Demo..."
+	cd build && ./yangep_animation_demo
+
 test: build
 	@echo "Running tests..."
 	./scripts/test.sh

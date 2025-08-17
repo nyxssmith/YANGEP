@@ -6,9 +6,9 @@
 #include "lib/DataFileDebugWindow.h"
 #include "lib/Utils.h"
 #include "lib/DataFile.h"
-#include "lib/SpriteDemo.h"
 #include "lib/tsx.h"
 #include "lib/tmx.h"
+
 #include "lib/Camera.h"
 using namespace Cute;
 
@@ -21,13 +21,10 @@ int main(int argc, char *argv[])
 	if (is_error(result))
 		return -1;
 
-    // Create demo
-    PNGSpriteDemo demo;
-    if (!demo.initialize()) {
-        printf("Failed to initialize demo\n");
-        destroy_app();
-        return -1;
-    }
+	// Set up VFS for reading and writing
+	mount_content_directory_as("/assets");
+
+
 
 	// read datafile
 	// DataFile df("/assets/a.json");
@@ -79,6 +76,9 @@ int main(int argc, char *argv[])
         cf_draw_quad_fill(make_aabb(v2(0, 0), 1280, 720), 0.0f);
         cf_draw_pop_color();
 
+        // Main loop
+        while (cf_app_is_running()) {
+
 		// Handle camera input (WASD for movement, mouse wheel for zoom)
 		float camera_speed = 200.0f; // pixels per second
 		float dt = CF_DELTA_TIME;
@@ -125,6 +125,7 @@ int main(int argc, char *argv[])
 		// Update camera
 		camera.update(dt);
 
+		// Update sprite animation demo
 		// Render debug windows
 		// debugWindow.render();
 		// dataFileDebugWindow.render();
@@ -146,6 +147,8 @@ int main(int argc, char *argv[])
 
 		// Restore camera transformation
 		camera.restore();
+
+
 
 		// Draw camera debug info
 		camera.drawDebugInfo(bottom_left_x, bottom_left_y + 20.0f);
