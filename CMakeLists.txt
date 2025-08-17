@@ -96,7 +96,9 @@ add_executable(
 	src/lib/Utils.cpp
 	src/lib/tsx.cpp
 	src/lib/tmx.cpp
-	src/lib/Camera.cpp
+	src/lib/CFNativeCamera.cpp
+	src/lib/SpriteAnimationLoader.cpp
+	src/lib/SpriteAnimationDemo.cpp
 )
 
 # Our source code will be in the `src` folder.
@@ -161,10 +163,11 @@ add_executable(${PROJECT_NAME}_tests
     tests/unit/SpriteAnimationLoaderTest.cpp
     tests/unit/TMXTest.cpp
     tests/unit/PNGValidationTest.cpp
+    tests/unit/CFNativeCameraTest.cpp
     tests/integration/SpriteSystemIntegrationTest.cpp
     tests/integration/TMXRenderingTest.cpp
     src/lib/SpriteAnimationLoader.cpp
-    src/lib/Camera.cpp
+    src/lib/CFNativeCamera.cpp
     src/lib/DataFile.cpp
     src/lib/Utils.cpp
     src/lib/tsx.cpp

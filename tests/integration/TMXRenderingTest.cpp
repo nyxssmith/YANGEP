@@ -2,7 +2,7 @@
 #include <cute.h>
 #include "lib/tmx.h"
 #include "lib/tsx.h"
-#include "lib/Camera.h"
+#include "lib/CFNativeCamera.h"
 #include "lib/Utils.h"
 #include "../fixtures/TestFixture.hpp"
 
@@ -11,7 +11,7 @@ using namespace Cute;
 class TMXRenderingTest : public TestFixture {
 protected:
     std::unique_ptr<tmx> testMap;
-    std::unique_ptr<Camera> testCamera;
+    std::unique_ptr<CFNativeCamera> testCamera;
 
     void SetUp() override {
         TestFixture::SetUp();
@@ -19,7 +19,7 @@ protected:
 
         // Load test TMX and create camera
         testMap = std::make_unique<tmx>("assets/Levels/test_one/test_one.tmx");
-        testCamera = std::make_unique<Camera>(cf_v2(0.0f, 0.0f), 1.0f);
+        testCamera = std::make_unique<CFNativeCamera>(cf_v2(0.0f, 0.0f), 1.0f);
 
         ASSERT_FALSE(testMap->empty()) << "TMX file should load for rendering tests";
     }

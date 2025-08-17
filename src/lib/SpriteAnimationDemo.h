@@ -21,6 +21,9 @@ public:
     // Render the demo
     void render();
 
+    // Render the demo at a specific position
+    void render(v2 renderPosition);
+
     // Handle input for demo controls
     void handleInput();
 
@@ -60,6 +63,7 @@ private:
     void cycleAnimation();
     void updateAnimation(float dt);
     void renderCurrentFrame();
+    void renderCurrentFrameAt(v2 renderPosition);
     void renderDebugInfo();
 };
 

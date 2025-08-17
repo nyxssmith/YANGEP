@@ -1,5 +1,5 @@
 #include "tmx.h"
-#include "Camera.h"
+#include "CFNativeCamera.h"
 #include <cute.h>
 #include <functional>
 #include <sstream>
@@ -443,7 +443,7 @@ void tmx::renderAllLayers(float world_x, float world_y) const
     }
 }
 
-void tmx::renderLayer(int layer_index, const Camera &camera, float world_x, float world_y) const
+void tmx::renderLayer(int layer_index, const CFNativeCamera &camera, float world_x, float world_y) const
 {
     auto layer = getLayer(layer_index);
     if (!layer || !layer->visible)
@@ -568,7 +568,7 @@ void tmx::renderLayer(int layer_index, const Camera &camera, float world_x, floa
     // printf("  Rendered %d tiles (culled %d tiles)\n", tiles_rendered, layer->width * layer->height - tiles_rendered);
 }
 
-void tmx::renderLayer(const std::string &layer_name, const Camera &camera, float world_x, float world_y) const
+void tmx::renderLayer(const std::string &layer_name, const CFNativeCamera &camera, float world_x, float world_y) const
 {
     auto layer = getLayer(layer_name);
     if (!layer)
@@ -587,7 +587,7 @@ void tmx::renderLayer(const std::string &layer_name, const Camera &camera, float
     }
 }
 
-void tmx::renderAllLayers(const Camera &camera, float world_x, float world_y) const
+void tmx::renderAllLayers(const CFNativeCamera &camera, float world_x, float world_y) const
 {
     for (int i = 0; i < static_cast<int>(layers.size()); i++)
     {

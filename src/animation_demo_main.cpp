@@ -76,6 +76,7 @@ int main(int argc, char *argv[])
         // FIXED: Use single presentation approach to avoid CF graphics crash
         // Draw background manually without separate screen clear
         CF_Color bg = make_color(0.1f, 0.1f, 0.15f, 1.0f); // Dark blue-gray
+
         cf_draw_push_color(bg);
         cf_draw_quad_fill(make_aabb(v2(0, 0), (float)cf_app_get_width(), (float)cf_app_get_height()), 0.0f);
         cf_draw_pop_color();
