@@ -11,6 +11,7 @@
 // Forward declarations
 struct TMXTileset;
 struct TMXLayer;
+class Camera;
 
 class tmx : public pugi::xml_document
 {
@@ -61,26 +62,34 @@ public:
     std::shared_ptr<TMXTileset> getTileset(int index) const;
 
     // Get a tile sprite at specific layer and map coordinates
-    // Coordinate system: (0,0) is top-left, +X goes right, +Y goes down
+    // Note: TMX uses (0,0) top-left, +Y down, but rendering converts to Y-up coordinate system
     CF_Sprite getTileAt(int layer_index, int map_x, int map_y) const;
     CF_Sprite getTileAt(const std::string &layer_name, int map_x, int map_y) const;
 
     // Convert map coordinates to world coordinates
-    // map_x, map_y: tile coordinates in the map (0,0 = top-left tile)
+    // map_x, map_y: tile coordinates in TMX format (0,0 = top-left tile)
     // world_x, world_y: base world position offset
-    // Returns: actual world position for the specified tile
+    // Returns: actual world position for rendering (with Y-axis flipped from TMX)
     void mapToWorldCoords(int map_x, int map_y, float world_x, float world_y, float &tile_world_x, float &tile_world_y) const;
 
     // Convert world coordinates to map coordinates
     // Returns true if the world coordinates correspond to a valid map tile
+    // Note: Handles conversion from rendering Y-up to TMX Y-down coordinate system
     bool worldToMapCoords(float world_x, float world_y, float base_world_x, float base_world_y, int &map_x, int &map_y) const;
 
     // Render entire layer at given position
     void renderLayer(int layer_index, float world_x, float world_y) const;
     void renderLayer(const std::string &layer_name, float world_x, float world_y) const;
 
+    // Render entire layer with camera-aware culling and positioning
+    void renderLayer(int layer_index, const class CFNativeCamera &camera, float world_x = 0.0f, float world_y = 0.0f) const;
+    void renderLayer(const std::string &layer_name, const class CFNativeCamera &camera, float world_x = 0.0f, float world_y = 0.0f) const;
+
     // Render all layers at given position
     void renderAllLayers(float world_x, float world_y) const;
+
+    // Render all layers with camera-aware culling and positioning
+    void renderAllLayers(const class CFNativeCamera &camera, float world_x = 0.0f, float world_y = 0.0f) const;
 
     // Cache management
     void clearAllSpriteCaches();
@@ -113,7 +122,7 @@ struct TMXTileset
 };
 
 // Structure to represent a layer in the TMX
-// Coordinate system: (0,0) is top-left tile, +X goes right, +Y goes down
+// Note: TMX coordinate system (0,0 top-left, Y down) but rendering uses Y-up
 struct TMXLayer
 {
     int id;                // Layer ID

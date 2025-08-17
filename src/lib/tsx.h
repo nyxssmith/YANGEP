@@ -28,4 +28,8 @@ public:
     // Get tile dimensions
     int getTileWidth() const;
     int getTileHeight() const;
+
+    // Get source image dimensions
+    int getSourceWidth() const;
+    int getSourceHeight() const;
 };

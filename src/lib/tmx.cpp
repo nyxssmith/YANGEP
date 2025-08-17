@@ -1,4 +1,5 @@
 #include "tmx.h"
+#include "CFNativeCamera.h"
 #include <cute.h>
 #include <functional>
 #include <sstream>
@@ -378,9 +379,16 @@ void tmx::renderLayer(int layer_index, float world_x, float world_y) const
             CF_Sprite sprite = tileset->getSpriteForGID(gid);
 
             // Calculate world position for this tile
-            // Coordinate system: (0,0) is top-left, +X goes right, +Y goes down
+            // Convert from TMX coordinate system (0,0 top-left, Y down) to rendering system (Y up)
             float tile_world_x = world_x + (x * tile_width);
-            float tile_world_y = world_y + (y * tile_height);
+            float tile_world_y = world_y + ((layer->height - 1 - y) * tile_height);
+
+            // Round world coordinates to integer pixel coordinates to prevent seams
+            // Also round the base world position to ensure alignment
+            float rounded_world_x = roundf(world_x);
+            float rounded_world_y = roundf(world_y);
+            tile_world_x = rounded_world_x + (x * tile_width);
+            tile_world_y = rounded_world_y + ((layer->height - 1 - y) * tile_height);
 
             // Debug: Print first few tile positions to verify coordinate system
             if (x < 3 && y < 3)
@@ -389,9 +397,15 @@ void tmx::renderLayer(int layer_index, float world_x, float world_y) const
                        x, y, gid, tile_world_x, tile_world_y);
             }
 
-            // Draw the sprite at the tile position
+            // Draw the sprite at the tile position with slight overlap to prevent seams
             cf_draw_push();
             cf_draw_translate_v2(cf_v2(tile_world_x, tile_world_y));
+
+            // Add a tiny scale factor to create overlap between tiles (prevents seams)
+            // This makes each tile slightly larger to ensure no gaps appear
+            const float overlap_scale = 1.001f; // 0.1% overlap
+            cf_draw_scale(overlap_scale, overlap_scale);
+
             if (layer->opacity < 1.0f)
             {
                 // TODO: Apply opacity if needed
@@ -429,6 +443,158 @@ void tmx::renderAllLayers(float world_x, float world_y) const
     }
 }
 
+void tmx::renderLayer(int layer_index, const CFNativeCamera &camera, float world_x, float world_y) const
+{
+    auto layer = getLayer(layer_index);
+    if (!layer || !layer->visible)
+    {
+        return;
+    }
+
+    // Get camera view bounds for culling
+    CF_Aabb view_bounds = camera.getViewBounds();
+
+    // printf("Rendering layer %d: '%s' with %dx%d tiles at world position (%.1f, %.1f) with camera culling\n",
+    //        layer_index, layer->name.c_str(), layer->width, layer->height, world_x, world_y);
+
+    // Calculate which tiles are potentially visible
+    // For X: standard left-to-right calculation
+    int start_x = std::max(0, (int)((view_bounds.min.x - world_x) / tile_width) - 1);
+    int end_x = std::min(layer->width - 1, (int)((view_bounds.max.x - world_x) / tile_width) + 1);
+
+    // For Y: need to account for coordinate system flip (TMX Y-down vs Rendering Y-up)
+    // Convert view bounds from world coordinates (Y up) to TMX layer coordinates (Y down)
+    float layer_bottom_world = world_y;                              // Bottom of layer in world coordinates
+    float layer_top_world = world_y + (layer->height * tile_height); // Top of layer in world coordinates
+
+    // Map view bounds to TMX layer tile coordinates (flipped Y)
+    int start_y_tmx = std::max(0, (int)((layer_top_world - view_bounds.max.y) / tile_height) - 1);
+    int end_y_tmx = std::min(layer->height - 1, (int)((layer_top_world - view_bounds.min.y) / tile_height) + 1);
+
+    // printf("  Culling to tiles: x[%d-%d], y[%d-%d] (camera bounds: %.1f,%.1f to %.1f,%.1f)\n",
+    //        start_x, end_x, start_y_tmx, end_y_tmx,
+    //        view_bounds.min.x, view_bounds.min.y, view_bounds.max.x, view_bounds.max.y);
+
+    int tiles_rendered = 0;
+    for (int y = start_y_tmx; y <= end_y_tmx; y++)
+    {
+        for (int x = start_x; x <= end_x; x++)
+        {
+            int gid = layer->getTileGID(x, y);
+            if (gid == 0)
+                continue; // Skip empty tiles
+
+            auto tileset = findTilesetForGID(gid);
+            if (!tileset)
+                continue;
+            // printf("Found tileset '%s' for GID %d\n", tileset->name.c_str(), gid);
+            CF_Sprite sprite = tileset->getSpriteForGID(gid);
+
+            // Calculate world position for this tile
+            // Convert from TMX coordinate system (0,0 top-left, Y down) to rendering system (Y up)
+            float tile_world_x = world_x + (x * tile_width);
+            float tile_world_y = world_y + ((layer->height - 1 - y) * tile_height);
+
+            // Round world coordinates to zoom-aware pixel boundaries to prevent seams
+            // This ensures tiles align properly at any zoom level
+            float camera_zoom = camera.getZoom();
+            if (camera_zoom != 1.0f)
+            {
+                // Round to zoom-adjusted pixel boundaries
+                float rounded_world_x = roundf(world_x * camera_zoom) / camera_zoom;
+                float rounded_world_y = roundf(world_y * camera_zoom) / camera_zoom;
+                tile_world_x = rounded_world_x + (x * tile_width);
+                tile_world_y = rounded_world_y + ((layer->height - 1 - y) * tile_height);
+
+                // Also round the final tile position
+                tile_world_x = roundf(tile_world_x * camera_zoom) / camera_zoom;
+                tile_world_y = roundf(tile_world_y * camera_zoom) / camera_zoom;
+            }
+            else
+            {
+                // At 1x zoom, just round to integer pixels
+                float rounded_world_x = roundf(world_x);
+                float rounded_world_y = roundf(world_y);
+                tile_world_x = rounded_world_x + (x * tile_width);
+                tile_world_y = rounded_world_y + ((layer->height - 1 - y) * tile_height);
+            }
+
+            // Create tile bounds for more precise visibility check
+            CF_Aabb tile_bounds = make_aabb(
+                cf_v2(tile_world_x, tile_world_y),
+                cf_v2(tile_world_x + tile_width, tile_world_y + tile_height));
+
+            // Check if this specific tile is visible
+            if (!camera.isVisible(tile_bounds))
+                continue;
+
+            // Draw the sprite at the tile position with zoom-dependent overlap to prevent seams
+            cf_draw_push();
+            cf_draw_translate_v2(cf_v2(tile_world_x, tile_world_y));
+
+            // Calculate overlap based on zoom level to prevent seams at any zoom
+            // Higher zoom needs much more overlap to compensate for precision issues
+            // Reuse camera_zoom variable from above
+            float overlap_scale;
+            if (camera_zoom >= 4.0f)
+            {
+                overlap_scale = 1.05f; // 5% overlap for very high zoom
+            }
+            else if (camera_zoom >= 2.0f)
+            {
+                overlap_scale = 1.03f; // 3% overlap for high zoom
+            }
+            else if (camera_zoom >= 1.5f)
+            {
+                overlap_scale = 1.015f; // 1.5% overlap for medium zoom
+            }
+            else
+            {
+                overlap_scale = 1.01f; // 1% overlap for low zoom (increased from 0.2%)
+            }
+            cf_draw_scale(overlap_scale, overlap_scale);
+
+            if (layer->opacity < 1.0f)
+            {
+                // TODO: Apply opacity if needed
+            }
+            cf_draw_sprite(&sprite);
+            cf_draw_pop();
+
+            tiles_rendered++;
+        }
+    }
+
+    // printf("  Rendered %d tiles (culled %d tiles)\n", tiles_rendered, layer->width * layer->height - tiles_rendered);
+}
+
+void tmx::renderLayer(const std::string &layer_name, const CFNativeCamera &camera, float world_x, float world_y) const
+{
+    auto layer = getLayer(layer_name);
+    if (!layer)
+    {
+        return;
+    }
+
+    // Find layer index and use the index-based render function
+    for (size_t i = 0; i < layers.size(); i++)
+    {
+        if (layers[i] == layer)
+        {
+            renderLayer(static_cast<int>(i), camera, world_x, world_y);
+            return;
+        }
+    }
+}
+
+void tmx::renderAllLayers(const CFNativeCamera &camera, float world_x, float world_y) const
+{
+    for (int i = 0; i < static_cast<int>(layers.size()); i++)
+    {
+        renderLayer(i, camera, world_x, world_y);
+    }
+}
+
 void tmx::clearAllSpriteCaches()
 {
     printf("Clearing all sprite caches for TMX map '%s'\n", path.c_str());
@@ -443,9 +609,9 @@ void tmx::clearAllSpriteCaches()
 
 void tmx::mapToWorldCoords(int map_x, int map_y, float world_x, float world_y, float &tile_world_x, float &tile_world_y) const
 {
-    // Coordinate system: (0,0) is top-left, +X goes right, +Y goes down
+    // Convert from TMX coordinate system (0,0 top-left, Y down) to rendering system (Y up)
     tile_world_x = world_x + (map_x * tile_width);
-    tile_world_y = world_y + (map_y * tile_height);
+    tile_world_y = world_y + ((map_height - 1 - map_y) * tile_height);
 }
 
 bool tmx::worldToMapCoords(float world_x, float world_y, float base_world_x, float base_world_y, int &map_x, int &map_y) const
@@ -455,7 +621,10 @@ bool tmx::worldToMapCoords(float world_x, float world_y, float base_world_x, flo
     float relative_y = world_y - base_world_y;
 
     map_x = static_cast<int>(relative_x / tile_width);
-    map_y = static_cast<int>(relative_y / tile_height);
+
+    // Convert from rendering system (Y up) back to TMX coordinate system (Y down)
+    int rendered_map_y = static_cast<int>(relative_y / tile_height);
+    map_y = map_height - 1 - rendered_map_y;
 
     // Check if the coordinates are within the map bounds
     return (map_x >= 0 && map_x < map_width && map_y >= 0 && map_y < map_height);
@@ -486,16 +655,15 @@ bool TMXTileset::getLocalTileCoords(int gid, int &tile_x, int &tile_y) const
     // Calculate tile coordinates based on tileset layout
     // This assumes a standard grid layout
     int tileset_width = tsx_data->getTileWidth();
+    int source_width = tsx_data->getSourceWidth();
     if (tileset_width <= 0)
         return false;
 
-    // For now, assume a simple row-based layout
-    // In a real implementation, you'd need to know the tileset image dimensions
-    int tiles_per_row = 32; // This should be calculated from the tileset image width
+    int tiles_per_row = source_width / tileset_width;
 
     tile_x = local_id % tiles_per_row;
     tile_y = local_id / tiles_per_row;
-
+    printf("Local tile coords for GID %d: (%d, %d)\n", gid, tile_x, tile_y);
     return true;
 }
 
@@ -515,6 +683,7 @@ CF_Sprite TMXTileset::getSpriteForGID(int gid) const
     }
 
     // Not in cache, need to create the sprite
+    printf("Creating sprite for GID %d\n", gid);
     int tile_x, tile_y;
     if (!getLocalTileCoords(gid, tile_x, tile_y))
     {
