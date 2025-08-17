@@ -139,6 +139,8 @@ target_link_libraries(${PROJECT_NAME}_animation_demo
 )
 target_include_directories(${PROJECT_NAME}_animation_demo PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)
 
+
+
 # For convenience on Windows, set MSVC debugger's working directory in the build folder.
 # Also ask MSVC to make the game the startup project.
 if (MSVC)
@@ -151,13 +153,23 @@ endif()
 
 
 
+
+
 # Test executable
 add_executable(${PROJECT_NAME}_tests
     tests/main.cpp
     tests/unit/SpriteAnimationLoaderTest.cpp
+    tests/unit/TMXTest.cpp
+    tests/unit/PNGValidationTest.cpp
     tests/integration/SpriteSystemIntegrationTest.cpp
+    tests/integration/TMXRenderingTest.cpp
     src/lib/SpriteAnimationLoader.cpp
+    src/lib/Camera.cpp
+    src/lib/DataFile.cpp
+    src/lib/Utils.cpp
+    src/lib/tsx.cpp
+    src/lib/tmx.cpp
 )
 
-target_link_libraries(${PROJECT_NAME}_tests gtest gtest_main cute spng_static)
+target_link_libraries(${PROJECT_NAME}_tests gtest gtest_main cute spng_static nlohmann_json::nlohmann_json pugixml-static)
 target_include_directories(${PROJECT_NAME}_tests PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)

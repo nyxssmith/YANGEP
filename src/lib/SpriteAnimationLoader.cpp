@@ -10,9 +10,9 @@ using namespace Cute;
 
 // Predefined animation layouts
 namespace AnimationLayouts {
-    // Idle: 4 directions × 1 frame each = 4 total frames (256x64 PNG)
+    // Idle: 1 frame × 4 directions each = 4 total frames (64x256 PNG)
     const AnimationLayout IDLE_4_DIRECTIONS(
-        "idle", 64, 64, 4, 1,
+        "idle", 64, 64, 1, 4,
         {Direction::UP, Direction::LEFT, Direction::DOWN, Direction::RIGHT}
     );
 

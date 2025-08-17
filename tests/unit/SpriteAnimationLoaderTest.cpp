@@ -22,13 +22,13 @@ protected:
 
 // Test animation layouts
 TEST_F(SpriteAnimationLoaderTest, AnimationLayouts) {
-    // Test idle layout
+    // Test idle layout (corrected: 1 frame per row, 4 directions)
     const auto& idle = AnimationLayouts::IDLE_4_DIRECTIONS;
     EXPECT_EQ(idle.name, "idle");
     EXPECT_EQ(idle.frame_width, 64);
     EXPECT_EQ(idle.frame_height, 64);
-    EXPECT_EQ(idle.frames_per_row, 4);
-    EXPECT_EQ(idle.frames_per_col, 1);
+    EXPECT_EQ(idle.frames_per_row, 1);
+    EXPECT_EQ(idle.frames_per_col, 4);
     EXPECT_EQ(idle.directions.size(), 4);
 
     // Test walkcycle layout
