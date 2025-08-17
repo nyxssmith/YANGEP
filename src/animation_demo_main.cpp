@@ -73,9 +73,9 @@ int main(int argc, char *argv[])
             break;
         }
 
-        // Clear screen with a nice dark background
+        // FIXED: Use single presentation approach to avoid CF graphics crash
+        // Draw background manually without separate screen clear
         CF_Color bg = make_color(0.1f, 0.1f, 0.15f, 1.0f); // Dark blue-gray
-        app_draw_onto_screen(true);
         cf_draw_push_color(bg);
         cf_draw_quad_fill(make_aabb(v2(0, 0), (float)cf_app_get_width(), (float)cf_app_get_height()), 0.0f);
         cf_draw_pop_color();
@@ -101,7 +101,8 @@ int main(int argc, char *argv[])
             printf("Continuing demo...\n");
         }
 
-        app_draw_onto_screen(false);
+        // FIXED: Single presentation call (no parameter = default behavior)
+        app_draw_onto_screen();
         frame_count++;
 
         // Debug: Show progress every 30 frames (roughly every 0.5 seconds at 60fps)

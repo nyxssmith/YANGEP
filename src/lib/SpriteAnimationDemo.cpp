@@ -140,16 +140,9 @@ void SpriteAnimationDemo::update(float dt) {
     // Handle input
     handleInput();
 
-    // Auto-cycle demo elements
-    if (demoTime >= directionChangeTime) {
-        cycleDirection();
-        directionChangeTime = demoTime + 3.0f;
-    }
-
-    if (demoTime >= animationChangeTime) {
-        cycleAnimation();
-        animationChangeTime = demoTime + 5.0f;
-    }
+    // Auto-cycle demo elements - DISABLED for player control
+    // Player now has full control via WASD keys and 1/2/SPACE keys
+    // No automatic direction or animation changes
 
     // Update animation
     updateAnimation(dt);
@@ -292,14 +285,20 @@ void SpriteAnimationDemo::updateAnimation(float dt) {
     if (currentAnimFrame && frameTimer >= currentAnimFrame->delay) {
         frameTimer = 0.0f;
 
-        // Advance to next frame
-        currentFrame++;
-
-        // Check if we need to loop
-        // For idle: 4 frames total (4 directions × 1 frame), for walkcycle: 36 frames total (4 directions × 9 frames)
-        int maxFrames = (currentAnimation == "idle") ? 4 : 36;
-        if (currentFrame >= maxFrames) {
+        // Advance to next frame - but handle idle vs animated differently
+        if (currentAnimation == "idle") {
+            // Idle animations don't advance frames - they stay at frame 0 for each direction
+            // Only direction changes based on user input, not time
             currentFrame = 0;
+        } else {
+            // Walkcycle and other animations advance through frames within each direction
+            currentFrame++;
+
+            // For walkcycle: 9 frames per direction, so max frame index is 8
+            int maxFramesPerDirection = 9;
+            if (currentFrame >= maxFramesPerDirection) {
+                currentFrame = 0;
+            }
         }
 
         printf("SpriteAnimationDemo: Frame %d, Direction %d, Animation %s\n",
