@@ -72,7 +72,8 @@ int main(int argc, char *argv[])
 	}
 
 	// Read debug options from config
-	bool debugHighlightNavmesh = false; // Default: don't highlight navmesh
+	bool debugHighlightNavmesh = false;		  // Default: don't highlight navmesh
+	bool debugHighlightNavMeshPoints = false; // Default: don't highlight navmesh points
 	if (windowConfig.contains("Debug"))
 	{
 		auto &debug = windowConfig["Debug"];
@@ -85,6 +86,11 @@ int main(int argc, char *argv[])
 		{
 			debugHighlightNavmesh = debug["highlightNavmesh"];
 			printf("Debug highlightNavmesh: %s\n", debugHighlightNavmesh ? "enabled" : "disabled");
+		}
+		if (debug.contains("highlightNavMeshPoints"))
+		{
+			debugHighlightNavMeshPoints = debug["highlightNavMeshPoints"];
+			printf("Debug highlightNavMeshPoints: %s\n", debugHighlightNavMeshPoints ? "enabled" : "disabled");
 		}
 	}
 
@@ -196,6 +202,7 @@ int main(int argc, char *argv[])
 
 	// NavMesh debug rendering toggle (initialized from config)
 	bool showNavMesh = debugHighlightNavmesh;
+	bool showNavMeshPoints = debugHighlightNavMeshPoints;
 
 	// Main loop
 	printf("Skeleton Adventure Game:\n");
@@ -208,6 +215,8 @@ int main(int argc, char *argv[])
 	printf("  1/2 - switch animations (idle/walk)\n");
 	printf("  SPACE - reset skeleton position\n");
 	printf("  N - toggle navmesh visualization\n");
+	printf("  M - toggle navmesh points visualization\n");
+	printf("  P - place/update navmesh point at player position\n");
 	printf("  ESC - quit\n");
 	while (cf_app_is_running())
 	{
@@ -276,6 +285,26 @@ int main(int argc, char *argv[])
 			printf("NavMesh visualization: %s\n", showNavMesh ? "ON" : "OFF");
 		}
 
+		// NavMesh points visualization toggle
+		if (cf_key_just_pressed(CF_KEY_M))
+		{
+			showNavMeshPoints = !showNavMeshPoints;
+			printf("NavMesh points visualization: %s\n", showNavMeshPoints ? "ON" : "OFF");
+		}
+
+		// Place/update NavMesh point at player position
+		if (cf_key_just_pressed(CF_KEY_P))
+		{
+			// Remove existing point if it exists
+			if (navmesh.getPoint("player_marker") != nullptr)
+			{
+				navmesh.removePoint("player_marker");
+			}
+			// Add new point at player position
+			navmesh.addPoint("player_marker", playerPosition);
+			printf("NavMesh point placed at player position (%.1f, %.1f)\n", playerPosition.x, playerPosition.y);
+		}
+
 		// Camera zoom controls (Q/E) and reset (R)
 		if (cf_key_just_pressed(CF_KEY_Q))
 		{
@@ -319,6 +348,12 @@ int main(int argc, char *argv[])
 		if (showNavMesh && navmesh.getPolygonCount() > 0)
 		{
 			navmesh.debugRender(cfCamera);
+		}
+
+		// Render NavMesh points debug visualization (if enabled)
+		if (showNavMeshPoints && navmesh.getPointCount() > 0)
+		{
+			navmesh.debugRenderPoints(cfCamera);
 		}
 
 		// Render skeleton at player position (world space)

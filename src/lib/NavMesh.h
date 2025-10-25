@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <memory>
+#include <string>
 #include <cute.h>
 
 // Forward declarations
@@ -31,15 +32,31 @@ struct NavEdge
         : start(s), end(e), poly_a(a), poly_b(b) {}
 };
 
+// Structure to represent a named point on the navigation mesh
+// Useful for spawn points, waypoints, objectives, etc.
+struct NavMeshPoint
+{
+    std::string name;  // Identifier for this point (e.g., "spawn_player", "waypoint_1")
+    CF_V2 position;    // World position of the point
+    int polygon_index; // Index of polygon containing this point (-1 if not on mesh)
+
+    NavMeshPoint() : name(""), position(cf_v2(0, 0)), polygon_index(-1) {}
+    NavMeshPoint(const std::string &n, CF_V2 pos)
+        : name(n), position(pos), polygon_index(-1) {}
+    NavMeshPoint(const std::string &n, CF_V2 pos, int poly_idx)
+        : name(n), position(pos), polygon_index(poly_idx) {}
+};
+
 // Main NavMesh class for pathfinding and navigation
 class NavMesh
 {
 private:
-    std::vector<NavPoly> polygons; // Navigation polygons
-    std::vector<NavEdge> edges;    // All edges in the mesh
-    CF_Aabb bounds;                // Bounding box of the entire mesh
-    int tile_width;                // Tile width from TMX
-    int tile_height;               // Tile height from TMX
+    std::vector<NavPoly> polygons;    // Navigation polygons
+    std::vector<NavEdge> edges;       // All edges in the mesh
+    std::vector<NavMeshPoint> points; // Named points on the mesh
+    CF_Aabb bounds;                   // Bounding box of the entire mesh
+    int tile_width;                   // Tile width from TMX
+    int tile_height;                  // Tile height from TMX
 
     // Helper functions for mesh generation
     void generateFromTileGrid(const std::vector<bool> &walkable_tiles,
@@ -87,8 +104,26 @@ public:
     // Check if a world point is walkable
     bool isWalkable(CF_V2 point) const;
 
+    // NavMesh point management
+    // Add a point to the mesh (automatically finds containing polygon)
+    bool addPoint(const std::string &name, CF_V2 position);
+
+    // Remove a point by name
+    bool removePoint(const std::string &name);
+
+    // Get a point by name (returns nullptr if not found)
+    const NavMeshPoint *getPoint(const std::string &name) const;
+
+    // Get all points
+    const std::vector<NavMeshPoint> &getPoints() const { return points; }
+    int getPointCount() const { return static_cast<int>(points.size()); }
+
+    // Clear all points
+    void clearPoints();
+
     // Debug rendering
     void debugRender(const class CFNativeCamera &camera) const;
     void debugRenderPolygons(const class CFNativeCamera &camera, CF_Color color = cf_color_white()) const;
     void debugRenderEdges(const class CFNativeCamera &camera, CF_Color color = cf_color_red()) const;
+    void debugRenderPoints(const class CFNativeCamera &camera, CF_Color color = cf_make_color_rgb(255, 255, 0)) const;
 };

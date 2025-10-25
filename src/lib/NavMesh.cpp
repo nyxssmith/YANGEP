@@ -379,3 +379,105 @@ void NavMesh::debugRenderEdges(const class CFNativeCamera &camera, CF_Color colo
 
     cf_draw_pop_color();
 }
+
+bool NavMesh::addPoint(const std::string &name, CF_V2 position)
+{
+    // Check if point with this name already exists
+    for (const auto &point : points)
+    {
+        if (point.name == name)
+        {
+            printf("NavMesh::addPoint - Point '%s' already exists\n", name.c_str());
+            return false;
+        }
+    }
+
+    // Find which polygon contains this position
+    int poly_idx = findPolygonAt(position);
+
+    if (poly_idx == -1)
+    {
+        printf("NavMesh::addPoint - Warning: Point '%s' at (%.1f, %.1f) is not on the navigation mesh\n",
+               name.c_str(), position.x, position.y);
+        // Still add it, but mark as not on mesh
+    }
+
+    points.push_back(NavMeshPoint(name, position, poly_idx));
+    printf("NavMesh::addPoint - Added point '%s' at (%.1f, %.1f) [polygon: %d]\n",
+           name.c_str(), position.x, position.y, poly_idx);
+    return true;
+}
+
+bool NavMesh::removePoint(const std::string &name)
+{
+    for (auto it = points.begin(); it != points.end(); ++it)
+    {
+        if (it->name == name)
+        {
+            points.erase(it);
+            printf("NavMesh::removePoint - Removed point '%s'\n", name.c_str());
+            return true;
+        }
+    }
+
+    printf("NavMesh::removePoint - Point '%s' not found\n", name.c_str());
+    return false;
+}
+
+const NavMeshPoint *NavMesh::getPoint(const std::string &name) const
+{
+    for (const auto &point : points)
+    {
+        if (point.name == name)
+        {
+            return &point;
+        }
+    }
+    return nullptr;
+}
+
+void NavMesh::clearPoints()
+{
+    printf("NavMesh::clearPoints - Clearing %d points\n", static_cast<int>(points.size()));
+    points.clear();
+}
+
+void NavMesh::debugRenderPoints(const class CFNativeCamera &camera, CF_Color color) const
+{
+    if (points.empty())
+        return;
+
+    cf_draw_push_color(color);
+
+    for (const auto &point : points)
+    {
+        // Create a small AABB around the point for visibility check
+        const float point_radius = 5.0f;
+        CF_Aabb point_bounds = make_aabb(
+            cf_v2(point.position.x - point_radius, point.position.y - point_radius),
+            cf_v2(point.position.x + point_radius, point.position.y + point_radius));
+
+        // Only render if visible
+        if (!camera.isVisible(point_bounds))
+            continue;
+
+        // Draw point as a circle (using a filled quad approximation)
+        const float size = 8.0f; // Size of the point marker
+        CF_Aabb point_rect = make_aabb(
+            cf_v2(point.position.x - size / 2, point.position.y - size / 2),
+            cf_v2(point.position.x + size / 2, point.position.y + size / 2));
+
+        cf_draw_quad_fill(point_rect, 0.0f);
+
+        // Draw a border around the point for better visibility
+        cf_draw_push_color(cf_make_color_rgb(0, 0, 0)); // Black border
+        cf_draw_quad(point_rect, 0.0f, 1.5f);
+        cf_draw_pop_color();
+
+        // Optionally draw the point name above it
+        // Note: You may want to adjust text rendering based on your setup
+        // draw_text(point.name.c_str(), cf_v2(point.position.x, point.position.y + size));
+    }
+
+    cf_draw_pop_color();
+}
