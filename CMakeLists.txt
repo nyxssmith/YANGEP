@@ -102,6 +102,7 @@ add_executable(
 	src/lib/SpriteAnimationLoader.cpp
 	src/lib/SpriteAnimationDemo.cpp
 	src/lib/NavMesh.cpp
+	src/lib/NavMeshPoint.cpp
 )
 
 # Our source code will be in the `src` folder.
@@ -176,6 +177,7 @@ add_executable(${PROJECT_NAME}_tests
     src/lib/tsx.cpp
     src/lib/tmx.cpp
     src/lib/NavMesh.cpp
+    src/lib/NavMeshPoint.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}_tests gtest gtest_main cute spng_static nlohmann_json::nlohmann_json pugixml-static)

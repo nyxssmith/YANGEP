@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include <cute.h>
+#include "NavMeshPoint.h"
 
 // Forward declarations
 struct TMXLayer;
@@ -30,21 +31,6 @@ struct NavEdge
     NavEdge() : start(cf_v2(0, 0)), end(cf_v2(0, 0)), poly_a(-1), poly_b(-1) {}
     NavEdge(CF_V2 s, CF_V2 e, int a = -1, int b = -1)
         : start(s), end(e), poly_a(a), poly_b(b) {}
-};
-
-// Structure to represent a named point on the navigation mesh
-// Useful for spawn points, waypoints, objectives, etc.
-struct NavMeshPoint
-{
-    std::string name;  // Identifier for this point (e.g., "spawn_player", "waypoint_1")
-    CF_V2 position;    // World position of the point
-    int polygon_index; // Index of polygon containing this point (-1 if not on mesh)
-
-    NavMeshPoint() : name(""), position(cf_v2(0, 0)), polygon_index(-1) {}
-    NavMeshPoint(const std::string &n, CF_V2 pos)
-        : name(n), position(pos), polygon_index(-1) {}
-    NavMeshPoint(const std::string &n, CF_V2 pos, int poly_idx)
-        : name(n), position(pos), polygon_index(poly_idx) {}
 };
 
 // Main NavMesh class for pathfinding and navigation
