@@ -4,6 +4,7 @@
 #include <dcimgui.h>
 #include "lib/DebugWindow.h"
 #include "lib/DataFileDebugWindow.h"
+#include "lib/DebugWindowList.h"
 #include "lib/Utils.h"
 #include "lib/DataFile.h"
 #include "lib/tsx.h"
@@ -15,18 +16,30 @@ using namespace Cute;
 
 int main(int argc, char *argv[])
 {
-	// Create a window with a resolution of 640 x 480.
+	// Create a window with a default resolution first (will resize after loading config)
 	int options = CF_APP_OPTIONS_WINDOW_POS_CENTERED_BIT | CF_APP_OPTIONS_RESIZABLE_BIT;
 	CF_Result result = make_app("Fancy Window Title", 0, 0, 0, 640, 480, options, argv[0]);
 	cf_app_init_imgui();
 	if (is_error(result))
 		return -1;
 
-	// Set up VFS for reading and writing
+	// Set up VFS for reading and writing (must be done after make_app)
 	mount_content_directory_as("/assets");
 
-	// Load game data
-	DataFile df("assets/DataFiles/EntityFiles/skeleton.json");
+	// Load window configuration and resize window
+	DataFile windowConfig("/assets/window-config.json");
+	if (windowConfig.contains("window"))
+	{
+		auto &window = windowConfig["window"];
+		if (window.contains("width") && window.contains("height"))
+		{
+			int windowWidth = window["width"];
+			int windowHeight = window["height"];
+			printf("Loaded window config: %dx%d\n", windowWidth, windowHeight);
+			// Resize the window to match the config
+			cf_app_set_size(windowWidth, windowHeight);
+		}
+	}
 
 	// Create TMX parser for the level
 	tmx levelMap("/assets/Levels/test_one/test_one.tmx");
@@ -36,15 +49,61 @@ int main(int argc, char *argv[])
 	int tile_width = levelMap.getTileWidth();
 	int tile_height = levelMap.getTileHeight();
 
-	// Create debug windows
-	DebugWindow debugWindow("Debug Info");
-	DataFileDebugWindow dataFileDebugWindow("DataFile Viewer", df);
+	// Create debug window list and populate from config
+	DebugWindowList debugWindows;
+
+	// Load debug windows from config
+	printf("Checking for DebugWindows in config...\n");
+	printf("Config contains DebugWindows: %s\n", windowConfig.contains("DebugWindows") ? "yes" : "no");
+
+	if (windowConfig.contains("DebugWindows"))
+	{
+		printf("DebugWindows is_array: %s\n", windowConfig["DebugWindows"].is_array() ? "yes" : "no");
+	}
+
+	if (windowConfig.contains("DebugWindows") && windowConfig["DebugWindows"].is_array())
+	{
+		printf("Number of entries in DebugWindows array: %zu\n", windowConfig["DebugWindows"].size());
+
+		for (const auto &debugWindowEntry : windowConfig["DebugWindows"])
+		{
+			printf("Processing debug window entry...\n");
+			printf("  Contains 'enabled': %s\n", debugWindowEntry.contains("enabled") ? "yes" : "no");
+
+			if (debugWindowEntry.contains("enabled"))
+			{
+				bool enabled = debugWindowEntry["enabled"].get<bool>();
+				printf("  Enabled: %s\n", enabled ? "yes" : "no");
+			}
+
+			if (debugWindowEntry.contains("enabled") && debugWindowEntry["enabled"].get<bool>())
+			{
+				if (debugWindowEntry.contains("dataFilePath"))
+				{
+					std::string path = debugWindowEntry["dataFilePath"];
+					printf("  Loading debug window for: %s\n", path.c_str());
+					debugWindows.add(path);
+				}
+				else
+				{
+					printf("  No dataFilePath found\n");
+				}
+			}
+		}
+	}
+	else
+	{
+		printf("DebugWindows not found or not an array\n");
+	}
+
+	printf("Loaded %zu debug windows from config\n", debugWindows.count());
 
 	// Create skeleton player character
 	SpriteAnimationDemo skeleton;
 	v2 playerPosition = cf_v2(0.0f, 0.0f); // Start at world origin
 
-	if (!skeleton.init()) {
+	if (!skeleton.init())
+	{
 		destroy_app();
 		return -1;
 	}
@@ -53,7 +112,7 @@ int main(int argc, char *argv[])
 	CFNativeCamera cfCamera(cf_v2(0.0f, 0.0f), 1.0f); // Start at origin with normal zoom
 
 	// Set up camera with basic settings
-	cfCamera.setZoomRange(0.25f, 4.0f);			   // Allow 1/4x to 4x zoom
+	cfCamera.setZoomRange(0.25f, 4.0f); // Allow 1/4x to 4x zoom
 
 	// Make camera follow the player
 	cfCamera.setTarget(&playerPosition);
@@ -78,12 +137,14 @@ int main(int argc, char *argv[])
 	printf("  1/2 - switch animations (idle/walk)\n");
 	printf("  SPACE - reset skeleton position\n");
 	printf("  ESC - quit\n");
-	while (cf_app_is_running()) {
+	while (cf_app_is_running())
+	{
 		// Update app to handle window events and input (proper CF pattern)
 		cf_app_update(NULL);
 
 		// Handle ESC to quit
-		if (cf_key_just_pressed(CF_KEY_ESCAPE)) {
+		if (cf_key_just_pressed(CF_KEY_ESCAPE))
+		{
 			break;
 		}
 
@@ -92,19 +153,23 @@ int main(int argc, char *argv[])
 		float playerSpeed = 200.0f; // pixels per second
 		bool playerMoved = false;
 
-		if (cf_key_down(CF_KEY_W) || cf_key_down(CF_KEY_UP)) {
+		if (cf_key_down(CF_KEY_W) || cf_key_down(CF_KEY_UP))
+		{
 			playerPosition.y += playerSpeed * dt;
 			playerMoved = true;
 		}
-		if (cf_key_down(CF_KEY_S) || cf_key_down(CF_KEY_DOWN)) {
+		if (cf_key_down(CF_KEY_S) || cf_key_down(CF_KEY_DOWN))
+		{
 			playerPosition.y -= playerSpeed * dt;
 			playerMoved = true;
 		}
-		if (cf_key_down(CF_KEY_A) || cf_key_down(CF_KEY_LEFT)) {
+		if (cf_key_down(CF_KEY_A) || cf_key_down(CF_KEY_LEFT))
+		{
 			playerPosition.x -= playerSpeed * dt;
 			playerMoved = true;
 		}
-		if (cf_key_down(CF_KEY_D) || cf_key_down(CF_KEY_RIGHT)) {
+		if (cf_key_down(CF_KEY_D) || cf_key_down(CF_KEY_RIGHT))
+		{
 			playerPosition.x += playerSpeed * dt;
 			playerMoved = true;
 		}
@@ -113,29 +178,36 @@ int main(int argc, char *argv[])
 		skeleton.handleInput();
 
 		// Reset skeleton position
-		if (cf_key_just_pressed(CF_KEY_SPACE)) {
+		if (cf_key_just_pressed(CF_KEY_SPACE))
+		{
 			playerPosition = cf_v2(0.0f, 0.0f);
 		}
 
 		// Camera feature demo keys
-		if (cf_key_just_pressed(CF_KEY_T)) {
+		if (cf_key_just_pressed(CF_KEY_T))
+		{
 			cfCamera.moveTo(cf_v2(playerPosition.x + 200.0f, playerPosition.y + 200.0f), 2.0f);
 		}
-		if (cf_key_just_pressed(CF_KEY_Y)) {
+		if (cf_key_just_pressed(CF_KEY_Y))
+		{
 			cfCamera.zoomTo(2.0f, 1.5f);
 		}
-		if (cf_key_just_pressed(CF_KEY_U)) {
+		if (cf_key_just_pressed(CF_KEY_U))
+		{
 			cfCamera.shake(20.0f, 1.5f);
 		}
 
 		// Camera zoom controls (Q/E) and reset (R)
-		if (cf_key_just_pressed(CF_KEY_Q)) {
+		if (cf_key_just_pressed(CF_KEY_Q))
+		{
 			cfCamera.zoomOut(1.2f);
 		}
-		if (cf_key_just_pressed(CF_KEY_E)) {
+		if (cf_key_just_pressed(CF_KEY_E))
+		{
 			cfCamera.zoomIn(1.2f);
 		}
-		if (cf_key_just_pressed(CF_KEY_R)) {
+		if (cf_key_just_pressed(CF_KEY_R))
+		{
 			cfCamera.reset();
 		}
 
@@ -146,8 +218,7 @@ int main(int argc, char *argv[])
 		cfCamera.update(dt);
 
 		// Render debug windows
-		debugWindow.render();
-		dataFileDebugWindow.render();
+		debugWindows.renderAll();
 
 		// Clear background
 		CF_Color bg = make_color(0.1f, 0.1f, 0.15f, 1.0f);
