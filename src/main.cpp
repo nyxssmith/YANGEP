@@ -14,6 +14,7 @@
 #include "lib/CFNativeCamera.h"
 #include "lib/SpriteAnimationDemo.h"
 #include "lib/NavMesh.h"
+#include "lib/NavMeshPath.h"
 using namespace Cute;
 
 int main(int argc, char *argv[])
@@ -204,6 +205,9 @@ int main(int argc, char *argv[])
 	bool showNavMesh = debugHighlightNavmesh;
 	bool showNavMeshPoints = debugHighlightNavMeshPoints;
 
+	// NavMesh path for pathfinding
+	NavMeshPath navmeshPath;
+
 	// Main loop
 	printf("Skeleton Adventure Game:\n");
 	printf("  WASD - move skeleton\n");
@@ -217,6 +221,7 @@ int main(int argc, char *argv[])
 	printf("  N - toggle navmesh visualization\n");
 	printf("  M - toggle navmesh points visualization\n");
 	printf("  P - place/update navmesh point at player position\n");
+	printf("  L - pathfind to navmesh point from player\n");
 	printf("  ESC - quit\n");
 	while (cf_app_is_running())
 	{
@@ -305,6 +310,31 @@ int main(int argc, char *argv[])
 			printf("NavMesh point placed at player position (%.1f, %.1f)\n", playerPosition.x, playerPosition.y);
 		}
 
+		// Pathfind to NavMesh point from player position
+		if (cf_key_just_pressed(CF_KEY_L))
+		{
+			// Check if there's a player_marker point to pathfind to
+			const NavMeshPoint *targetPoint = navmesh.getPoint("player_marker");
+			if (targetPoint != nullptr)
+			{
+				printf("Attempting to pathfind from player (%.1f, %.1f) to marker (%.1f, %.1f)\n",
+					   playerPosition.x, playerPosition.y, targetPoint->position.x, targetPoint->position.y);
+
+				if (navmeshPath.generateToPoint(navmesh, playerPosition, "player_marker"))
+				{
+					printf("Path generated successfully with %d waypoints\n", navmeshPath.getWaypointCount());
+				}
+				else
+				{
+					printf("Failed to generate path\n");
+				}
+			}
+			else
+			{
+				printf("No 'player_marker' point found. Press P to place a marker first.\n");
+			}
+		}
+
 		// Camera zoom controls (Q/E) and reset (R)
 		if (cf_key_just_pressed(CF_KEY_Q))
 		{
@@ -354,6 +384,12 @@ int main(int argc, char *argv[])
 		if (showNavMeshPoints && navmesh.getPointCount() > 0)
 		{
 			navmesh.debugRenderPoints(cfCamera);
+		}
+
+		// Render NavMesh path (if valid and points visualization is enabled)
+		if (showNavMeshPoints && navmeshPath.isValid())
+		{
+			navmeshPath.debugRender(cfCamera);
 		}
 
 		// Render skeleton at player position (world space)
