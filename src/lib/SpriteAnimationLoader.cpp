@@ -297,7 +297,9 @@ AnimationTable SpriteAnimationLoader::loadAnimationTable(const std::string &base
 
     for (const auto &layout : layouts) {
         // Construct PNG path for this animation
-        std::string png_path = base_path + "/" + layout.name + ".png";
+        // PhysFS requires absolute paths starting with /
+        // Also, animations are in subdirectories (idle/, walkcycle/) with specific filenames
+        std::string png_path = "/" + base_path + "/" + layout.name + "/BODY_skeleton.png";
 
         printf("SpriteAnimationLoader: Loading animation %s from %s\n", layout.name.c_str(), png_path.c_str());
 
