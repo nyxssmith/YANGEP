@@ -696,12 +696,10 @@ void tmx::renderAllLayers(const CFNativeCamera &camera, const DataFile &config, 
                     CF_Aabb line_bounds;
                     line_bounds.min = cf_v2(
                         std::min(line.start.x, line.end.x) - 1,
-                        std::min(line.start.y, line.end.y) - 1
-                    );
+                        std::min(line.start.y, line.end.y) - 1);
                     line_bounds.max = cf_v2(
                         std::max(line.start.x, line.end.x) + 1,
-                        std::max(line.start.y, line.end.y) + 1
-                    );
+                        std::max(line.start.y, line.end.y) + 1);
 
                     // Only draw if visible in camera
                     if (camera.isVisible(line_bounds))
@@ -872,7 +870,7 @@ std::vector<EdgeLine> tmx::calculateLayerOuterBorderLines(int layer_index, float
             float top = tile_world_y + half_height;
 
             // Check each edge and add a line if it faces empty space
-            
+
             // Top edge (faces up)
             if (y == 0 || layer->getTileGID(x, y - 1) == 0)
             {
