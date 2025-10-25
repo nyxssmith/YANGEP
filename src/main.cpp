@@ -7,6 +7,7 @@
 #include "lib/DebugWindowList.h"
 #include "lib/Utils.h"
 #include "lib/DataFile.h"
+#include "lib/RealConfigFile.h"
 #include "lib/tsx.h"
 #include "lib/tmx.h"
 
@@ -16,9 +17,29 @@ using namespace Cute;
 
 int main(int argc, char *argv[])
 {
-	// Create a window with a default resolution first (will resize after loading config)
+	// Load window configuration BEFORE creating the window (using RealConfigFile)
+	RealConfigFile preConfig("assets/window-config.json");
+	int windowWidth = 640;	// Default fallback
+	int windowHeight = 480; // Default fallback
+
+	if (preConfig.contains("window"))
+	{
+		auto &window = preConfig["window"];
+		if (window.contains("width") && window.contains("height"))
+		{
+			windowWidth = window["width"];
+			windowHeight = window["height"];
+			printf("Loaded window config: %dx%d\n", windowWidth, windowHeight);
+		}
+	}
+	else
+	{
+		printf("Could not load window config, using defaults: %dx%d\n", windowWidth, windowHeight);
+	}
+
+	// Create window with the configured size
 	int options = CF_APP_OPTIONS_WINDOW_POS_CENTERED_BIT | CF_APP_OPTIONS_RESIZABLE_BIT;
-	CF_Result result = make_app("Fancy Window Title", 0, 0, 0, 640, 480, options, argv[0]);
+	CF_Result result = make_app("Fancy Window Title", 0, 0, 0, windowWidth, windowHeight, options, argv[0]);
 	cf_app_init_imgui();
 	if (is_error(result))
 		return -1;
@@ -26,20 +47,8 @@ int main(int argc, char *argv[])
 	// Set up VFS for reading and writing (must be done after make_app)
 	mount_content_directory_as("/assets");
 
-	// Load window configuration and resize window
+	// Load window configuration again using VFS for debug windows
 	DataFile windowConfig("/assets/window-config.json");
-	if (windowConfig.contains("window"))
-	{
-		auto &window = windowConfig["window"];
-		if (window.contains("width") && window.contains("height"))
-		{
-			int windowWidth = window["width"];
-			int windowHeight = window["height"];
-			printf("Loaded window config: %dx%d\n", windowWidth, windowHeight);
-			// Resize the window to match the config
-			cf_app_set_size(windowWidth, windowHeight);
-		}
-	}
 
 	// Create TMX parser for the level
 	tmx levelMap("/assets/Levels/test_one/test_one.tmx");

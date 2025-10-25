@@ -91,6 +91,7 @@ add_executable(
 	${PROJECT_NAME}
 	src/main.cpp
 	src/lib/DataFile.cpp
+	src/lib/RealConfigFile.cpp
 	src/lib/DebugWindow.cpp
 	src/lib/DataFileDebugWindow.cpp
 	src/lib/DebugWindowList.cpp
