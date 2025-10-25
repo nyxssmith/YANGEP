@@ -13,6 +13,7 @@
 
 #include "lib/CFNativeCamera.h"
 #include "lib/SpriteAnimationDemo.h"
+#include "lib/NavMesh.h"
 using namespace Cute;
 
 int main(int argc, char *argv[])
@@ -71,6 +72,7 @@ int main(int argc, char *argv[])
 	}
 
 	// Read debug options from config
+	bool debugHighlightNavmesh = false; // Default: don't highlight navmesh
 	if (windowConfig.contains("Debug"))
 	{
 		auto &debug = windowConfig["Debug"];
@@ -78,6 +80,11 @@ int main(int argc, char *argv[])
 		{
 			debugHighlightViewport = debug["highlightViewport"];
 			printf("Debug highlightViewport: %s\n", debugHighlightViewport ? "enabled" : "disabled");
+		}
+		if (debug.contains("highlightNavmesh"))
+		{
+			debugHighlightNavmesh = debug["highlightNavmesh"];
+			printf("Debug highlightNavmesh: %s\n", debugHighlightNavmesh ? "enabled" : "disabled");
 		}
 	}
 
@@ -87,6 +94,24 @@ int main(int argc, char *argv[])
 
 	// Configure layer highlighting from config (parse once, use map for lookups)
 	levelMap.setLayerHighlightConfig(windowConfig);
+
+	// Create NavMesh for pathfinding and collision detection
+	NavMesh navmesh;
+	// Try to build from a navmesh layer (looks in navmesh_layers first)
+	// Common layer names: "navmesh", "nav_walkable", "collision", "walkable"
+	// Set invert=true if empty tiles are walkable, false if filled tiles are walkable
+	if (levelMap.getNavMeshLayerCount() > 0)
+	{
+		// Use the first navmesh layer found
+		auto navLayer = levelMap.getNavMeshLayer(0);
+		printf("Building navmesh from layer: %s\n", navLayer->name.c_str());
+		navmesh.buildFromLayer(navLayer, levelMap.getTileWidth(), levelMap.getTileHeight(), 0.0f, 0.0f, false);
+		printf("NavMesh created with %d polygons\n", navmesh.getPolygonCount());
+	}
+	else
+	{
+		printf("Warning: No navmesh layers found in level. Navigation mesh not created.\n");
+	}
 
 	// Get tile dimensions for proper spacing
 	int tile_width = levelMap.getTileWidth();
@@ -169,6 +194,9 @@ int main(int argc, char *argv[])
 	float bottom_left_y = -1.0f * (window_height / 2.0f);
 	// printf("Window size: %dx%d, bottom-left at (%.1f, %.1f)\n", window_width, window_height, bottom_left_x, bottom_left_y);
 
+	// NavMesh debug rendering toggle (initialized from config)
+	bool showNavMesh = debugHighlightNavmesh;
+
 	// Main loop
 	printf("Skeleton Adventure Game:\n");
 	printf("  WASD - move skeleton\n");
@@ -179,6 +207,7 @@ int main(int argc, char *argv[])
 	printf("  U - test camera shake\n");
 	printf("  1/2 - switch animations (idle/walk)\n");
 	printf("  SPACE - reset skeleton position\n");
+	printf("  N - toggle navmesh visualization\n");
 	printf("  ESC - quit\n");
 	while (cf_app_is_running())
 	{
@@ -240,6 +269,13 @@ int main(int argc, char *argv[])
 			cfCamera.shake(20.0f, 1.5f);
 		}
 
+		// NavMesh visualization toggle
+		if (cf_key_just_pressed(CF_KEY_N))
+		{
+			showNavMesh = !showNavMesh;
+			printf("NavMesh visualization: %s\n", showNavMesh ? "ON" : "OFF");
+		}
+
 		// Camera zoom controls (Q/E) and reset (R)
 		if (cf_key_just_pressed(CF_KEY_Q))
 		{
@@ -278,6 +314,12 @@ int main(int argc, char *argv[])
 
 		// Render TMX level (with CF-native camera transformations and config for layer highlighting)
 		levelMap.renderAllLayers(cfCamera, windowConfig, 0.0f, 0.0f);
+
+		// Render NavMesh debug visualization (if enabled)
+		if (showNavMesh && navmesh.getPolygonCount() > 0)
+		{
+			navmesh.debugRender(cfCamera);
+		}
 
 		// Render skeleton at player position (world space)
 		skeleton.render(playerPosition);
