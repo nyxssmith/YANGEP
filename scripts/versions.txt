@@ -10,3 +10,4 @@
 0.0.10-level-load-1-710030a
 0.0.11-main-3549482
 0.0.12-level-load-2-91a7daa
+0.0.13-aria-features-sprite-loading-phase-1-2-7685edd
