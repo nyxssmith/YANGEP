@@ -93,6 +93,7 @@ add_executable(
 	src/lib/DataFile.cpp
 	src/lib/DebugWindow.cpp
 	src/lib/DataFileDebugWindow.cpp
+	src/lib/DebugWindowList.cpp
 	src/lib/Utils.cpp
 	src/lib/tsx.cpp
 	src/lib/tmx.cpp
