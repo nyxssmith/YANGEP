@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "1.0",
+  "window": {
+    "width": 1280,
+    "height": 720,
+    "viewportWidth": 640,
+    "viewportHeight": 360
+  },
+  "DebugWindows": [
+    {
+      "enabled": false,
+      "title": "DataFile Viewer",
+      "dataFilePath": "/assets/window-config.json"
+    },
+    {
+      "enabled": true,
+      "title": "Window Config Viewer",
+      "dataFilePath": "/assets/DataFiles/EntityFiles/skeleton.json"
+    }
+  ],
+  "Debug": {
+    "highlightViewport": true,
+    "highlightLayers": ["layer_one"],
+    "highlightLayerBorders": ["layer_two"],
+    "highlightLayerOuterBorders": ["layer_one"]
+  }
+}

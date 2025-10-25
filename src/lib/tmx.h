@@ -12,6 +12,14 @@
 struct TMXTileset;
 struct TMXLayer;
 class Camera;
+class DataFile;
+
+// Structure to represent a line segment (edge)
+struct EdgeLine
+{
+    CF_V2 start;
+    CF_V2 end;
+};
 
 class tmx : public pugi::xml_document
 {
@@ -30,11 +38,32 @@ private:
     // Layers in this map
     std::vector<std::shared_ptr<TMXLayer>> layers;
 
+    // Layer highlighting configuration (layer name -> should highlight)
+    std::map<std::string, bool> layer_highlight_map;
+
+    // Layer border highlighting configuration (layer name -> should highlight borders only)
+    std::map<std::string, bool> layer_border_highlight_map;
+
+    // Layer outer border highlighting configuration (layer name -> should highlight outer borders only)
+    std::map<std::string, bool> layer_outer_border_highlight_map;
+
+    // Cached border edges for each layer (layer index -> vector of edge AABBs)
+    mutable std::map<int, std::vector<CF_Aabb>> layer_border_cache;
+
+    // Cached outer border edge lines for each layer (layer index -> vector of edge lines)
+    mutable std::map<int, std::vector<EdgeLine>> layer_outer_border_cache;
+
     // Helper functions
     bool loadTilesets();
     bool loadLayers();
     std::shared_ptr<TMXTileset> findTilesetForGID(int gid) const;
     void parseCSVData(const std::string &csv_data, std::vector<int> &tile_data) const;
+
+    // Calculate border edges for a layer (returns AABBs for each border tile)
+    std::vector<CF_Aabb> calculateLayerBorderEdges(int layer_index, float world_x, float world_y) const;
+
+    // Calculate outer border edge lines for a layer (returns individual edge lines)
+    std::vector<EdgeLine> calculateLayerOuterBorderLines(int layer_index, float world_x, float world_y) const;
 
 public:
     tmx() = default;
@@ -85,11 +114,20 @@ public:
     void renderLayer(int layer_index, const class CFNativeCamera &camera, float world_x = 0.0f, float world_y = 0.0f) const;
     void renderLayer(const std::string &layer_name, const class CFNativeCamera &camera, float world_x = 0.0f, float world_y = 0.0f) const;
 
+    // Render layer with highlighting option
+    void renderLayer(int layer_index, const class CFNativeCamera &camera, bool highlight_tiles, float world_x = 0.0f, float world_y = 0.0f) const;
+
     // Render all layers at given position
     void renderAllLayers(float world_x, float world_y) const;
 
     // Render all layers with camera-aware culling and positioning
     void renderAllLayers(const class CFNativeCamera &camera, float world_x = 0.0f, float world_y = 0.0f) const;
+
+    // Render all layers with camera and config for layer highlighting
+    void renderAllLayers(const class CFNativeCamera &camera, const class DataFile &config, float world_x = 0.0f, float world_y = 0.0f) const;
+
+    // Configure layer highlighting from config (processes once and stores in map)
+    void setLayerHighlightConfig(const class DataFile &config);
 
     // Cache management
     void clearAllSpriteCaches();
