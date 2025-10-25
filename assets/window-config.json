@@ -6,7 +6,7 @@
   },
   "DebugWindows": [
     {
-      "enabled": true,
+      "enabled": false,
       "title": "DataFile Viewer",
       "dataFilePath": "/assets/window-config.json"
     },
