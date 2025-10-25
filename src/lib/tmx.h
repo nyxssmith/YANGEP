@@ -12,6 +12,7 @@
 struct TMXTileset;
 struct TMXLayer;
 class Camera;
+class DataFile;
 
 class tmx : public pugi::xml_document
 {
@@ -29,6 +30,9 @@ private:
 
     // Layers in this map
     std::vector<std::shared_ptr<TMXLayer>> layers;
+
+    // Layer highlighting configuration (layer name -> should highlight)
+    std::map<std::string, bool> layer_highlight_map;
 
     // Helper functions
     bool loadTilesets();
@@ -85,11 +89,20 @@ public:
     void renderLayer(int layer_index, const class CFNativeCamera &camera, float world_x = 0.0f, float world_y = 0.0f) const;
     void renderLayer(const std::string &layer_name, const class CFNativeCamera &camera, float world_x = 0.0f, float world_y = 0.0f) const;
 
+    // Render layer with highlighting option
+    void renderLayer(int layer_index, const class CFNativeCamera &camera, bool highlight_tiles, float world_x = 0.0f, float world_y = 0.0f) const;
+
     // Render all layers at given position
     void renderAllLayers(float world_x, float world_y) const;
 
     // Render all layers with camera-aware culling and positioning
     void renderAllLayers(const class CFNativeCamera &camera, float world_x = 0.0f, float world_y = 0.0f) const;
+
+    // Render all layers with camera and config for layer highlighting
+    void renderAllLayers(const class CFNativeCamera &camera, const class DataFile &config, float world_x = 0.0f, float world_y = 0.0f) const;
+
+    // Configure layer highlighting from config (processes once and stores in map)
+    void setLayerHighlightConfig(const class DataFile &config);
 
     // Cache management
     void clearAllSpriteCaches();

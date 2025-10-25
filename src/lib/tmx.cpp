@@ -1,4 +1,5 @@
 #include "tmx.h"
+#include "DataFile.h"
 #include "CFNativeCamera.h"
 #include <cute.h>
 #include <functional>
@@ -445,6 +446,12 @@ void tmx::renderAllLayers(float world_x, float world_y) const
 
 void tmx::renderLayer(int layer_index, const CFNativeCamera &camera, float world_x, float world_y) const
 {
+    // Forward to the version with highlight parameter (no highlighting)
+    renderLayer(layer_index, camera, false, world_x, world_y);
+}
+
+void tmx::renderLayer(int layer_index, const CFNativeCamera &camera, bool highlight_tiles, float world_x, float world_y) const
+{
     auto layer = getLayer(layer_index);
     if (!layer || !layer->visible)
     {
@@ -561,6 +568,23 @@ void tmx::renderLayer(int layer_index, const CFNativeCamera &camera, float world
             cf_draw_sprite(&sprite);
             cf_draw_pop();
 
+            // Draw tile highlight border if enabled for this layer
+            if (highlight_tiles)
+            {
+                // Sprites are drawn from their center, so adjust the highlight rectangle
+                // to match where the sprite actually appears
+                float half_width = tile_width / 2.0f;
+                float half_height = tile_height / 2.0f;
+
+                CF_Aabb tile_rect;
+                tile_rect.min = cf_v2(tile_world_x - half_width, tile_world_y - half_height);
+                tile_rect.max = cf_v2(tile_world_x + half_width, tile_world_y + half_height);
+
+                cf_draw_push_color(make_color(1.0f, 1.0f, 0.0f, 0.8f)); // Yellow, slightly transparent
+                cf_draw_quad(tile_rect, 0.0f, 2.0f);                    // 2px thick outline
+                cf_draw_pop_color();
+            }
+
             tiles_rendered++;
         }
     }
@@ -591,8 +615,53 @@ void tmx::renderAllLayers(const CFNativeCamera &camera, float world_x, float wor
 {
     for (int i = 0; i < static_cast<int>(layers.size()); i++)
     {
-        renderLayer(i, camera, world_x, world_y);
+        renderLayer(i, camera, false, world_x, world_y);
     }
+}
+
+void tmx::renderAllLayers(const CFNativeCamera &camera, const DataFile &config, float world_x, float world_y) const
+{
+    // Render each layer with highlighting based on pre-configured map
+    for (int i = 0; i < static_cast<int>(layers.size()); i++)
+    {
+        bool should_highlight = false;
+        if (i < static_cast<int>(layers.size()) && layers[i])
+        {
+            const std::string &layer_name = layers[i]->name;
+            // Check highlight map (efficient O(log n) lookup)
+            auto it = layer_highlight_map.find(layer_name);
+            if (it != layer_highlight_map.end())
+            {
+                should_highlight = it->second;
+            }
+        }
+        renderLayer(i, camera, should_highlight, world_x, world_y);
+    }
+}
+
+void tmx::setLayerHighlightConfig(const DataFile &config)
+{
+    // Clear existing configuration
+    layer_highlight_map.clear();
+
+    // Parse highlightLayers from config once
+    if (config.contains("Debug") && config["Debug"].contains("highlightLayers"))
+    {
+        auto &layers_json = config["Debug"]["highlightLayers"];
+        if (layers_json.is_array())
+        {
+            for (const auto &layer_name : layers_json)
+            {
+                if (layer_name.is_string())
+                {
+                    std::string name = layer_name.get<std::string>();
+                    layer_highlight_map[name] = true;
+                }
+            }
+        }
+    }
+
+    printf("Configured layer highlighting for %zu layers\n", layer_highlight_map.size());
 }
 
 void tmx::clearAllSpriteCaches()
