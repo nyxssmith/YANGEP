@@ -637,12 +637,51 @@ void tmx::renderAllLayers(const CFNativeCamera &camera, const DataFile &config, 
         }
         renderLayer(i, camera, should_highlight, world_x, world_y);
     }
+
+    // After rendering all layers, draw border highlights for configured layers
+    for (int i = 0; i < static_cast<int>(layers.size()); i++)
+    {
+        if (i < static_cast<int>(layers.size()) && layers[i])
+        {
+            const std::string &layer_name = layers[i]->name;
+
+            // Check if this layer should have border highlighting
+            auto border_it = layer_border_highlight_map.find(layer_name);
+            if (border_it != layer_border_highlight_map.end() && border_it->second)
+            {
+                // Check if borders are cached for this layer
+                auto cache_it = layer_border_cache.find(i);
+                if (cache_it == layer_border_cache.end())
+                {
+                    // Not cached, calculate and cache the border edges
+                    layer_border_cache[i] = calculateLayerBorderEdges(i, world_x, world_y);
+                    printf("Cached border edges for layer '%s': %zu edges\n",
+                           layer_name.c_str(), layer_border_cache[i].size());
+                }
+
+                // Draw the cached border edges
+                const auto &edges = layer_border_cache[i];
+                cf_draw_push_color(make_color(0.0f, 1.0f, 1.0f, 0.9f)); // Cyan, mostly opaque
+                for (const auto &edge : edges)
+                {
+                    // Only draw if visible in camera
+                    if (camera.isVisible(edge))
+                    {
+                        cf_draw_quad(edge, 0.0f, 3.0f); // 3px thick outline
+                    }
+                }
+                cf_draw_pop_color();
+            }
+        }
+    }
 }
 
 void tmx::setLayerHighlightConfig(const DataFile &config)
 {
     // Clear existing configuration
     layer_highlight_map.clear();
+    layer_border_highlight_map.clear();
+    layer_border_cache.clear();
 
     // Parse highlightLayers from config once
     if (config.contains("Debug") && config["Debug"].contains("highlightLayers"))
@@ -661,7 +700,84 @@ void tmx::setLayerHighlightConfig(const DataFile &config)
         }
     }
 
+    // Parse highlightLayerBorders from config once
+    if (config.contains("Debug") && config["Debug"].contains("highlightLayerBorders"))
+    {
+        auto &borders_json = config["Debug"]["highlightLayerBorders"];
+        if (borders_json.is_array())
+        {
+            for (const auto &layer_name : borders_json)
+            {
+                if (layer_name.is_string())
+                {
+                    std::string name = layer_name.get<std::string>();
+                    layer_border_highlight_map[name] = true;
+                }
+            }
+        }
+    }
+
     printf("Configured layer highlighting for %zu layers\n", layer_highlight_map.size());
+    printf("Configured layer border highlighting for %zu layers\n", layer_border_highlight_map.size());
+}
+
+std::vector<CF_Aabb> tmx::calculateLayerBorderEdges(int layer_index, float world_x, float world_y) const
+{
+    std::vector<CF_Aabb> edges;
+
+    auto layer = getLayer(layer_index);
+    if (!layer || !layer->visible)
+    {
+        return edges;
+    }
+
+    // For each tile, check if it's on the border of the filled area
+    // A tile is on the border if it's filled and has at least one empty neighbor
+    for (int y = 0; y < layer->height; y++)
+    {
+        for (int x = 0; x < layer->width; x++)
+        {
+            int gid = layer->getTileGID(x, y);
+            if (gid == 0)
+                continue; // Skip empty tiles
+
+            // Check if this tile is on the border (has at least one empty neighbor or edge)
+            bool is_border = false;
+
+            // Check all 4 directions (up, down, left, right)
+            // Top
+            if (y == 0 || layer->getTileGID(x, y - 1) == 0)
+                is_border = true;
+            // Bottom
+            if (y == layer->height - 1 || layer->getTileGID(x, y + 1) == 0)
+                is_border = true;
+            // Left
+            if (x == 0 || layer->getTileGID(x - 1, y) == 0)
+                is_border = true;
+            // Right
+            if (x == layer->width - 1 || layer->getTileGID(x + 1, y) == 0)
+                is_border = true;
+
+            if (is_border)
+            {
+                // Calculate world position for this border tile
+                float tile_world_x = world_x + (x * tile_width);
+                float tile_world_y = world_y + ((layer->height - 1 - y) * tile_height);
+
+                // Create AABB for this tile (centered, like the sprites)
+                float half_width = tile_width / 2.0f;
+                float half_height = tile_height / 2.0f;
+
+                CF_Aabb tile_rect;
+                tile_rect.min = cf_v2(tile_world_x - half_width, tile_world_y - half_height);
+                tile_rect.max = cf_v2(tile_world_x + half_width, tile_world_y + half_height);
+
+                edges.push_back(tile_rect);
+            }
+        }
+    }
+
+    return edges;
 }
 
 void tmx::clearAllSpriteCaches()

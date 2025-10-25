@@ -34,11 +34,20 @@ private:
     // Layer highlighting configuration (layer name -> should highlight)
     std::map<std::string, bool> layer_highlight_map;
 
+    // Layer border highlighting configuration (layer name -> should highlight borders only)
+    std::map<std::string, bool> layer_border_highlight_map;
+
+    // Cached border edges for each layer (layer index -> vector of edge AABBs)
+    mutable std::map<int, std::vector<CF_Aabb>> layer_border_cache;
+
     // Helper functions
     bool loadTilesets();
     bool loadLayers();
     std::shared_ptr<TMXTileset> findTilesetForGID(int gid) const;
     void parseCSVData(const std::string &csv_data, std::vector<int> &tile_data) const;
+
+    // Calculate border edges for a layer (returns AABBs for each border tile)
+    std::vector<CF_Aabb> calculateLayerBorderEdges(int layer_index, float world_x, float world_y) const;
 
 public:
     tmx() = default;
