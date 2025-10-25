@@ -47,8 +47,27 @@ int main(int argc, char *argv[])
 	// Set up VFS for reading and writing (must be done after make_app)
 	mount_content_directory_as("/assets");
 
-	// Load window configuration again using VFS for debug windows
+	// Load window configuration again using VFS for viewport and debug windows
 	DataFile windowConfig("/assets/window-config.json");
+
+	// Read viewport dimensions from config (defaults to window size)
+	float viewportWidth = (float)windowWidth;
+	float viewportHeight = (float)windowHeight;
+
+	if (windowConfig.contains("window"))
+	{
+		auto &window = windowConfig["window"];
+		if (window.contains("viewportWidth") && window.contains("viewportHeight"))
+		{
+			viewportWidth = window["viewportWidth"];
+			viewportHeight = window["viewportHeight"];
+			printf("Loaded viewport config: %.0fx%.0f\n", viewportWidth, viewportHeight);
+		}
+		else
+		{
+			printf("No viewport size in config, using window size: %.0fx%.0f\n", viewportWidth, viewportHeight);
+		}
+	}
 
 	// Create TMX parser for the level
 	tmx levelMap("/assets/Levels/test_one/test_one.tmx");
@@ -117,8 +136,8 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	// Create CF-native camera for handling view transformations
-	CFNativeCamera cfCamera(cf_v2(0.0f, 0.0f), 1.0f); // Start at origin with normal zoom
+	// Create CF-native camera with explicit viewport dimensions from config
+	CFNativeCamera cfCamera(cf_v2(0.0f, 0.0f), 1.0f, viewportWidth, viewportHeight);
 
 	// Set up camera with basic settings
 	cfCamera.setZoomRange(0.25f, 4.0f); // Allow 1/4x to 4x zoom
@@ -252,12 +271,42 @@ int main(int argc, char *argv[])
 		cfCamera.restore();
 
 		// UI space drawing (not affected by camera)
-		cfCamera.drawDebugInfo(10.0f, -240.0f + 20.0f); // Top-left corner
+		// Get current window dimensions for proper UI positioning
+		int current_width = cf_app_get_width();
+		int current_height = cf_app_get_height();
+		float top_y = -(current_height / 2.0f) + 20.0f; // 20px from top
+
+		cfCamera.drawDebugInfo(10.0f, top_y);
 
 		// Show player position in UI
 		char playerInfo[256];
 		snprintf(playerInfo, sizeof(playerInfo), "Player: (%.0f, %.0f)", playerPosition.x, playerPosition.y);
-		draw_text(playerInfo, cf_v2(10.0f, -240.0f + 40.0f));
+		draw_text(playerInfo, cf_v2(10.0f, top_y + 20.0f));
+
+		// Draw viewport rectangle visualization
+		if (true)
+		{
+			// Get viewport size from camera
+			v2 viewport_size = cfCamera.getViewportSize();
+
+			// Calculate viewport rectangle in screen space (centered)
+			float half_vp_width = viewport_size.x / 2.0f;
+			float half_vp_height = viewport_size.y / 2.0f;
+
+			CF_Aabb viewport_rect = make_aabb(
+				cf_v2(-half_vp_width, -half_vp_height),
+				cf_v2(half_vp_width, half_vp_height));
+
+			// Draw viewport boundary as a colored rectangle outline
+			cf_draw_push_color(make_color(1.0f, 0.0f, 0.0f, 1.0f)); // Red
+			cf_draw_quad(viewport_rect, 0.0f, 3.0f);				// 3px thick outline
+			cf_draw_pop_color();
+
+			// Draw viewport info text
+			char viewportInfo[256];
+			snprintf(viewportInfo, sizeof(viewportInfo), "Viewport: %.0fx%.0f", viewport_size.x, viewport_size.y);
+			draw_text(viewportInfo, cf_v2(10.0f, top_y + 40.0f));
+		}
 
 		app_draw_onto_screen();
 	}
