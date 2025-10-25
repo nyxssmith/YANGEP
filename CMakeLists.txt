@@ -38,7 +38,7 @@ include(FetchContent)
 FetchContent_Declare(
 	cute
 	GIT_REPOSITORY https://github.com/RandyGaul/cute_framework
-	GIT_TAG master
+	GIT_TAG 0124e35 # master as of Oct 25 2025
 	GIT_SHALLOW
 )
 
