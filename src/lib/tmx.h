@@ -14,6 +14,13 @@ struct TMXLayer;
 class Camera;
 class DataFile;
 
+// Structure to represent a line segment (edge)
+struct EdgeLine
+{
+    CF_V2 start;
+    CF_V2 end;
+};
+
 class tmx : public pugi::xml_document
 {
 private:
@@ -37,8 +44,14 @@ private:
     // Layer border highlighting configuration (layer name -> should highlight borders only)
     std::map<std::string, bool> layer_border_highlight_map;
 
+    // Layer outer border highlighting configuration (layer name -> should highlight outer borders only)
+    std::map<std::string, bool> layer_outer_border_highlight_map;
+
     // Cached border edges for each layer (layer index -> vector of edge AABBs)
     mutable std::map<int, std::vector<CF_Aabb>> layer_border_cache;
+
+    // Cached outer border edge lines for each layer (layer index -> vector of edge lines)
+    mutable std::map<int, std::vector<EdgeLine>> layer_outer_border_cache;
 
     // Helper functions
     bool loadTilesets();
@@ -48,6 +61,9 @@ private:
 
     // Calculate border edges for a layer (returns AABBs for each border tile)
     std::vector<CF_Aabb> calculateLayerBorderEdges(int layer_index, float world_x, float world_y) const;
+
+    // Calculate outer border edge lines for a layer (returns individual edge lines)
+    std::vector<EdgeLine> calculateLayerOuterBorderLines(int layer_index, float world_x, float world_y) const;
 
 public:
     tmx() = default;

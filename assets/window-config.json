@@ -21,6 +21,7 @@
   "Debug": {
     "highlightViewport": true,
     "highlightLayers": ["layer_one"],
-    "highlightLayerBorders": ["layer_two"]
+    "highlightLayerBorders": ["layer_two"],
+    "highlightLayerOuterBorders": ["layer_one"]
   }
 }
