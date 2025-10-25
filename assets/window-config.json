@@ -21,6 +21,7 @@
   "Debug": {
     "highlightViewport": true,
     "highlightNavmesh": true,
+    "highlightNavMeshPoints": true,
     "highlightLayers": [],
     "highlightLayerBorders": [],
     "highlightLayerOuterBorders": []
