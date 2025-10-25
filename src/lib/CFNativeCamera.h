@@ -10,10 +10,12 @@ using namespace Cute;
  *
  * Uses cf_draw_push/pop, cf_draw_translate, cf_draw_scale instead of custom matrices
  */
-class CFNativeCamera {
+class CFNativeCamera
+{
 public:
     CFNativeCamera();
     CFNativeCamera(v2 position, float zoom = 1.0f);
+    CFNativeCamera(v2 position, float zoom, float viewport_width, float viewport_height);
 
     // Basic camera operations
     void apply();
@@ -34,6 +36,12 @@ public:
     void zoomOut(float factor = 1.1f);
     void setZoomRange(float min_zoom, float max_zoom);
 
+    // Viewport control
+    void setViewportSize(float width, float height);
+    void setViewportSize(v2 size);
+    v2 getViewportSize() const;
+    void updateViewportFromWindow(); // Update viewport from cf_app_get_width/height
+
     // Input handling
     void handleInput(float dt);
 
@@ -43,7 +51,7 @@ public:
     void stopShake();
 
     // Target following
-    void setTarget(v2* target);
+    void setTarget(v2 *target);
     void setTarget(v2 target);
     void clearTarget();
     void setFollowSpeed(float speed);
@@ -73,6 +81,11 @@ private:
     float m_max_zoom;
     bool m_is_applied;
 
+    // Viewport
+    float m_viewport_width;
+    float m_viewport_height;
+    bool m_use_window_size; // If true, query window size; if false, use stored viewport
+
     // Camera shake
     float m_shake_intensity;
     float m_shake_duration;
@@ -80,7 +93,7 @@ private:
     v2 m_shake_offset;
 
     // Target following
-    v2* m_target_ptr;
+    v2 *m_target_ptr;
     v2 m_target_pos;
     bool m_has_static_target;
     float m_follow_speed;
