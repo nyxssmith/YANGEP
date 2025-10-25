@@ -131,6 +131,22 @@ void Camera::apply()
     // Get the final camera position including shake
     v2 final_position = m_position + m_shake_offset;
 
+    // Aggressive pixel alignment to prevent seams at any zoom level
+    // We need to ensure that after zoom transformation, everything aligns to pixel boundaries
+    if (m_zoom >= 1.0f)
+    {
+        // For zoom >= 1, round to 1/zoom precision to ensure pixel alignment after scaling
+        float zoom_precision = 1.0f / m_zoom;
+        final_position.x = floorf(final_position.x / zoom_precision) * zoom_precision;
+        final_position.y = floorf(final_position.y / zoom_precision) * zoom_precision;
+    }
+    else
+    {
+        // For zoom < 1, just round to integer pixels
+        final_position.x = roundf(final_position.x);
+        final_position.y = roundf(final_position.y);
+    }
+
     // Apply zoom (scale)
     cf_draw_scale(m_zoom, m_zoom);
 
@@ -142,7 +158,6 @@ void Camera::apply()
 
     // Apply translation (move world opposite to camera movement)
     cf_draw_translate(-final_position.x, -final_position.y);
-
     m_is_applied = true;
 }
 

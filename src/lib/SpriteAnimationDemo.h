@@ -1,0 +1,70 @@
+#ifndef SPRITE_ANIMATION_DEMO_H
+#define SPRITE_ANIMATION_DEMO_H
+
+#include <cute.h>
+#include "SpriteAnimationLoader.h"
+
+using namespace Cute;
+
+// Demo class to showcase the new SpriteAnimationLoader system
+class SpriteAnimationDemo {
+public:
+    SpriteAnimationDemo();
+    ~SpriteAnimationDemo();
+
+    // Initialize the demo with skeleton animations
+    bool init();
+
+    // Update demo state
+    void update(float dt);
+
+    // Render the demo
+    void render();
+
+    // Render the demo at a specific position
+    void render(v2 renderPosition);
+
+    // Handle input for demo controls
+    void handleInput();
+
+    // Check if demo is valid
+    bool isValid() const;
+
+private:
+    // The animation loader
+    SpriteAnimationLoader loader;
+
+    // Animation table containing all skeleton animations
+    AnimationTable animationTable;
+
+    // Current animation state
+    std::string currentAnimation;
+    Direction currentDirection;
+    int currentFrame;
+    float frameTimer;
+
+    // Demo state
+    bool initialized;
+    float demoTime;
+
+    // Input state
+    bool keysPressed[4]; // UP, LEFT, DOWN, RIGHT
+    bool animationKeys[2]; // 1 for idle, 2 for walkcycle
+
+    // Demo parameters
+    float directionChangeTime;
+    float animationChangeTime;
+
+    // Position for rendering
+    v2 position;
+
+    // Helper methods
+    void cycleDirection();
+    void cycleAnimation();
+    void updateAnimation(float dt);
+    void renderCurrentFrame();
+    void renderCurrentFrameAt(v2 renderPosition);
+    void renderDebugInfo();
+};
+
+#endif // SPRITE_ANIMATION_DEMO_H

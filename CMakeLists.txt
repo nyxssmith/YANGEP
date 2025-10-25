@@ -38,7 +38,7 @@ include(FetchContent)
 FetchContent_Declare(
 	cute
 	GIT_REPOSITORY https://github.com/RandyGaul/cute_framework
-	GIT_TAG master
+	GIT_TAG 0124e35 # master as of Oct 25 2025
 	GIT_SHALLOW
 )
 
@@ -96,9 +96,9 @@ add_executable(
 	src/lib/Utils.cpp
 	src/lib/tsx.cpp
 	src/lib/tmx.cpp
-	src/lib/Sprite.cpp
-	src/lib/SpriteDemo.cpp
-	src/lib/Camera.cpp
+	src/lib/CFNativeCamera.cpp
+	src/lib/SpriteAnimationLoader.cpp
+	src/lib/SpriteAnimationDemo.cpp
 )
 
 # Our source code will be in the `src` folder.
@@ -107,70 +107,72 @@ target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURR
 # Some basic information needed for CMake to generate your Info.plist file.
 # This is necessary for e.g. iOS builds.
 if(APPLE)
-	set_target_properties(
-		${PROJECT_NAME}
-		PROPERTIES
-		MACOSX_BUNDLE_GUI_IDENTIFIER "com.myteam.${PROJECT_NAME}"
-		MACOSX_BUNDLE_BUNDLE_VERSION "1.0.0"
-		MACOSX_BUNDLE_SHORT_VERSION_STRING "1.0.0"
-	)
+    set_target_properties(
+        ${PROJECT_NAME}
+        PROPERTIES
+        MACOSX_BUNDLE_GUI_IDENTIFIER "com.myteam.yangep"
+        MACOSX_BUNDLE_BUNDLE_VERSION "1.0.0"
+        MACOSX_BUNDLE_SHORT_VERSION_STRING "1.0.0"
+    )
 endif()
 
-# Make the game link against Cute Framework and nlohmann/json.
-target_link_libraries(${PROJECT_NAME} cute nlohmann_json::nlohmann_json pugixml spng_static)
-
-# Test executable
-add_executable(${PROJECT_NAME}_tests
-	tests/main.cpp
-	tests/unit/DataFileTest.cpp
-	tests/unit/DebugWindowTest.cpp
-	tests/unit/UtilsTest.cpp
-	tests/integration/SpriteSystemTest.cpp
-	tests/unit/DataFileTest.h
-	tests/unit/DebugWindowTest.h
-	tests/unit/UtilsTest.h
-	tests/integration/SpriteSystemTest.h
-	tests/fixtures/TestFixture.hpp
-	src/lib/DataFile.cpp
-	src/lib/DebugWindow.cpp
-	src/lib/Utils.cpp
-	src/lib/tsx.cpp
-	src/lib/tmx.cpp
-	src/lib/Sprite.cpp
-	src/lib/SpriteDemo.cpp
-	src/lib/Camera.cpp
+# Make the game link against Cute Framework and other dependencies
+target_link_libraries(${PROJECT_NAME}
+    cute
+    nlohmann_json::nlohmann_json
+    pugixml
+    spng_static
 )
 
-# Link test executable with dependencies
-target_link_libraries(${PROJECT_NAME}_tests
-	cute
-	nlohmann_json::nlohmann_json
-	pugixml
-	spng_static
-	gtest
-	gtest_main
+# Animation Demo executable - dedicated demo for sprite animation system
+add_executable(${PROJECT_NAME}_animation_demo
+    src/animation_demo_main.cpp
+    src/lib/SpriteAnimationLoader.cpp
+    src/lib/SpriteAnimationDemo.cpp
+    src/lib/Utils.cpp
+    src/lib/DataFile.cpp
 )
 
-# Include directories for tests
-target_include_directories(${PROJECT_NAME}_tests
-	PUBLIC
-	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
-	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/tests>
+# Animation demo needs the same dependencies as main project
+target_link_libraries(${PROJECT_NAME}_animation_demo
+    cute
+    nlohmann_json::nlohmann_json
+    spng_static
 )
+target_include_directories(${PROJECT_NAME}_animation_demo PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)
 
-# Add test to CTest
-add_test(NAME ${PROJECT_NAME}_tests COMMAND ${PROJECT_NAME}_tests)
 
-# Copy test assets
-add_custom_command(TARGET ${PROJECT_NAME}_tests POST_BUILD
-	COMMAND ${CMAKE_COMMAND} -E copy_directory
-	${CMAKE_SOURCE_DIR}/tests/assets
-	$<TARGET_FILE_DIR:${PROJECT_NAME}_tests>/tests/assets
-)
 
 # For convenience on Windows, set MSVC debugger's working directory in the build folder.
 # Also ask MSVC to make the game the startup project.
 if (MSVC)
-	set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY $<TARGET_FILE_DIR:${PROJECT_NAME}>)
-	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
+    set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY $<TARGET_FILE_DIR:${PROJECT_NAME}>)
+    set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
+
+    # Also set working directory for animation demo
+    set_property(TARGET ${PROJECT_NAME}_animation_demo PROPERTY VS_DEBUGGER_WORKING_DIRECTORY $<TARGET_FILE_DIR:${PROJECT_NAME}_animation_demo>)
 endif()
+
+
+
+
+
+# Test executable
+add_executable(${PROJECT_NAME}_tests
+    tests/main.cpp
+    tests/unit/SpriteAnimationLoaderTest.cpp
+    tests/unit/TMXTest.cpp
+    tests/unit/PNGValidationTest.cpp
+    tests/unit/CFNativeCameraTest.cpp
+    tests/integration/SpriteSystemIntegrationTest.cpp
+    tests/integration/TMXRenderingTest.cpp
+    src/lib/SpriteAnimationLoader.cpp
+    src/lib/CFNativeCamera.cpp
+    src/lib/DataFile.cpp
+    src/lib/Utils.cpp
+    src/lib/tsx.cpp
+    src/lib/tmx.cpp
+)
+
+target_link_libraries(${PROJECT_NAME}_tests gtest gtest_main cute spng_static nlohmann_json::nlohmann_json pugixml-static)
+target_include_directories(${PROJECT_NAME}_tests PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)
