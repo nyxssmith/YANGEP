@@ -53,6 +53,7 @@ int main(int argc, char *argv[])
 	// Read viewport dimensions from config (defaults to window size)
 	float viewportWidth = (float)windowWidth;
 	float viewportHeight = (float)windowHeight;
+	bool debugHighlightViewport = false; // Default: don't highlight viewport
 
 	if (windowConfig.contains("window"))
 	{
@@ -69,9 +70,23 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	// Read debug options from config
+	if (windowConfig.contains("Debug"))
+	{
+		auto &debug = windowConfig["Debug"];
+		if (debug.contains("highlightViewport"))
+		{
+			debugHighlightViewport = debug["highlightViewport"];
+			printf("Debug highlightViewport: %s\n", debugHighlightViewport ? "enabled" : "disabled");
+		}
+	}
+
 	// Create TMX parser for the level
 	tmx levelMap("/assets/Levels/test_one/test_one.tmx");
 	levelMap.debugPrint();
+
+	// Configure layer highlighting from config (parse once, use map for lookups)
+	levelMap.setLayerHighlightConfig(windowConfig);
 
 	// Get tile dimensions for proper spacing
 	int tile_width = levelMap.getTileWidth();
@@ -261,8 +276,8 @@ int main(int argc, char *argv[])
 		v2 text_position1 = cf_v2(0.0f, 0.0f); // World origin
 		draw_text("Skeleton Adventure - TMX Level Map", text_position1);
 
-		// Render TMX level (with CF-native camera transformations and culling)
-		levelMap.renderAllLayers(cfCamera, 0.0f, 0.0f);
+		// Render TMX level (with CF-native camera transformations and config for layer highlighting)
+		levelMap.renderAllLayers(cfCamera, windowConfig, 0.0f, 0.0f);
 
 		// Render skeleton at player position (world space)
 		skeleton.render(playerPosition);
@@ -283,8 +298,8 @@ int main(int argc, char *argv[])
 		snprintf(playerInfo, sizeof(playerInfo), "Player: (%.0f, %.0f)", playerPosition.x, playerPosition.y);
 		draw_text(playerInfo, cf_v2(10.0f, top_y + 20.0f));
 
-		// Draw viewport rectangle visualization
-		if (true)
+		// Draw viewport rectangle visualization (if enabled in config)
+		if (debugHighlightViewport)
 		{
 			// Get viewport size from camera
 			v2 viewport_size = cfCamera.getViewportSize();
