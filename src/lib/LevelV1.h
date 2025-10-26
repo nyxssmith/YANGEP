@@ -148,9 +148,10 @@ public:
     void updateAgents(float dt);
 
     /**
-     * Render all agents in the level
+     * Render all agents in the level that are visible in the camera viewport
+     * @param camera Camera to use for viewport culling
      */
-    void renderAgents();
+    void renderAgents(const CFNativeCamera &camera);
 
     /**
      * Render all layers of the level map

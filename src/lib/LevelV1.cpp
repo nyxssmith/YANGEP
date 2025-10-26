@@ -229,15 +229,46 @@ void LevelV1::updateAgents(float dt)
     }
 }
 
-void LevelV1::renderAgents()
+void LevelV1::renderAgents(const CFNativeCamera &camera)
 {
+    // Get camera view bounds for culling
+    CF_Aabb viewBounds = camera.getViewBounds();
+
+    // Reasonable default size for agent bounds (can be adjusted or made configurable)
+    const float agentHalfSize = 32.0f; // Assumes agent is roughly 64x64 pixels
+
+    int renderedCount = 0;
+    int culledCount = 0;
+
     for (auto &agent : agents)
     {
         if (agent)
         {
-            agent->render(agent->getPosition());
+            v2 agentPos = agent->getPosition();
+
+            // Create a bounding box around the agent
+            CF_Aabb agentBounds = make_aabb(
+                cf_v2(agentPos.x - agentHalfSize, agentPos.y - agentHalfSize),
+                cf_v2(agentPos.x + agentHalfSize, agentPos.y + agentHalfSize));
+
+            // Check if agent is visible in viewport
+            if (camera.isVisible(agentBounds))
+            {
+                agent->render(agentPos);
+                renderedCount++;
+            }
+            else
+            {
+                culledCount++;
+            }
         }
     }
+
+    // Optional: Uncomment for debugging viewport culling
+    // if (culledCount > 0)
+    // {
+    //     printf("LevelV1: Rendered %d agents, culled %d agents\n", renderedCount, culledCount);
+    // }
 }
 
 void LevelV1::render(const CFNativeCamera &camera, const DataFile &config, float worldX, float worldY)
@@ -249,7 +280,7 @@ void LevelV1::render(const CFNativeCamera &camera, const DataFile &config, float
 
     // TODO change render order based on height in world, not agents always on top
     levelMap->renderAllLayers(camera, config, worldX, worldY);
-    renderAgents();
+    renderAgents(camera);
 }
 
 void LevelV1::debugPrint() const
