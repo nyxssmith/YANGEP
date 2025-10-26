@@ -183,6 +183,8 @@ add_executable(${PROJECT_NAME}_tests
     src/lib/NavMesh.cpp
     src/lib/NavMeshPoint.cpp
     src/lib/NavMeshPath.cpp
+    src/lib/AnimatedDataCharacter.cpp
+    src/lib/AnimatedDataCharacterNavMeshAgent.cpp
     src/lib/LevelV1.cpp
 )
 

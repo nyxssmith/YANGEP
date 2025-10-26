@@ -516,3 +516,8 @@ v2 AnimatedDataCharacter::getPosition() const
 {
     return position;
 }
+
+void AnimatedDataCharacter::setPosition(v2 newPosition)
+{
+    position = newPosition;
+}

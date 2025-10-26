@@ -35,6 +35,9 @@ public:
     // Get current position
     v2 getPosition() const;
 
+    // Set current position
+    void setPosition(v2 newPosition);
+
 private:
     // The animation loader
     SpriteAnimationLoader loader;
