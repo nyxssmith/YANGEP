@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <cstdlib>
 #include <chrono>
-#include "lib/SpriteAnimationDemo.h"
+#include "lib/AnimatedDataCharacter.h"
 #include "lib/Utils.h"
 
 using namespace Cute;
@@ -16,7 +16,8 @@ int main(int argc, char *argv[])
     int options = CF_APP_OPTIONS_WINDOW_POS_CENTERED_BIT | CF_APP_OPTIONS_RESIZABLE_BIT;
     CF_Result result = make_app("YANGEP - Animation Demo", 0, 0, 0, 800, 600, options, argv[0]);
 
-    if (is_error(result)) {
+    if (is_error(result))
+    {
         printf("ERROR: Failed to create animation demo window: %s\n", result.details);
         return -1;
     }
@@ -24,21 +25,25 @@ int main(int argc, char *argv[])
     printf("Window created successfully (800x600)\n");
 
     // Set up VFS for reading assets
-    try {
+    try
+    {
         printf("Setting up VFS...\n");
         mount_content_directory_as("/assets");
         printf("VFS mounted successfully\n");
-    } catch (...) {
+    }
+    catch (...)
+    {
         printf("ERROR: Failed to mount content directory\n");
         destroy_app();
         return -1;
     }
 
     // Create and initialize the sprite animation demo
-    printf("Initializing SpriteAnimationDemo...\n");
+    printf("Initializing AnimatedDataCharacter...\n");
 
-    SpriteAnimationDemo demo;
-    if (!demo.init()) {
+    AnimatedDataCharacter demo;
+    if (!demo.init())
+    {
         printf("ERROR: Failed to initialize sprite animation demo\n");
         destroy_app();
         return -1;
@@ -60,11 +65,13 @@ int main(int argc, char *argv[])
     bool user_quit = false;
 
     // Main loop - dedicated to animation demo only
-    while (app_is_running()) {
+    while (app_is_running())
+    {
         app_update(); // Handle window events
 
         // Handle ESC key to exit
-        if (key_just_pressed(CF_KEY_ESCAPE)) {
+        if (key_just_pressed(CF_KEY_ESCAPE))
+        {
             user_quit = true;
             auto end_time = std::chrono::high_resolution_clock::now();
             auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
@@ -82,7 +89,8 @@ int main(int argc, char *argv[])
         cf_draw_pop_color();
 
         // Update and render animation demo
-        try {
+        try
+        {
             float dt = CF_DELTA_TIME;
 
             // Handle input first
@@ -93,11 +101,14 @@ int main(int argc, char *argv[])
 
             // Render the demo
             demo.render();
-
-        } catch (const std::exception& e) {
+        }
+        catch (const std::exception &e)
+        {
             printf("EXCEPTION in main loop: %s\n", e.what());
             printf("Continuing demo...\n");
-        } catch (...) {
+        }
+        catch (...)
+        {
             printf("UNKNOWN EXCEPTION in main loop\n");
             printf("Continuing demo...\n");
         }
@@ -107,7 +118,8 @@ int main(int argc, char *argv[])
         frame_count++;
 
         // Debug: Show progress every 30 frames (roughly every 0.5 seconds at 60fps)
-        if (frame_count % 30 == 0) {
+        if (frame_count % 30 == 0)
+        {
             auto current_time = std::chrono::high_resolution_clock::now();
             auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - start_time);
             printf("Animation Demo: Frame %d completed (%.3f seconds elapsed)\n",
@@ -121,16 +133,20 @@ int main(int argc, char *argv[])
     auto end_time = std::chrono::high_resolution_clock::now();
     auto total_duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
 
-    if (user_quit) {
+    if (user_quit)
+    {
         printf("CLEAN EXIT: User-initiated shutdown via ESC key\n");
         printf("Total runtime: %.3f seconds, %d frames rendered\n",
                total_duration.count() / 1000.0, frame_count);
         printf("Average FPS: %.1f\n", frame_count / (total_duration.count() / 1000.0));
-    } else {
+    }
+    else
+    {
         printf("UNEXPECTED EXIT: Demo ended without user request\n");
         printf("Runtime before exit: %.3f seconds, %d frames rendered\n",
                total_duration.count() / 1000.0, frame_count);
-        if (frame_count > 0) {
+        if (frame_count > 0)
+        {
             printf("Average FPS before exit: %.1f\n", frame_count / (total_duration.count() / 1000.0));
         }
         printf("This may indicate a technical issue or crash\n");
