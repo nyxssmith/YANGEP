@@ -246,27 +246,25 @@ int main(int argc, char *argv[])
 		// Player movement (WASD)
 		float dt = CF_DELTA_TIME;
 		float playerSpeed = 200.0f; // pixels per second
-		bool playerMoved = false;
+
+		// Calculate move vector from input
+		v2 moveVector = cf_v2(0.0f, 0.0f);
 
 		if (cf_key_down(CF_KEY_W) || cf_key_down(CF_KEY_UP))
 		{
-			playerPosition.y += playerSpeed * dt;
-			playerMoved = true;
+			moveVector.y += playerSpeed;
 		}
 		if (cf_key_down(CF_KEY_S) || cf_key_down(CF_KEY_DOWN))
 		{
-			playerPosition.y -= playerSpeed * dt;
-			playerMoved = true;
+			moveVector.y -= playerSpeed;
 		}
 		if (cf_key_down(CF_KEY_A) || cf_key_down(CF_KEY_LEFT))
 		{
-			playerPosition.x -= playerSpeed * dt;
-			playerMoved = true;
+			moveVector.x -= playerSpeed;
 		}
 		if (cf_key_down(CF_KEY_D) || cf_key_down(CF_KEY_RIGHT))
 		{
-			playerPosition.x += playerSpeed * dt;
-			playerMoved = true;
+			moveVector.x += playerSpeed;
 		}
 
 		// Handle skeleton animation input (1/2 for idle/walk)
@@ -275,6 +273,7 @@ int main(int argc, char *argv[])
 		// Reset skeleton position
 		if (cf_key_just_pressed(CF_KEY_SPACE))
 		{
+			skeleton.setPosition(cf_v2(0.0f, 0.0f));
 			playerPosition = cf_v2(0.0f, 0.0f);
 		}
 
@@ -358,8 +357,11 @@ int main(int argc, char *argv[])
 			cfCamera.reset();
 		}
 
-		// Update skeleton animation
-		skeleton.update(dt);
+		// Update skeleton animation with move vector
+		skeleton.update(dt, moveVector);
+
+		// Get updated player position from skeleton (for camera following)
+		playerPosition = skeleton.getPosition();
 
 		// Update camera (handles following and smooth movement)
 		cfCamera.update(dt);

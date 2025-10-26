@@ -17,8 +17,8 @@ public:
     // Initialize the character with a datafile path
     bool init(const std::string &datafilePath);
 
-    // Update demo state
-    void update(float dt);
+    // Update demo state with a move vector
+    void update(float dt, v2 moveVector);
 
     // Render the demo
     void render();
