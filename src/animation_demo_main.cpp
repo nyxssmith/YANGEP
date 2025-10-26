@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
     printf("Initializing AnimatedDataCharacter...\n");
 
     AnimatedDataCharacter demo;
-    if (!demo.init())
+    if (!demo.init("assets/DataFiles/EntityFiles/skeleton.json"))
     {
         printf("ERROR: Failed to initialize sprite animation demo\n");
         destroy_app();

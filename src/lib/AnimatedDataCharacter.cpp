@@ -1,9 +1,46 @@
 #include "AnimatedDataCharacter.h"
+#include "DataFile.h"
 #include <cute.h>
 #include <cute_draw.h>
 #include <cute_math.h>
+#include <spng.h>
 
 using namespace Cute;
+
+// Helper function to get PNG dimensions
+static bool getPNGDimensions(const std::string &path, uint32_t &width, uint32_t &height)
+{
+    size_t file_size = 0;
+    void *file_data = cf_fs_read_entire_file_to_memory(path.c_str(), &file_size);
+
+    if (!file_data)
+    {
+        return false;
+    }
+
+    spng_ctx *ctx = spng_ctx_new(0);
+    if (!ctx)
+    {
+        cf_free(file_data);
+        return false;
+    }
+
+    spng_set_png_buffer(ctx, file_data, file_size);
+
+    struct spng_ihdr ihdr;
+    int ret = spng_get_ihdr(ctx, &ihdr);
+
+    if (ret == 0)
+    {
+        width = ihdr.width;
+        height = ihdr.height;
+    }
+
+    spng_ctx_free(ctx);
+    cf_free(file_data);
+
+    return ret == 0;
+}
 
 // Constructor
 AnimatedDataCharacter::AnimatedDataCharacter()
@@ -28,45 +65,103 @@ AnimatedDataCharacter::~AnimatedDataCharacter()
     // Cleanup is automatic
 }
 
-// Initialize the demo with skeleton animations
-bool AnimatedDataCharacter::init()
+// Initialize the character with a datafile path
+bool AnimatedDataCharacter::init(const std::string &datafilePath)
 {
-    // Define the animation layouts for skeleton animations
+    // Load the datafile
+    if (!datafile.load(datafilePath))
+    {
+        printf("AnimatedDataCharacter: ERROR: Failed to load datafile from %s\n", datafilePath.c_str());
+        return false;
+    }
+
+    // Validate datafile structure
+    if (!datafile.contains("character_config"))
+    {
+        printf("AnimatedDataCharacter: ERROR: Datafile missing 'character_config' section\n");
+        return false;
+    }
+
+    auto &charConfig = datafile["character_config"];
+
+    if (!charConfig.contains("name") || !charConfig.contains("layers"))
+    {
+        printf("AnimatedDataCharacter: ERROR: character_config missing required fields\n");
+        return false;
+    }
+
+    std::string characterName = charConfig["name"];
+    printf("AnimatedDataCharacter: Loading character '%s' from datafile\n", characterName.c_str());
+
+    // Get the first layer from the layers array
+    if (!charConfig["layers"].is_array() || charConfig["layers"].empty())
+    {
+        printf("AnimatedDataCharacter: ERROR: character_config.layers is empty or not an array\n");
+        return false;
+    }
+
+    auto &firstLayer = charConfig["layers"][0];
+
+    if (!firstLayer.contains("filename"))
+    {
+        printf("AnimatedDataCharacter: ERROR: First layer missing 'filename' field\n");
+        return false;
+    }
+
+    if (!firstLayer.contains("tile_size"))
+    {
+        printf("AnimatedDataCharacter: ERROR: First layer missing 'tile_size' field\n");
+        return false;
+    }
+
+    std::string layerFilename = firstLayer["filename"];
+    int tileSize = firstLayer["tile_size"];
+
+    printf("AnimatedDataCharacter: Using layer filename: %s\n", layerFilename.c_str());
+    printf("AnimatedDataCharacter: Using tile size: %d\n", tileSize);
+
+    // Construct paths using the layer filename from the datafile
+    std::string idle_body_path = "assets/Art/AnimationsSheets/idle/" + layerFilename;
+    std::string walkcycle_body_path = "assets/Art/AnimationsSheets/walkcycle/" + layerFilename;
+
+    // Get dimensions for idle animation
+    uint32_t idle_width = 0, idle_height = 0;
+    if (!getPNGDimensions(idle_body_path, idle_width, idle_height))
+    {
+        printf("AnimatedDataCharacter: ERROR: Cannot read dimensions from %s\n", idle_body_path.c_str());
+        return false;
+    }
+
+    // Get dimensions for walkcycle animation
+    uint32_t walkcycle_width = 0, walkcycle_height = 0;
+    if (!getPNGDimensions(walkcycle_body_path, walkcycle_width, walkcycle_height))
+    {
+        printf("AnimatedDataCharacter: ERROR: Cannot read dimensions from %s\n", walkcycle_body_path.c_str());
+        return false;
+    }
+
+    // Calculate frame counts dynamically
+    // Frames per direction = image_width / tile_size
+    // Number of directions = image_height / tile_size
+    int idle_frames_per_direction = idle_width / tileSize;
+    int idle_direction_count = idle_height / tileSize;
+
+    int walkcycle_frames_per_direction = walkcycle_width / tileSize;
+    int walkcycle_direction_count = walkcycle_height / tileSize;
+
+    printf("AnimatedDataCharacter: Idle dimensions: %ux%u (frames: %d, directions: %d)\n",
+           idle_width, idle_height, idle_frames_per_direction, idle_direction_count);
+    printf("AnimatedDataCharacter: Walkcycle dimensions: %ux%u (frames: %d, directions: %d)\n",
+           walkcycle_width, walkcycle_height, walkcycle_frames_per_direction, walkcycle_direction_count);
+
+    // Define the animation layouts using computed values
     std::vector<AnimationLayout> layouts = {
-        AnimationLayouts::IDLE_4_DIRECTIONS,
-        AnimationLayouts::WALKCYCLE_4_DIRECTIONS_9_FRAMES};
-
-    // Test file access
-    std::string idle_body_path = "assets/Art/AnimationsSheets/idle/BODY_skeleton.png";
-    std::string walkcycle_body_path = "assets/Art/AnimationsSheets/walkcycle/BODY_skeleton.png";
-
-    // Test if we can read both body PNG files
-    size_t idle_file_size = 0;
-    void *idle_file_data = cf_fs_read_entire_file_to_memory(idle_body_path.c_str(), &idle_file_size);
-
-    if (idle_file_data != nullptr)
-    {
-        cf_free(idle_file_data);
-    }
-    else
-    {
-        printf("AnimatedDataCharacter: ERROR: Cannot read %s\n", idle_body_path.c_str());
-        return false;
-    }
-
-    // Test walkcycle body
-    size_t walkcycle_file_size = 0;
-    void *walkcycle_file_data = cf_fs_read_entire_file_to_memory(walkcycle_body_path.c_str(), &walkcycle_file_size);
-
-    if (walkcycle_file_data != nullptr)
-    {
-        cf_free(walkcycle_file_data);
-    }
-    else
-    {
-        printf("AnimatedDataCharacter: ERROR: Cannot read %s\n", walkcycle_body_path.c_str());
-        return false;
-    }
+        AnimationLayout(
+            "idle", tileSize, tileSize, idle_frames_per_direction, idle_direction_count,
+            {Direction::UP, Direction::LEFT, Direction::DOWN, Direction::RIGHT}),
+        AnimationLayout(
+            "walkcycle", tileSize, tileSize, walkcycle_frames_per_direction, walkcycle_direction_count,
+            {Direction::UP, Direction::LEFT, Direction::DOWN, Direction::RIGHT})};
 
     // Load the animation table using our new system
     animationTable = loader.loadAnimationTable("assets/Art/AnimationsSheets", layouts);
