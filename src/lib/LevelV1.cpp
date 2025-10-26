@@ -220,9 +220,10 @@ void LevelV1::clearAgents()
 
 void LevelV1::updateAgents(float dt)
 {
-    // For now, agents are stationary (zero move vector)
-    // Later, this can be replaced with AI-driven movement or pathfinding
-    v2 zeroMoveVector = cf_v2(0.0f, 0.0f);
+    // TODO link into job system
+    //  For now, agents are stationary (zero move vector)
+    //  Later, this can be replaced with AI-driven movement or pathfinding
+    v2 zeroMoveVector = cf_v2(10.0f, 0.0f);
 
     for (auto &agent : agents)
     {

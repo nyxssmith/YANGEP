@@ -22,6 +22,7 @@
     "highlightViewport": true,
     "highlightNavmesh": false,
     "highlightNavMeshPoints": true,
+    "highlightAgents": true,
     "highlightLayers": [],
     "highlightLayerBorders": [],
     "highlightLayerOuterBorders": [],

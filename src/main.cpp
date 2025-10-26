@@ -76,6 +76,7 @@ int main(int argc, char *argv[])
 	// Read debug options from config
 	bool debugHighlightNavmesh = false;		  // Default: don't highlight navmesh
 	bool debugHighlightNavMeshPoints = false; // Default: don't highlight navmesh points
+	bool debugHighlightAgents = false;		  // Default: don't highlight agents
 	if (windowConfig.contains("Debug"))
 	{
 		auto &debug = windowConfig["Debug"];
@@ -93,6 +94,11 @@ int main(int argc, char *argv[])
 		{
 			debugHighlightNavMeshPoints = debug["highlightNavMeshPoints"];
 			printf("Debug highlightNavMeshPoints: %s\n", debugHighlightNavMeshPoints ? "enabled" : "disabled");
+		}
+		if (debug.contains("highlightAgents"))
+		{
+			debugHighlightAgents = debug["highlightAgents"];
+			printf("Debug highlightAgents: %s\n", debugHighlightAgents ? "enabled" : "disabled");
 		}
 	}
 
@@ -213,6 +219,7 @@ int main(int argc, char *argv[])
 	// NavMesh debug rendering toggle (initialized from config)
 	bool showNavMesh = debugHighlightNavmesh;
 	bool showNavMeshPoints = debugHighlightNavMeshPoints;
+	bool showAgents = debugHighlightAgents;
 
 	// NavMesh path for pathfinding
 	NavMeshPath navmeshPath;
@@ -357,6 +364,8 @@ int main(int argc, char *argv[])
 			cfCamera.reset();
 		}
 
+		level.updateAgents(dt);
+
 		// Update skeleton animation with move vector
 		skeleton.update(dt, moveVector);
 
@@ -407,6 +416,36 @@ int main(int argc, char *argv[])
 		if (showNavMeshPoints && navmeshPath.isValid())
 		{
 			navmeshPath.debugRender(cfCamera);
+		}
+
+		// Render agent position markers (if enabled)
+		if (showAgents && level.getAgentCount() > 0)
+		{
+			cf_draw_push_color(cf_make_color_rgb(0, 255, 0)); // Green color
+
+			for (size_t i = 0; i < level.getAgentCount(); ++i)
+			{
+				const AnimatedDataCharacterNavMeshAgent *agent = level.getAgent(i);
+				if (agent)
+				{
+					v2 agentPos = agent->getPosition();
+
+					// Draw agent as a green dot
+					const float size = 8.0f; // Size of the agent marker
+					CF_Aabb agent_rect = make_aabb(
+						cf_v2(agentPos.x - size / 2, agentPos.y - size / 2),
+						cf_v2(agentPos.x + size / 2, agentPos.y + size / 2));
+
+					cf_draw_quad_fill(agent_rect, 0.0f);
+
+					// Draw a border around the dot for better visibility
+					cf_draw_push_color(cf_make_color_rgb(0, 0, 0)); // Black border
+					cf_draw_quad(agent_rect, 0.0f, 1.5f);
+					cf_draw_pop_color();
+				}
+			}
+
+			cf_draw_pop_color();
 		}
 
 		// Render skeleton at player position (world space)
