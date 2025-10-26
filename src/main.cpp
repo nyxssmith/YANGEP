@@ -275,7 +275,7 @@ int main(int argc, char *argv[])
 		}
 
 		// Handle skeleton animation input (1/2 for idle/walk)
-		skeleton.handleInput();
+		// skeleton.handleInput();
 
 		// Reset skeleton position
 		if (cf_key_just_pressed(CF_KEY_SPACE))
