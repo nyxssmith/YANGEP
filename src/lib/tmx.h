@@ -38,6 +38,10 @@ private:
     // Layers in this map
     std::vector<std::shared_ptr<TMXLayer>> layers;
 
+    // NavMesh layers (layers used for navigation mesh generation)
+    // These are separated from regular rendering layers
+    std::vector<std::shared_ptr<TMXLayer>> navmesh_layers;
+
     // Layer highlighting configuration (layer name -> should highlight)
     std::map<std::string, bool> layer_highlight_map;
 
@@ -85,6 +89,11 @@ public:
     int getLayerCount() const { return static_cast<int>(layers.size()); }
     std::shared_ptr<TMXLayer> getLayer(int index) const;
     std::shared_ptr<TMXLayer> getLayer(const std::string &name) const;
+
+    // NavMesh layer access
+    int getNavMeshLayerCount() const { return static_cast<int>(navmesh_layers.size()); }
+    std::shared_ptr<TMXLayer> getNavMeshLayer(int index) const;
+    std::shared_ptr<TMXLayer> getNavMeshLayer(const std::string &name) const;
 
     // Tileset access
     int getTilesetCount() const { return static_cast<int>(tilesets.size()); }

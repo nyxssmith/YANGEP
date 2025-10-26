@@ -13,6 +13,8 @@
 
 #include "lib/CFNativeCamera.h"
 #include "lib/SpriteAnimationDemo.h"
+#include "lib/NavMesh.h"
+#include "lib/NavMeshPath.h"
 using namespace Cute;
 
 int main(int argc, char *argv[])
@@ -71,6 +73,8 @@ int main(int argc, char *argv[])
 	}
 
 	// Read debug options from config
+	bool debugHighlightNavmesh = false;		  // Default: don't highlight navmesh
+	bool debugHighlightNavMeshPoints = false; // Default: don't highlight navmesh points
 	if (windowConfig.contains("Debug"))
 	{
 		auto &debug = windowConfig["Debug"];
@@ -79,14 +83,43 @@ int main(int argc, char *argv[])
 			debugHighlightViewport = debug["highlightViewport"];
 			printf("Debug highlightViewport: %s\n", debugHighlightViewport ? "enabled" : "disabled");
 		}
+		if (debug.contains("highlightNavmesh"))
+		{
+			debugHighlightNavmesh = debug["highlightNavmesh"];
+			printf("Debug highlightNavmesh: %s\n", debugHighlightNavmesh ? "enabled" : "disabled");
+		}
+		if (debug.contains("highlightNavMeshPoints"))
+		{
+			debugHighlightNavMeshPoints = debug["highlightNavMeshPoints"];
+			printf("Debug highlightNavMeshPoints: %s\n", debugHighlightNavMeshPoints ? "enabled" : "disabled");
+		}
 	}
 
 	// Create TMX parser for the level
-	tmx levelMap("/assets/Levels/test_one/test_one.tmx");
+	// tmx levelMap("/assets/Levels/test_one/test_one.tmx");
+	tmx levelMap("/assets/Levels/test_two/test_two.tmx");
 	levelMap.debugPrint();
 
 	// Configure layer highlighting from config (parse once, use map for lookups)
 	levelMap.setLayerHighlightConfig(windowConfig);
+
+	// Create NavMesh for pathfinding and collision detection
+	NavMesh navmesh;
+	// Try to build from a navmesh layer (looks in navmesh_layers first)
+	// Common layer names: "navmesh", "nav_walkable", "collision", "walkable"
+	// Set invert=true if empty tiles are walkable, false if filled tiles are walkable
+	if (levelMap.getNavMeshLayerCount() > 0)
+	{
+		// Use the first navmesh layer found
+		auto navLayer = levelMap.getNavMeshLayer(0);
+		printf("Building navmesh from layer: %s\n", navLayer->name.c_str());
+		navmesh.buildFromLayer(navLayer, levelMap.getTileWidth(), levelMap.getTileHeight(), 0.0f, 0.0f, false);
+		printf("NavMesh created with %d polygons\n", navmesh.getPolygonCount());
+	}
+	else
+	{
+		printf("Warning: No navmesh layers found in level. Navigation mesh not created.\n");
+	}
 
 	// Get tile dimensions for proper spacing
 	int tile_width = levelMap.getTileWidth();
@@ -169,6 +202,13 @@ int main(int argc, char *argv[])
 	float bottom_left_y = -1.0f * (window_height / 2.0f);
 	// printf("Window size: %dx%d, bottom-left at (%.1f, %.1f)\n", window_width, window_height, bottom_left_x, bottom_left_y);
 
+	// NavMesh debug rendering toggle (initialized from config)
+	bool showNavMesh = debugHighlightNavmesh;
+	bool showNavMeshPoints = debugHighlightNavMeshPoints;
+
+	// NavMesh path for pathfinding
+	NavMeshPath navmeshPath;
+
 	// Main loop
 	printf("Skeleton Adventure Game:\n");
 	printf("  WASD - move skeleton\n");
@@ -179,6 +219,10 @@ int main(int argc, char *argv[])
 	printf("  U - test camera shake\n");
 	printf("  1/2 - switch animations (idle/walk)\n");
 	printf("  SPACE - reset skeleton position\n");
+	printf("  N - toggle navmesh visualization\n");
+	printf("  M - toggle navmesh points visualization\n");
+	printf("  P - place/update navmesh point at player position\n");
+	printf("  L - pathfind to navmesh point from player\n");
 	printf("  ESC - quit\n");
 	while (cf_app_is_running())
 	{
@@ -240,6 +284,58 @@ int main(int argc, char *argv[])
 			cfCamera.shake(20.0f, 1.5f);
 		}
 
+		// NavMesh visualization toggle
+		if (cf_key_just_pressed(CF_KEY_N))
+		{
+			showNavMesh = !showNavMesh;
+			printf("NavMesh visualization: %s\n", showNavMesh ? "ON" : "OFF");
+		}
+
+		// NavMesh points visualization toggle
+		if (cf_key_just_pressed(CF_KEY_M))
+		{
+			showNavMeshPoints = !showNavMeshPoints;
+			printf("NavMesh points visualization: %s\n", showNavMeshPoints ? "ON" : "OFF");
+		}
+
+		// Place/update NavMesh point at player position
+		if (cf_key_just_pressed(CF_KEY_P))
+		{
+			// Remove existing point if it exists
+			if (navmesh.getPoint("player_marker") != nullptr)
+			{
+				navmesh.removePoint("player_marker");
+			}
+			// Add new point at player position
+			navmesh.addPoint("player_marker", playerPosition);
+			printf("NavMesh point placed at player position (%.1f, %.1f)\n", playerPosition.x, playerPosition.y);
+		}
+
+		// Pathfind to NavMesh point from player position
+		if (cf_key_just_pressed(CF_KEY_L))
+		{
+			// Check if there's a player_marker point to pathfind to
+			const NavMeshPoint *targetPoint = navmesh.getPoint("player_marker");
+			if (targetPoint != nullptr)
+			{
+				printf("Attempting to pathfind from player (%.1f, %.1f) to marker (%.1f, %.1f)\n",
+					   playerPosition.x, playerPosition.y, targetPoint->position.x, targetPoint->position.y);
+
+				if (navmeshPath.generateToPoint(navmesh, playerPosition, "player_marker"))
+				{
+					printf("Path generated successfully with %d waypoints\n", navmeshPath.getWaypointCount());
+				}
+				else
+				{
+					printf("Failed to generate path\n");
+				}
+			}
+			else
+			{
+				printf("No 'player_marker' point found. Press P to place a marker first.\n");
+			}
+		}
+
 		// Camera zoom controls (Q/E) and reset (R)
 		if (cf_key_just_pressed(CF_KEY_Q))
 		{
@@ -278,6 +374,24 @@ int main(int argc, char *argv[])
 
 		// Render TMX level (with CF-native camera transformations and config for layer highlighting)
 		levelMap.renderAllLayers(cfCamera, windowConfig, 0.0f, 0.0f);
+
+		// Render NavMesh debug visualization (if enabled)
+		if (showNavMesh && navmesh.getPolygonCount() > 0)
+		{
+			navmesh.debugRender(cfCamera);
+		}
+
+		// Render NavMesh points debug visualization (if enabled)
+		if (showNavMeshPoints && navmesh.getPointCount() > 0)
+		{
+			navmesh.debugRenderPoints(cfCamera);
+		}
+
+		// Render NavMesh path (if valid and points visualization is enabled)
+		if (showNavMeshPoints && navmeshPath.isValid())
+		{
+			navmeshPath.debugRender(cfCamera);
+		}
 
 		// Render skeleton at player position (world space)
 		skeleton.render(playerPosition);
