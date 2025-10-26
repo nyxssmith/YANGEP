@@ -510,3 +510,9 @@ bool AnimatedDataCharacter::isValid() const
 {
     return initialized && !animationTable.getAnimationNames().empty();
 }
+
+// Get current position
+v2 AnimatedDataCharacter::getPosition() const
+{
+    return position;
+}
