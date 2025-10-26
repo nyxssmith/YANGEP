@@ -3,6 +3,7 @@
 
 #include <cute.h>
 #include "SpriteAnimationLoader.h"
+#include "DataFile.h"
 
 using namespace Cute;
 
@@ -13,8 +14,8 @@ public:
     AnimatedDataCharacter();
     ~AnimatedDataCharacter();
 
-    // Initialize the demo with skeleton animations
-    bool init();
+    // Initialize the character with a datafile path
+    bool init(const std::string &datafilePath);
 
     // Update demo state
     void update(float dt);
@@ -34,6 +35,9 @@ public:
 private:
     // The animation loader
     SpriteAnimationLoader loader;
+
+    // DataFile containing character configuration
+    DataFile datafile;
 
     // Animation table containing all skeleton animations
     AnimationTable animationTable;
