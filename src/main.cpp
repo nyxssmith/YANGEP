@@ -12,7 +12,7 @@
 #include "lib/tmx.h"
 
 #include "lib/CFNativeCamera.h"
-#include "lib/SpriteAnimationDemo.h"
+#include "lib/AnimatedDataCharacter.h"
 using namespace Cute;
 
 int main(int argc, char *argv[])
@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
 	printf("Loaded %zu debug windows from config\n", debugWindows.count());
 
 	// Create skeleton player character
-	SpriteAnimationDemo skeleton;
+	AnimatedDataCharacter skeleton;
 	v2 playerPosition = cf_v2(0.0f, 0.0f); // Start at world origin
 
 	if (!skeleton.init())
