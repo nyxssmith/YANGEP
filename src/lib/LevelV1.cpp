@@ -115,16 +115,24 @@ LevelV1::LevelV1(const std::string &directoryPath)
 
             if (agent)
             {
-                // Set position if provided
+                // Set position if provided (position is in tile coordinates)
                 if (entityEntry.contains("position"))
                 {
                     const auto &pos = entityEntry["position"];
                     if (pos.contains("x") && pos.contains("y"))
                     {
-                        float x = pos["x"].get<float>();
-                        float y = pos["y"].get<float>();
-                        agent->setPosition(cf_v2(x, y));
-                        printf("LevelV1:   Set agent position to (%.1f, %.1f)\n", x, y);
+                        // Get tile coordinates
+                        float tileX = pos["x"].get<float>();
+                        float tileY = pos["y"].get<float>();
+
+                        // Convert tile coordinates to world pixel coordinates
+                        // Multiply by tile dimensions to get world position
+                        float worldX = tileX * tileWidth;
+                        float worldY = tileY * tileHeight;
+
+                        agent->setPosition(cf_v2(worldX, worldY));
+                        printf("LevelV1:   Set agent position to tile (%.1f, %.1f) = world (%.1f, %.1f)\n",
+                               tileX, tileY, worldX, worldY);
                     }
                 }
 
