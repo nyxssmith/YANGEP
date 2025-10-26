@@ -2,9 +2,11 @@
 
 #include <string>
 #include <memory>
+#include <vector>
 #include "tmx.h"
 #include "NavMesh.h"
 #include "DataFile.h"
+#include "AnimatedDataCharacterNavMeshAgent.h"
 
 // Forward declarations
 class CFNativeCamera;
@@ -31,6 +33,9 @@ private:
     // Level data files
     DataFile entities;
     DataFile details;
+
+    // NavMesh agents in this level
+    std::vector<std::unique_ptr<AnimatedDataCharacterNavMeshAgent>> agents;
 
     // TMX tile dimensions (cached for convenience)
     int tileWidth;
@@ -102,6 +107,50 @@ public:
      * @return Tile height in pixels
      */
     int getTileHeight() const { return tileHeight; }
+
+    /**
+     * Add a NavMesh agent to the level
+     * @param agent Unique pointer to the agent to add
+     * @return Raw pointer to the added agent (for reference, level owns the agent)
+     */
+    AnimatedDataCharacterNavMeshAgent *addAgent(std::unique_ptr<AnimatedDataCharacterNavMeshAgent> agent);
+
+    /**
+     * Create and add a NavMesh agent from an entity data file
+     * @param entityDataPath Path to the entity JSON file
+     * @return Raw pointer to the created agent, or nullptr if creation failed
+     */
+    AnimatedDataCharacterNavMeshAgent *createAgentFromFile(const std::string &entityDataPath);
+
+    /**
+     * Get the number of agents in the level
+     * @return Number of agents
+     */
+    size_t getAgentCount() const { return agents.size(); }
+
+    /**
+     * Get an agent by index
+     * @param index Index of the agent
+     * @return Pointer to the agent, or nullptr if index is out of bounds
+     */
+    AnimatedDataCharacterNavMeshAgent *getAgent(size_t index);
+    const AnimatedDataCharacterNavMeshAgent *getAgent(size_t index) const;
+
+    /**
+     * Remove all agents from the level
+     */
+    void clearAgents();
+
+    /**
+     * Update all agents in the level
+     * @param dt Delta time in seconds
+     */
+    void updateAgents(float dt);
+
+    /**
+     * Render all agents in the level
+     */
+    void renderAgents();
 
     /**
      * Render all layers of the level map

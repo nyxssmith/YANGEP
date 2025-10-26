@@ -91,9 +91,145 @@ LevelV1::LevelV1(const std::string &directoryPath)
         printf("LevelV1 Warning: No navmesh layers found in level. Navigation mesh not created.\n");
     }
 
+    // Create agents from entities.json
+    if (entities.contains("entities") && entities["entities"].is_array())
+    {
+        printf("LevelV1: Creating agents from entities.json...\n");
+
+        for (const auto &entityEntry : entities["entities"])
+        {
+            // Check if entity has required fields
+            if (!entityEntry.contains("datafilePath"))
+            {
+                printf("LevelV1 Warning: Entity missing 'datafilePath' field, skipping\n");
+                continue;
+            }
+
+            std::string datafilePath = entityEntry["datafilePath"].get<std::string>();
+            std::string entityName = entityEntry.contains("name") ? entityEntry["name"].get<std::string>() : "unnamed";
+
+            printf("LevelV1: Creating agent '%s' from: %s\n", entityName.c_str(), datafilePath.c_str());
+
+            // Create the agent
+            auto agent = createAgentFromFile(datafilePath);
+
+            if (agent)
+            {
+                // Set position if provided
+                if (entityEntry.contains("position"))
+                {
+                    const auto &pos = entityEntry["position"];
+                    if (pos.contains("x") && pos.contains("y"))
+                    {
+                        float x = pos["x"].get<float>();
+                        float y = pos["y"].get<float>();
+                        agent->setPosition(cf_v2(x, y));
+                        printf("LevelV1:   Set agent position to (%.1f, %.1f)\n", x, y);
+                    }
+                }
+
+                printf("LevelV1:   Agent '%s' created successfully\n", entityName.c_str());
+            }
+            else
+            {
+                printf("LevelV1 Error: Failed to create agent '%s'\n", entityName.c_str());
+            }
+        }
+
+        printf("LevelV1: Created %zu agents from entities.json\n", agents.size());
+    }
+    else
+    {
+        printf("LevelV1: No entities array found in entities.json\n");
+    }
+
     // Mark as successfully initialized
     initialized = true;
     printf("LevelV1: Level '%s' initialized successfully\n", levelName.c_str());
+}
+
+AnimatedDataCharacterNavMeshAgent *LevelV1::addAgent(std::unique_ptr<AnimatedDataCharacterNavMeshAgent> agent)
+{
+    if (!agent)
+    {
+        printf("LevelV1 Warning: Attempted to add null agent\n");
+        return nullptr;
+    }
+
+    // Set the agent's navmesh to this level's navmesh
+    if (navmesh)
+    {
+        agent->setNavMesh(navmesh.get());
+    }
+
+    agents.push_back(std::move(agent));
+    printf("LevelV1: Added agent (total: %zu)\n", agents.size());
+
+    return agents.back().get();
+}
+
+AnimatedDataCharacterNavMeshAgent *LevelV1::createAgentFromFile(const std::string &entityDataPath)
+{
+    auto agent = std::make_unique<AnimatedDataCharacterNavMeshAgent>();
+
+    if (!agent->init(entityDataPath))
+    {
+        printf("LevelV1 Error: Failed to initialize agent from: %s\n", entityDataPath.c_str());
+        return nullptr;
+    }
+
+    printf("LevelV1: Created agent from: %s\n", entityDataPath.c_str());
+    return addAgent(std::move(agent));
+}
+
+AnimatedDataCharacterNavMeshAgent *LevelV1::getAgent(size_t index)
+{
+    if (index >= agents.size())
+    {
+        printf("LevelV1 Warning: Agent index %zu out of bounds (size: %zu)\n", index, agents.size());
+        return nullptr;
+    }
+
+    return agents[index].get();
+}
+
+const AnimatedDataCharacterNavMeshAgent *LevelV1::getAgent(size_t index) const
+{
+    if (index >= agents.size())
+    {
+        printf("LevelV1 Warning: Agent index %zu out of bounds (size: %zu)\n", index, agents.size());
+        return nullptr;
+    }
+
+    return agents[index].get();
+}
+
+void LevelV1::clearAgents()
+{
+    agents.clear();
+    printf("LevelV1: Cleared all agents\n");
+}
+
+void LevelV1::updateAgents(float dt)
+{
+    for (auto &agent : agents)
+    {
+        if (agent)
+        {
+            agent->update(dt);
+        }
+    }
+}
+
+void LevelV1::renderAgents()
+{
+    for (auto &agent : agents)
+    {
+        if (agent)
+        {
+            agent->render(agent->getPosition());
+        }
+    }
 }
 
 void LevelV1::render(const CFNativeCamera &camera, const DataFile &config, float worldX, float worldY)
@@ -103,7 +239,9 @@ void LevelV1::render(const CFNativeCamera &camera, const DataFile &config, float
         return;
     }
 
+    // TODO change render order based on height in world, not agents always on top
     levelMap->renderAllLayers(camera, config, worldX, worldY);
+    renderAgents();
 }
 
 void LevelV1::debugPrint() const
@@ -131,6 +269,19 @@ void LevelV1::debugPrint() const
     else
     {
         printf("  NavMesh: NOT created\n");
+    }
+
+    printf("  Agents: %zu\n", agents.size());
+    for (size_t i = 0; i < agents.size(); ++i)
+    {
+        if (agents[i])
+        {
+            v2 pos = agents[i]->getPosition();
+            printf("    Agent %zu: pos=(%.1f, %.1f), polygon=%d, walkable=%s\n",
+                   i, pos.x, pos.y,
+                   agents[i]->getCurrentPolygon(),
+                   agents[i]->isOnWalkableArea() ? "yes" : "no");
+        }
     }
 
     printf("  Entities: %s\n", entities.dump(2).c_str());
