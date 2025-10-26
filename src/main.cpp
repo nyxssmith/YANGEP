@@ -1,10 +1,12 @@
 #include <cute.h>
 #include <stdio.h>
 #include <cstdlib>
+#include <memory>
 #include <dcimgui.h>
 #include "lib/DebugWindow.h"
 #include "lib/DataFileDebugWindow.h"
 #include "lib/DebugWindowList.h"
+#include "lib/DebugFPSWindow.h"
 #include "lib/Utils.h"
 #include "lib/DataFile.h"
 #include "lib/RealConfigFile.h"
@@ -173,6 +175,26 @@ int main(int argc, char *argv[])
 	}
 
 	printf("Loaded %zu debug windows from config\n", debugWindows.count());
+
+	// Create FPS metrics debug window if enabled in config
+	std::unique_ptr<DebugFPSWindow> fpsWindow;
+	bool showFPSMetrics = false;
+
+	if (windowConfig.contains("Debug"))
+	{
+		auto &debug = windowConfig["Debug"];
+		if (debug.contains("ShowFPSMetrics"))
+		{
+			showFPSMetrics = debug["ShowFPSMetrics"];
+			printf("Debug ShowFPSMetrics: %s\n", showFPSMetrics ? "enabled" : "disabled");
+
+			if (showFPSMetrics)
+			{
+				fpsWindow = std::make_unique<DebugFPSWindow>("FPS Metrics");
+				printf("Created FPS metrics debug window\n");
+			}
+		}
+	}
 
 	// Create skeleton player character
 	SpriteAnimationDemo skeleton;
@@ -358,6 +380,12 @@ int main(int argc, char *argv[])
 
 		// Render debug windows
 		debugWindows.renderAll();
+
+		// Render FPS metrics window if enabled
+		if (fpsWindow)
+		{
+			fpsWindow->render();
+		}
 
 		// Clear background
 		CF_Color bg = make_color(0.1f, 0.1f, 0.15f, 1.0f);

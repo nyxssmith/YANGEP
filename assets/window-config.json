@@ -24,6 +24,7 @@
     "highlightNavMeshPoints": true,
     "highlightLayers": [],
     "highlightLayerBorders": [],
-    "highlightLayerOuterBorders": []
+    "highlightLayerOuterBorders": [],
+    "ShowFPSMetrics": true
   }
 }
