@@ -46,7 +46,7 @@ static bool getPNGDimensions(const std::string &path, uint32_t &width, uint32_t 
 AnimatedDataCharacter::AnimatedDataCharacter()
     : initialized(false), demoTime(0.0f), directionChangeTime(0.0f), animationChangeTime(0.0f),
       currentAnimation("idle"), currentDirection(Direction::DOWN), currentFrame(0), frameTimer(0.0f),
-      position(v2(0, 0))
+      position(v2(0, 0)), wasMoving(false)
 {
     // Initialize input state
     for (int i = 0; i < 4; i++)
@@ -211,8 +211,6 @@ void AnimatedDataCharacter::update(float dt, v2 moveVector)
     }
 
     // Auto-switch to walkcycle when moving, idle when stopping
-    static bool wasMoving = false;
-
     if (isMoving && !wasMoving)
     {
         if (currentAnimation != "walkcycle")

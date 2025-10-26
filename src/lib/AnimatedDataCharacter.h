@@ -69,6 +69,9 @@ private:
     // Position for rendering
     v2 position;
 
+    // Movement tracking for animation switching
+    bool wasMoving;
+
     // Helper methods
     void cycleDirection();
     void cycleAnimation();
