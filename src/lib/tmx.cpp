@@ -190,11 +190,29 @@ bool tmx::loadLayers()
         printf("Layer '%s' loaded with %d tiles\n",
                layer->name.c_str(), static_cast<int>(layer->data.size()));
 
-        layers.push_back(layer);
+        // Determine if this is a navmesh layer based on naming convention
+        // NavMesh layers have names starting with "navmesh", "nav_", or contain "collision"
+        std::string layer_name_lower = layer->name;
+        std::transform(layer_name_lower.begin(), layer_name_lower.end(), layer_name_lower.begin(), ::tolower);
+
+        bool is_navmesh_layer = (layer_name_lower.find("navmesh") == 0 ||
+                                 layer_name_lower.find("nav_") == 0);
+
+        if (is_navmesh_layer)
+        {
+            navmesh_layers.push_back(layer);
+            printf("  -> Added to navmesh layers\n");
+        }
+        else
+        {
+            layers.push_back(layer);
+            printf("  -> Added to regular layers\n");
+        }
     }
 
-    printf("Loaded %d layers\n", static_cast<int>(layers.size()));
-    return !layers.empty();
+    printf("Loaded %d regular layers and %d navmesh layers\n",
+           static_cast<int>(layers.size()), static_cast<int>(navmesh_layers.size()));
+    return !layers.empty() || !navmesh_layers.empty();
 }
 
 void tmx::parseCSVData(const std::string &csv_data, std::vector<int> &tile_data) const
@@ -271,6 +289,16 @@ void tmx::debugPrint() const
                static_cast<int>(layer->data.size()));
     }
 
+    printf("\nNavMesh Layers (%d):\n", static_cast<int>(navmesh_layers.size()));
+    for (size_t i = 0; i < navmesh_layers.size(); i++)
+    {
+        const auto &layer = navmesh_layers[i];
+        printf("  [%zu] id=%d, name=%s, size=%dx%d, visible=%s, opacity=%.2f, tiles=%d\n",
+               i, layer->id, layer->name.c_str(), layer->width, layer->height,
+               layer->visible ? "true" : "false", layer->opacity,
+               static_cast<int>(layer->data.size()));
+    }
+
     printf("=== End TMX Content ===\n\n");
 }
 
@@ -286,6 +314,27 @@ std::shared_ptr<TMXLayer> tmx::getLayer(int index) const
 std::shared_ptr<TMXLayer> tmx::getLayer(const std::string &name) const
 {
     for (const auto &layer : layers)
+    {
+        if (layer->name == name)
+        {
+            return layer;
+        }
+    }
+    return nullptr;
+}
+
+std::shared_ptr<TMXLayer> tmx::getNavMeshLayer(int index) const
+{
+    if (index >= 0 && index < static_cast<int>(navmesh_layers.size()))
+    {
+        return navmesh_layers[index];
+    }
+    return nullptr;
+}
+
+std::shared_ptr<TMXLayer> tmx::getNavMeshLayer(const std::string &name) const
+{
+    for (const auto &layer : navmesh_layers)
     {
         if (layer->name == name)
         {
