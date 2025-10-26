@@ -241,6 +241,12 @@ int main(int argc, char *argv[])
 	printf("  ESC - quit\n");
 	while (cf_app_is_running())
 	{
+		// Begin profiling the frame
+		if (fpsWindow)
+		{
+			fpsWindow->beginFrame();
+		}
+
 		// Update app to handle window events and input (proper CF pattern)
 		cf_app_update(NULL);
 
@@ -364,7 +370,16 @@ int main(int argc, char *argv[])
 			cfCamera.reset();
 		}
 
+		if (fpsWindow)
+		{
+			fpsWindow->markSection("Player Input");
+		}
 		level.updateAgents(dt);
+
+		if (fpsWindow)
+		{
+			fpsWindow->markSection("Agent Update");
+		}
 
 		// Update skeleton animation with move vector
 		skeleton.update(dt, moveVector);
@@ -375,15 +390,17 @@ int main(int argc, char *argv[])
 		// Update camera (handles following and smooth movement)
 		cfCamera.update(dt);
 
+		if (fpsWindow)
+		{
+			fpsWindow->markSection("Camera Update");
+		}
 		// Render debug windows
 		debugWindows.renderAll();
 
-		// Render FPS metrics window if enabled
 		if (fpsWindow)
 		{
-			fpsWindow->render();
+			fpsWindow->markSection("Debug Windows");
 		}
-
 		// Clear background
 		CF_Color bg = make_color(0.1f, 0.1f, 0.15f, 1.0f);
 		cf_draw_push_color(bg);
@@ -400,6 +417,10 @@ int main(int argc, char *argv[])
 		// Render TMX level (with CF-native camera transformations and config for layer highlighting)
 		level.render(cfCamera, windowConfig, 0.0f, 0.0f);
 
+		if (fpsWindow)
+		{
+			fpsWindow->markSection("Level Render");
+		}
 		// Render NavMesh debug visualization (if enabled)
 		if (showNavMesh && level.getNavMesh().getPolygonCount() > 0)
 		{
@@ -451,6 +472,10 @@ int main(int argc, char *argv[])
 		// Render skeleton at player position (world space)
 		skeleton.render(playerPosition);
 
+		if (fpsWindow)
+		{
+			fpsWindow->markSection("Agent/Player Render");
+		}
 		// Restore camera transformation
 		cfCamera.restore();
 
@@ -490,6 +515,21 @@ int main(int argc, char *argv[])
 			char viewportInfo[256];
 			snprintf(viewportInfo, sizeof(viewportInfo), "Viewport: %.0fx%.0f", viewport_size.x, viewport_size.y);
 			draw_text(viewportInfo, cf_v2(10.0f, top_y + 40.0f));
+		}
+
+		if (fpsWindow)
+		{
+			fpsWindow->markSection("UI Render");
+		}
+		// End profiling the frame
+		if (fpsWindow)
+		{
+			fpsWindow->endFrame();
+		}
+		// Render FPS metrics window if enabled
+		if (fpsWindow)
+		{
+			fpsWindow->render();
 		}
 
 		app_draw_onto_screen();
