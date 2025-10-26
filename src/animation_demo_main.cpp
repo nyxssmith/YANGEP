@@ -96,8 +96,9 @@ int main(int argc, char *argv[])
             // Handle input first
             demo.handleInput();
 
-            // Update animation state
-            demo.update(dt);
+            // Update animation state (no movement for this demo)
+            v2 zeroMoveVector = cf_v2(0.0f, 0.0f);
+            demo.update(dt, zeroMoveVector);
 
             // Render the demo
             demo.render();

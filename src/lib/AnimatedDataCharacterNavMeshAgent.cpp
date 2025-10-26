@@ -72,10 +72,10 @@ bool AnimatedDataCharacterNavMeshAgent::isOnWalkableArea() const
 }
 
 // Override update to track navmesh position
-void AnimatedDataCharacterNavMeshAgent::update(float dt)
+void AnimatedDataCharacterNavMeshAgent::update(float dt, v2 moveVector)
 {
     // Call parent update
-    AnimatedDataCharacter::update(dt);
+    AnimatedDataCharacter::update(dt, moveVector);
 
     // Update our current polygon after movement
     if (navmesh)
