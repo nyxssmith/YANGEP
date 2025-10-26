@@ -10,8 +10,7 @@
 #include "lib/Utils.h"
 #include "lib/DataFile.h"
 #include "lib/RealConfigFile.h"
-#include "lib/tsx.h"
-#include "lib/tmx.h"
+#include "lib/LevelV1.h"
 
 #include "lib/CFNativeCamera.h"
 #include "lib/NavMesh.h"
@@ -97,35 +96,22 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	// Create TMX parser for the level
-	// tmx levelMap("/assets/Levels/test_one/test_one.tmx");
-	tmx levelMap("/assets/Levels/test_two/test_two.tmx");
-	levelMap.debugPrint();
+	// Create LevelV1 instance - handles all TMX and NavMesh initialization
+	LevelV1 level("/assets/Levels/test_two");
+
+	if (!level.isInitialized())
+	{
+		printf("Error: Failed to initialize level\n");
+		destroy_app();
+		return -1;
+	}
 
 	// Configure layer highlighting from config (parse once, use map for lookups)
-	levelMap.setLayerHighlightConfig(windowConfig);
+	level.getLevelMap().setLayerHighlightConfig(windowConfig);
 
-	// Create NavMesh for pathfinding and collision detection
-	NavMesh navmesh;
-	// Try to build from a navmesh layer (looks in navmesh_layers first)
-	// Common layer names: "navmesh", "nav_walkable", "collision", "walkable"
-	// Set invert=true if empty tiles are walkable, false if filled tiles are walkable
-	if (levelMap.getNavMeshLayerCount() > 0)
-	{
-		// Use the first navmesh layer found
-		auto navLayer = levelMap.getNavMeshLayer(0);
-		printf("Building navmesh from layer: %s\n", navLayer->name.c_str());
-		navmesh.buildFromLayer(navLayer, levelMap.getTileWidth(), levelMap.getTileHeight(), 0.0f, 0.0f, false);
-		printf("NavMesh created with %d polygons\n", navmesh.getPolygonCount());
-	}
-	else
-	{
-		printf("Warning: No navmesh layers found in level. Navigation mesh not created.\n");
-	}
-
-	// Get tile dimensions for proper spacing
-	int tile_width = levelMap.getTileWidth();
-	int tile_height = levelMap.getTileHeight();
+	// Get tile dimensions from level for proper spacing
+	int tile_width = level.getTileWidth();
+	int tile_height = level.getTileHeight();
 
 	// Create debug window list and populate from config
 	DebugWindowList debugWindows;
@@ -324,12 +310,12 @@ int main(int argc, char *argv[])
 		if (cf_key_just_pressed(CF_KEY_P))
 		{
 			// Remove existing point if it exists
-			if (navmesh.getPoint("player_marker") != nullptr)
+			if (level.getNavMesh().getPoint("player_marker") != nullptr)
 			{
-				navmesh.removePoint("player_marker");
+				level.getNavMesh().removePoint("player_marker");
 			}
 			// Add new point at player position
-			navmesh.addPoint("player_marker", playerPosition);
+			level.getNavMesh().addPoint("player_marker", playerPosition);
 			printf("NavMesh point placed at player position (%.1f, %.1f)\n", playerPosition.x, playerPosition.y);
 		}
 
@@ -337,13 +323,13 @@ int main(int argc, char *argv[])
 		if (cf_key_just_pressed(CF_KEY_L))
 		{
 			// Check if there's a player_marker point to pathfind to
-			const NavMeshPoint *targetPoint = navmesh.getPoint("player_marker");
+			const NavMeshPoint *targetPoint = level.getNavMesh().getPoint("player_marker");
 			if (targetPoint != nullptr)
 			{
 				printf("Attempting to pathfind from player (%.1f, %.1f) to marker (%.1f, %.1f)\n",
 					   playerPosition.x, playerPosition.y, targetPoint->position.x, targetPoint->position.y);
 
-				if (navmeshPath.generateToPoint(navmesh, playerPosition, "player_marker"))
+				if (navmeshPath.generateToPoint(level.getNavMesh(), playerPosition, "player_marker"))
 				{
 					printf("Path generated successfully with %d waypoints\n", navmeshPath.getWaypointCount());
 				}
@@ -401,18 +387,18 @@ int main(int argc, char *argv[])
 		draw_text("Skeleton Adventure - TMX Level Map", text_position1);
 
 		// Render TMX level (with CF-native camera transformations and config for layer highlighting)
-		levelMap.renderAllLayers(cfCamera, windowConfig, 0.0f, 0.0f);
+		level.render(cfCamera, windowConfig, 0.0f, 0.0f);
 
 		// Render NavMesh debug visualization (if enabled)
-		if (showNavMesh && navmesh.getPolygonCount() > 0)
+		if (showNavMesh && level.getNavMesh().getPolygonCount() > 0)
 		{
-			navmesh.debugRender(cfCamera);
+			level.getNavMesh().debugRender(cfCamera);
 		}
 
 		// Render NavMesh points debug visualization (if enabled)
-		if (showNavMeshPoints && navmesh.getPointCount() > 0)
+		if (showNavMeshPoints && level.getNavMesh().getPointCount() > 0)
 		{
-			navmesh.debugRenderPoints(cfCamera);
+			level.getNavMesh().debugRenderPoints(cfCamera);
 		}
 
 		// Render NavMesh path (if valid and points visualization is enabled)

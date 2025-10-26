@@ -1,0 +1,139 @@
+#include "LevelV1.h"
+#include "CFNativeCamera.h"
+#include <cstdio>
+
+LevelV1::LevelV1(const std::string &directoryPath)
+    : levelDirectory(directoryPath), levelName(""), levelMap(nullptr), navmesh(nullptr), entities(), details(), tileWidth(0), tileHeight(0), initialized(false)
+{
+    printf("LevelV1: Loading level from directory: %s\n", directoryPath.c_str());
+
+    // Extract level name from directory path (last component)
+    size_t lastSlash = directoryPath.find_last_of('/');
+    if (lastSlash != std::string::npos)
+    {
+        levelName = directoryPath.substr(lastSlash + 1);
+    }
+    else
+    {
+        levelName = directoryPath;
+    }
+
+    // Load details.json first to get level name if available
+    std::string detailsPath = directoryPath + "/details.json";
+    try
+    {
+        details = DataFile(detailsPath);
+        printf("LevelV1: Loaded details from: %s\n", detailsPath.c_str());
+
+        // Override level name if present in details
+        if (details.contains("name"))
+        {
+            levelName = details["name"].get<std::string>();
+            printf("LevelV1: Level name from details: %s\n", levelName.c_str());
+        }
+    }
+    catch (const std::exception &e)
+    {
+        printf("LevelV1 Warning: Could not load details.json: %s\n", e.what());
+        printf("LevelV1: Using extracted directory name: %s\n", levelName.c_str());
+    }
+
+    // Load entities.json
+    std::string entitiesPath = directoryPath + "/entities.json";
+    try
+    {
+        entities = DataFile(entitiesPath);
+        printf("LevelV1: Loaded entities from: %s\n", entitiesPath.c_str());
+    }
+    catch (const std::exception &e)
+    {
+        printf("LevelV1 Warning: Could not load entities.json: %s\n", e.what());
+        // Initialize with empty entities structure
+        entities = DataFile();
+        entities["entities"] = nlohmann::json::array();
+    }
+
+    // Load TMX level map
+    std::string tmxPath = directoryPath + "/" + levelName + ".tmx";
+    try
+    {
+        levelMap = std::make_unique<tmx>(tmxPath);
+        printf("LevelV1: Loaded TMX map from: %s\n", tmxPath.c_str());
+
+        // Cache tile dimensions
+        tileWidth = levelMap->getTileWidth();
+        tileHeight = levelMap->getTileHeight();
+        printf("LevelV1: Tile dimensions: %dx%d\n", tileWidth, tileHeight);
+
+        // Debug print TMX info
+        levelMap->debugPrint();
+    }
+    catch (const std::exception &e)
+    {
+        printf("LevelV1 Error: Could not load TMX map from %s: %s\n", tmxPath.c_str(), e.what());
+        return;
+    }
+
+    // Initialize NavMesh
+    navmesh = std::make_unique<NavMesh>();
+
+    // Build NavMesh from TMX navmesh layer if available
+    if (levelMap->getNavMeshLayerCount() > 0)
+    {
+        auto navLayer = levelMap->getNavMeshLayer(0);
+        printf("LevelV1: Building navmesh from layer: %s\n", navLayer->name.c_str());
+
+        navmesh->buildFromLayer(navLayer, tileWidth, tileHeight, 0.0f, 0.0f, false);
+        printf("LevelV1: NavMesh created with %d polygons\n", navmesh->getPolygonCount());
+    }
+    else
+    {
+        printf("LevelV1 Warning: No navmesh layers found in level. Navigation mesh not created.\n");
+    }
+
+    // Mark as successfully initialized
+    initialized = true;
+    printf("LevelV1: Level '%s' initialized successfully\n", levelName.c_str());
+}
+
+void LevelV1::render(const CFNativeCamera &camera, const DataFile &config, float worldX, float worldY)
+{
+    if (!initialized || !levelMap)
+    {
+        return;
+    }
+
+    levelMap->renderAllLayers(camera, config, worldX, worldY);
+}
+
+void LevelV1::debugPrint() const
+{
+    printf("=== LevelV1 Debug Info ===\n");
+    printf("  Directory: %s\n", levelDirectory.c_str());
+    printf("  Name: %s\n", levelName.c_str());
+    printf("  Initialized: %s\n", initialized ? "yes" : "no");
+    printf("  Tile Size: %dx%d\n", tileWidth, tileHeight);
+
+    if (levelMap)
+    {
+        printf("  TMX Map: loaded\n");
+    }
+    else
+    {
+        printf("  TMX Map: NOT loaded\n");
+    }
+
+    if (navmesh)
+    {
+        printf("  NavMesh: %d polygons, %d points\n",
+               navmesh->getPolygonCount(), navmesh->getPointCount());
+    }
+    else
+    {
+        printf("  NavMesh: NOT created\n");
+    }
+
+    printf("  Entities: %s\n", entities.dump(2).c_str());
+    printf("  Details: %s\n", details.dump(2).c_str());
+    printf("========================\n");
+}

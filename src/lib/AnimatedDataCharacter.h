@@ -32,6 +32,9 @@ public:
     // Check if demo is valid
     bool isValid() const;
 
+    // Get current position
+    v2 getPosition() const;
+
 private:
     // The animation loader
     SpriteAnimationLoader loader;
