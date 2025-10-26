@@ -14,3 +14,4 @@
 0.0.14-nyx-feature-decouple-camera-c728d8c
 0.0.15-nyx-feature-navmesh-points-a3d513c
 0.0.16-nyx-feature-navmesh-agents-92f0e0e
+0.0.17-nyx-feature-navmesh-62bb2f3
