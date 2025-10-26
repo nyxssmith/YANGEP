@@ -1,19 +1,21 @@
-#ifndef SPRITE_ANIMATION_DEMO_H
-#define SPRITE_ANIMATION_DEMO_H
+#ifndef ANIMATED_DATA_CHARACTER_H
+#define ANIMATED_DATA_CHARACTER_H
 
 #include <cute.h>
 #include "SpriteAnimationLoader.h"
+#include "DataFile.h"
 
 using namespace Cute;
 
 // Demo class to showcase the new SpriteAnimationLoader system
-class SpriteAnimationDemo {
+class AnimatedDataCharacter
+{
 public:
-    SpriteAnimationDemo();
-    ~SpriteAnimationDemo();
+    AnimatedDataCharacter();
+    ~AnimatedDataCharacter();
 
-    // Initialize the demo with skeleton animations
-    bool init();
+    // Initialize the character with a datafile path
+    bool init(const std::string &datafilePath);
 
     // Update demo state
     void update(float dt);
@@ -34,6 +36,9 @@ private:
     // The animation loader
     SpriteAnimationLoader loader;
 
+    // DataFile containing character configuration
+    DataFile datafile;
+
     // Animation table containing all skeleton animations
     AnimationTable animationTable;
 
@@ -48,7 +53,7 @@ private:
     float demoTime;
 
     // Input state
-    bool keysPressed[4]; // UP, LEFT, DOWN, RIGHT
+    bool keysPressed[4];   // UP, LEFT, DOWN, RIGHT
     bool animationKeys[2]; // 1 for idle, 2 for walkcycle
 
     // Demo parameters
@@ -67,4 +72,4 @@ private:
     void renderDebugInfo();
 };
 
-#endif // SPRITE_ANIMATION_DEMO_H
+#endif // ANIMATED_DATA_CHARACTER_H
