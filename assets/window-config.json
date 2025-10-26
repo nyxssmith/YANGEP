@@ -3,8 +3,8 @@
   "window": {
     "width": 1280,
     "height": 720,
-    "viewportWidth": 1320,
-    "viewportHeight": 760
+    "viewportWidth": 820,
+    "viewportHeight": 560
   },
   "DebugWindows": [
     {
@@ -20,8 +20,9 @@
   ],
   "Debug": {
     "highlightViewport": true,
-    "highlightNavmesh": true,
+    "highlightNavmesh": false,
     "highlightNavMeshPoints": true,
+    "highlightAgents": true,
     "highlightLayers": [],
     "highlightLayerBorders": [],
     "highlightLayerOuterBorders": [],

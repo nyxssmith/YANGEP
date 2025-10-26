@@ -10,13 +10,12 @@
 #include "lib/Utils.h"
 #include "lib/DataFile.h"
 #include "lib/RealConfigFile.h"
-#include "lib/tsx.h"
-#include "lib/tmx.h"
+#include "lib/LevelV1.h"
 
 #include "lib/CFNativeCamera.h"
-#include "lib/SpriteAnimationDemo.h"
 #include "lib/NavMesh.h"
 #include "lib/NavMeshPath.h"
+#include "lib/AnimatedDataCharacter.h"
 using namespace Cute;
 
 int main(int argc, char *argv[])
@@ -77,6 +76,7 @@ int main(int argc, char *argv[])
 	// Read debug options from config
 	bool debugHighlightNavmesh = false;		  // Default: don't highlight navmesh
 	bool debugHighlightNavMeshPoints = false; // Default: don't highlight navmesh points
+	bool debugHighlightAgents = false;		  // Default: don't highlight agents
 	if (windowConfig.contains("Debug"))
 	{
 		auto &debug = windowConfig["Debug"];
@@ -95,37 +95,29 @@ int main(int argc, char *argv[])
 			debugHighlightNavMeshPoints = debug["highlightNavMeshPoints"];
 			printf("Debug highlightNavMeshPoints: %s\n", debugHighlightNavMeshPoints ? "enabled" : "disabled");
 		}
+		if (debug.contains("highlightAgents"))
+		{
+			debugHighlightAgents = debug["highlightAgents"];
+			printf("Debug highlightAgents: %s\n", debugHighlightAgents ? "enabled" : "disabled");
+		}
 	}
 
-	// Create TMX parser for the level
-	// tmx levelMap("/assets/Levels/test_one/test_one.tmx");
-	tmx levelMap("/assets/Levels/test_two/test_two.tmx");
-	levelMap.debugPrint();
+	// Create LevelV1 instance - handles all TMX and NavMesh initialization
+	LevelV1 level("/assets/Levels/test_two");
+
+	if (!level.isInitialized())
+	{
+		printf("Error: Failed to initialize level\n");
+		destroy_app();
+		return -1;
+	}
 
 	// Configure layer highlighting from config (parse once, use map for lookups)
-	levelMap.setLayerHighlightConfig(windowConfig);
+	level.getLevelMap().setLayerHighlightConfig(windowConfig);
 
-	// Create NavMesh for pathfinding and collision detection
-	NavMesh navmesh;
-	// Try to build from a navmesh layer (looks in navmesh_layers first)
-	// Common layer names: "navmesh", "nav_walkable", "collision", "walkable"
-	// Set invert=true if empty tiles are walkable, false if filled tiles are walkable
-	if (levelMap.getNavMeshLayerCount() > 0)
-	{
-		// Use the first navmesh layer found
-		auto navLayer = levelMap.getNavMeshLayer(0);
-		printf("Building navmesh from layer: %s\n", navLayer->name.c_str());
-		navmesh.buildFromLayer(navLayer, levelMap.getTileWidth(), levelMap.getTileHeight(), 0.0f, 0.0f, false);
-		printf("NavMesh created with %d polygons\n", navmesh.getPolygonCount());
-	}
-	else
-	{
-		printf("Warning: No navmesh layers found in level. Navigation mesh not created.\n");
-	}
-
-	// Get tile dimensions for proper spacing
-	int tile_width = levelMap.getTileWidth();
-	int tile_height = levelMap.getTileHeight();
+	// Get tile dimensions from level for proper spacing
+	int tile_width = level.getTileWidth();
+	int tile_height = level.getTileHeight();
 
 	// Create debug window list and populate from config
 	DebugWindowList debugWindows;
@@ -197,10 +189,10 @@ int main(int argc, char *argv[])
 	}
 
 	// Create skeleton player character
-	SpriteAnimationDemo skeleton;
+	AnimatedDataCharacter skeleton;
 	v2 playerPosition = cf_v2(0.0f, 0.0f); // Start at world origin
 
-	if (!skeleton.init())
+	if (!skeleton.init("assets/DataFiles/EntityFiles/skeleton.json"))
 	{
 		destroy_app();
 		return -1;
@@ -227,6 +219,7 @@ int main(int argc, char *argv[])
 	// NavMesh debug rendering toggle (initialized from config)
 	bool showNavMesh = debugHighlightNavmesh;
 	bool showNavMeshPoints = debugHighlightNavMeshPoints;
+	bool showAgents = debugHighlightAgents;
 
 	// NavMesh path for pathfinding
 	NavMeshPath navmeshPath;
@@ -260,35 +253,34 @@ int main(int argc, char *argv[])
 		// Player movement (WASD)
 		float dt = CF_DELTA_TIME;
 		float playerSpeed = 200.0f; // pixels per second
-		bool playerMoved = false;
+
+		// Calculate move vector from input
+		v2 moveVector = cf_v2(0.0f, 0.0f);
 
 		if (cf_key_down(CF_KEY_W) || cf_key_down(CF_KEY_UP))
 		{
-			playerPosition.y += playerSpeed * dt;
-			playerMoved = true;
+			moveVector.y += playerSpeed;
 		}
 		if (cf_key_down(CF_KEY_S) || cf_key_down(CF_KEY_DOWN))
 		{
-			playerPosition.y -= playerSpeed * dt;
-			playerMoved = true;
+			moveVector.y -= playerSpeed;
 		}
 		if (cf_key_down(CF_KEY_A) || cf_key_down(CF_KEY_LEFT))
 		{
-			playerPosition.x -= playerSpeed * dt;
-			playerMoved = true;
+			moveVector.x -= playerSpeed;
 		}
 		if (cf_key_down(CF_KEY_D) || cf_key_down(CF_KEY_RIGHT))
 		{
-			playerPosition.x += playerSpeed * dt;
-			playerMoved = true;
+			moveVector.x += playerSpeed;
 		}
 
 		// Handle skeleton animation input (1/2 for idle/walk)
-		skeleton.handleInput();
+		// skeleton.handleInput();
 
 		// Reset skeleton position
 		if (cf_key_just_pressed(CF_KEY_SPACE))
 		{
+			skeleton.setPosition(cf_v2(0.0f, 0.0f));
 			playerPosition = cf_v2(0.0f, 0.0f);
 		}
 
@@ -324,12 +316,12 @@ int main(int argc, char *argv[])
 		if (cf_key_just_pressed(CF_KEY_P))
 		{
 			// Remove existing point if it exists
-			if (navmesh.getPoint("player_marker") != nullptr)
+			if (level.getNavMesh().getPoint("player_marker") != nullptr)
 			{
-				navmesh.removePoint("player_marker");
+				level.getNavMesh().removePoint("player_marker");
 			}
 			// Add new point at player position
-			navmesh.addPoint("player_marker", playerPosition);
+			level.getNavMesh().addPoint("player_marker", playerPosition);
 			printf("NavMesh point placed at player position (%.1f, %.1f)\n", playerPosition.x, playerPosition.y);
 		}
 
@@ -337,13 +329,13 @@ int main(int argc, char *argv[])
 		if (cf_key_just_pressed(CF_KEY_L))
 		{
 			// Check if there's a player_marker point to pathfind to
-			const NavMeshPoint *targetPoint = navmesh.getPoint("player_marker");
+			const NavMeshPoint *targetPoint = level.getNavMesh().getPoint("player_marker");
 			if (targetPoint != nullptr)
 			{
 				printf("Attempting to pathfind from player (%.1f, %.1f) to marker (%.1f, %.1f)\n",
 					   playerPosition.x, playerPosition.y, targetPoint->position.x, targetPoint->position.y);
 
-				if (navmeshPath.generateToPoint(navmesh, playerPosition, "player_marker"))
+				if (navmeshPath.generateToPoint(level.getNavMesh(), playerPosition, "player_marker"))
 				{
 					printf("Path generated successfully with %d waypoints\n", navmeshPath.getWaypointCount());
 				}
@@ -372,8 +364,13 @@ int main(int argc, char *argv[])
 			cfCamera.reset();
 		}
 
-		// Update skeleton animation
-		skeleton.update(dt);
+		level.updateAgents(dt);
+
+		// Update skeleton animation with move vector
+		skeleton.update(dt, moveVector);
+
+		// Get updated player position from skeleton (for camera following)
+		playerPosition = skeleton.getPosition();
 
 		// Update camera (handles following and smooth movement)
 		cfCamera.update(dt);
@@ -401,24 +398,54 @@ int main(int argc, char *argv[])
 		draw_text("Skeleton Adventure - TMX Level Map", text_position1);
 
 		// Render TMX level (with CF-native camera transformations and config for layer highlighting)
-		levelMap.renderAllLayers(cfCamera, windowConfig, 0.0f, 0.0f);
+		level.render(cfCamera, windowConfig, 0.0f, 0.0f);
 
 		// Render NavMesh debug visualization (if enabled)
-		if (showNavMesh && navmesh.getPolygonCount() > 0)
+		if (showNavMesh && level.getNavMesh().getPolygonCount() > 0)
 		{
-			navmesh.debugRender(cfCamera);
+			level.getNavMesh().debugRender(cfCamera);
 		}
 
 		// Render NavMesh points debug visualization (if enabled)
-		if (showNavMeshPoints && navmesh.getPointCount() > 0)
+		if (showNavMeshPoints && level.getNavMesh().getPointCount() > 0)
 		{
-			navmesh.debugRenderPoints(cfCamera);
+			level.getNavMesh().debugRenderPoints(cfCamera);
 		}
 
 		// Render NavMesh path (if valid and points visualization is enabled)
 		if (showNavMeshPoints && navmeshPath.isValid())
 		{
 			navmeshPath.debugRender(cfCamera);
+		}
+
+		// Render agent position markers (if enabled)
+		if (showAgents && level.getAgentCount() > 0)
+		{
+			cf_draw_push_color(cf_make_color_rgb(0, 255, 0)); // Green color
+
+			for (size_t i = 0; i < level.getAgentCount(); ++i)
+			{
+				const AnimatedDataCharacterNavMeshAgent *agent = level.getAgent(i);
+				if (agent)
+				{
+					v2 agentPos = agent->getPosition();
+
+					// Draw agent as a green dot
+					const float size = 8.0f; // Size of the agent marker
+					CF_Aabb agent_rect = make_aabb(
+						cf_v2(agentPos.x - size / 2, agentPos.y - size / 2),
+						cf_v2(agentPos.x + size / 2, agentPos.y + size / 2));
+
+					cf_draw_quad_fill(agent_rect, 0.0f);
+
+					// Draw a border around the dot for better visibility
+					cf_draw_push_color(cf_make_color_rgb(0, 0, 0)); // Black border
+					cf_draw_quad(agent_rect, 0.0f, 1.5f);
+					cf_draw_pop_color();
+				}
+			}
+
+			cf_draw_pop_color();
 		}
 
 		// Render skeleton at player position (world space)
