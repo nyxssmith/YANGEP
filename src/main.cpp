@@ -96,7 +96,8 @@ int main(int argc, char *argv[])
 	}
 
 	// Create TMX parser for the level
-	tmx levelMap("/assets/Levels/test_one/test_one.tmx");
+	// tmx levelMap("/assets/Levels/test_one/test_one.tmx");
+	tmx levelMap("/assets/Levels/test_two/test_two.tmx");
 	levelMap.debugPrint();
 
 	// Configure layer highlighting from config (parse once, use map for lookups)
