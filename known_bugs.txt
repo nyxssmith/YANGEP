@@ -1,2 +1,2 @@
 camera zoom and viewport desyncassets/Levels/test_one
-shouldnt navmesh polygones be bigger? 
+change render order based on height in world, not agents always on top
