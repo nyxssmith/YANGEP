@@ -183,79 +183,34 @@ bool AnimatedDataCharacter::init(const std::string &datafilePath)
 }
 
 // Update demo state
-void AnimatedDataCharacter::update(float dt)
+void AnimatedDataCharacter::update(float dt, v2 moveVector)
 {
     if (!initialized)
         return;
 
     demoTime += dt;
 
-    // Handle input
-    handleInput();
+    // Calculate movement magnitude to determine if we're moving
+    float moveMagnitude = sqrt(moveVector.x * moveVector.x + moveVector.y * moveVector.y);
+    bool isMoving = moveMagnitude > 0.01f; // Small threshold to avoid floating point issues
 
-    // Auto-cycle demo elements - DISABLED for player control
-    // Player now has full control via WASD keys and 1/2/SPACE keys
-    // No automatic direction or animation changes
-
-    // Update animation
-    updateAnimation(dt);
-}
-
-// Handle input for demo controls
-void AnimatedDataCharacter::handleInput()
-{
-    if (!initialized)
-        return;
-
-    // Direction controls (WASD + Arrow Keys)
-    bool prevKeysPressed[4] = {keysPressed[0], keysPressed[1], keysPressed[2], keysPressed[3]};
-
-    keysPressed[0] = key_down(CF_KEY_W) || key_down(CF_KEY_UP);    // UP
-    keysPressed[1] = key_down(CF_KEY_A) || key_down(CF_KEY_LEFT);  // LEFT
-    keysPressed[2] = key_down(CF_KEY_S) || key_down(CF_KEY_DOWN);  // DOWN
-    keysPressed[3] = key_down(CF_KEY_D) || key_down(CF_KEY_RIGHT); // RIGHT
-
-    // Animation controls (1, 2)
-    animationKeys[0] = key_just_pressed(CF_KEY_1); // Switch to idle
-    animationKeys[1] = key_just_pressed(CF_KEY_2); // Switch to walkcycle
-
-    // Additional controls
-    bool spacePressed = key_just_pressed(CF_KEY_SPACE); // Toggle animation
-    bool rPressed = key_just_pressed(CF_KEY_R);         // Reset position
-
-    // Handle direction input
-    if (keysPressed[0] && !prevKeysPressed[0])
+    // Update direction based on move vector
+    if (isMoving)
     {
-        currentDirection = Direction::UP;
+        // Determine direction based on the dominant axis
+        if (cf_abs(moveVector.x) > cf_abs(moveVector.y))
+        {
+            // Horizontal movement is dominant
+            currentDirection = (moveVector.x > 0) ? Direction::RIGHT : Direction::LEFT;
+        }
+        else
+        {
+            // Vertical movement is dominant
+            currentDirection = (moveVector.y > 0) ? Direction::UP : Direction::DOWN;
+        }
     }
-    else if (keysPressed[1] && !prevKeysPressed[1])
-    {
-        currentDirection = Direction::LEFT;
-    }
-    else if (keysPressed[2] && !prevKeysPressed[2])
-    {
-        currentDirection = Direction::DOWN;
-    }
-    else if (keysPressed[3] && !prevKeysPressed[3])
-    {
-        currentDirection = Direction::RIGHT;
-    }
-
-    // Handle movement with WASD (move the character position)
-    float moveSpeed = 100.0f; // pixels per second
-    float dt = CF_DELTA_TIME;
-
-    if (keysPressed[0])
-        position.y += moveSpeed * dt; // UP
-    if (keysPressed[1])
-        position.x -= moveSpeed * dt; // LEFT
-    if (keysPressed[2])
-        position.y -= moveSpeed * dt; // DOWN
-    if (keysPressed[3])
-        position.x += moveSpeed * dt; // RIGHT
 
     // Auto-switch to walkcycle when moving, idle when stopping
-    bool isMoving = keysPressed[0] || keysPressed[1] || keysPressed[2] || keysPressed[3];
     static bool wasMoving = false;
 
     if (isMoving && !wasMoving)
@@ -278,14 +233,39 @@ void AnimatedDataCharacter::handleInput()
     }
     wasMoving = isMoving;
 
+    // Handle manual animation input (allows user to override auto-switching with 1/2/SPACE keys)
+    handleInput();
+
+    // Apply movement based on move vector
+    position.x += moveVector.x * dt;
+    position.y += moveVector.y * dt;
+
+    // Update animation
+    updateAnimation(dt);
+}
+
+// Handle input for demo controls
+void AnimatedDataCharacter::handleInput()
+{
+    if (!initialized)
+        return;
+
+    // Animation controls (1, 2) - manual override of auto-switching
+    bool animKey1 = key_just_pressed(CF_KEY_1); // Switch to idle
+    bool animKey2 = key_just_pressed(CF_KEY_2); // Switch to walkcycle
+
+    // Additional controls
+    bool spacePressed = key_just_pressed(CF_KEY_SPACE); // Toggle animation
+    bool rPressed = key_just_pressed(CF_KEY_R);         // Reset position
+
     // Handle manual animation input (overrides auto-switching)
-    if (animationKeys[0])
+    if (animKey1)
     {
         currentAnimation = "idle";
         currentFrame = 0;
         frameTimer = 0.0f;
     }
-    else if (animationKeys[1])
+    else if (animKey2)
     {
         currentAnimation = "walkcycle";
         currentFrame = 0;

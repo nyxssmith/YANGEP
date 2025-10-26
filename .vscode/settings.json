@@ -1,5 +1,12 @@
 {
     "files.associations": {
-        "atomic": "cpp"
+        "atomic": "cpp",
+        "memory": "cpp",
+        "istream": "cpp",
+        "optional": "cpp",
+        "sstream": "cpp",
+        "regex": "cpp",
+        "tuple": "cpp",
+        "valarray": "cpp"
     }
 }

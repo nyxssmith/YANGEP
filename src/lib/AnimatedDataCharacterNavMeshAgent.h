@@ -33,7 +33,7 @@ public:
     bool isOnWalkableArea() const;
 
     // Override update to track navmesh position
-    void update(float dt);
+    void update(float dt, v2 moveVector);
 
 private:
     // The navmesh this agent is on (non-owning pointer)
