@@ -2,7 +2,6 @@
 source "$(dirname "$0")/common.sh"
 cd "$BUILD_DIR"
 # if assets exists, remove it
-if [[ ! -d "assets" ]]; then
-    ../scripts/copy_assets_to_build.sh
+if [[ -d "assets" ]]; then
+    rm -rf assets
 fi
-make

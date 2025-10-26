@@ -95,6 +95,7 @@ add_executable(
 	src/lib/DebugWindow.cpp
 	src/lib/DataFileDebugWindow.cpp
 	src/lib/DebugWindowList.cpp
+	src/lib/DebugFPSWindow.cpp
 	src/lib/Utils.cpp
 	src/lib/tsx.cpp
 	src/lib/tmx.cpp
