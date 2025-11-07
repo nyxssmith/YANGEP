@@ -386,7 +386,10 @@ int main(int argc, char *argv[])
 
 		// Get updated player position from skeleton (for camera following)
 		playerPosition = skeleton.getPosition();
-
+		if (fpsWindow)
+		{
+			fpsWindow->markSection("Player Update");
+		}
 		// Update camera (handles following and smooth movement)
 		cfCamera.update(dt);
 
