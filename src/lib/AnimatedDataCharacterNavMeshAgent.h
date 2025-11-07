@@ -4,6 +4,7 @@
 #include "AnimatedDataCharacter.h"
 #include "NavMesh.h"
 #include <memory>
+#include <atomic>
 
 using namespace Cute;
 
@@ -35,12 +36,31 @@ public:
     // Override update to track navmesh position
     void update(float dt, v2 moveVector);
 
+    // Background update - submits AI/pathfinding calculations to job system
+    // Returns true if a background job was started, false if one is already running
+    bool backgroundUpdate(float dt);
+
+    // Check if background job is complete
+    bool isBackgroundUpdateComplete() const;
+
+    // Apply the result of the background update (should only be called if isBackgroundUpdateComplete())
+    // Returns the move vector calculated in the background
+    v2 getBackgroundMoveVector() const;
+
 private:
     // The navmesh this agent is on (non-owning pointer)
     NavMesh *navmesh;
 
     // Current polygon the agent is in (-1 if not on mesh)
     int currentPolygon;
+
+    // Background job state
+    std::atomic<bool> backgroundJobRunning;
+    std::atomic<bool> backgroundJobComplete;
+    v2 backgroundMoveVector;
+
+    // Background AI calculation (runs in worker thread)
+    void calculateMoveVector(float dt);
 };
 
 #endif // ANIMATED_DATA_CHARACTER_NAVMESH_AGENT_H

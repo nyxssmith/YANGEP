@@ -107,6 +107,7 @@ add_executable(
 	src/lib/AnimatedDataCharacter.cpp
 	src/lib/AnimatedDataCharacterNavMeshAgent.cpp
 	src/lib/LevelV1.cpp
+	src/lib/JobSystem.cpp
 )
 
 # Our source code will be in the `src` folder.
@@ -186,6 +187,7 @@ add_executable(${PROJECT_NAME}_tests
     src/lib/AnimatedDataCharacter.cpp
     src/lib/AnimatedDataCharacterNavMeshAgent.cpp
     src/lib/LevelV1.cpp
+    src/lib/JobSystem.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}_tests gtest gtest_main cute spng_static nlohmann_json::nlohmann_json pugixml-static)
