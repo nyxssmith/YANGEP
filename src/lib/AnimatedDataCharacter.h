@@ -26,7 +26,7 @@ public:
     // Render the demo at a specific position
     void render(v2 renderPosition);
 
-    // Handle input for demo controls
+    // deprecated
     void handleInput();
 
     // Check if demo is valid
