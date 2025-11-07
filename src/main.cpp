@@ -11,6 +11,7 @@
 #include "lib/DataFile.h"
 #include "lib/RealConfigFile.h"
 #include "lib/LevelV1.h"
+#include "lib/JobSystem.h"
 
 #include "lib/CFNativeCamera.h"
 #include "lib/NavMesh.h"
@@ -20,6 +21,7 @@ using namespace Cute;
 
 int main(int argc, char *argv[])
 {
+
 	// Load window configuration BEFORE creating the window (using RealConfigFile)
 	RealConfigFile preConfig("assets/window-config.json");
 	int windowWidth = 640;	// Default fallback
@@ -39,7 +41,11 @@ int main(int argc, char *argv[])
 	{
 		printf("Could not load window config, using defaults: %dx%d\n", windowWidth, windowHeight);
 	}
-
+	// Initialize job system for background tasks
+	if (!JobSystem::initialize())
+	{
+		printf("Warning: Failed to initialize job system\n");
+	}
 	// Create window with the configured size
 	int options = CF_APP_OPTIONS_WINDOW_POS_CENTERED_BIT | CF_APP_OPTIONS_RESIZABLE_BIT;
 	CF_Result result = make_app("Fancy Window Title", 0, 0, 0, windowWidth, windowHeight, options, argv[0]);
@@ -537,6 +543,9 @@ int main(int argc, char *argv[])
 
 		app_draw_onto_screen();
 	}
+
+	// Shutdown job system
+	JobSystem::shutdown();
 
 	destroy_app();
 	return 0;
