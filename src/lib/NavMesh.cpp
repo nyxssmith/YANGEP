@@ -4,6 +4,9 @@
 #include <algorithm>
 #include <cmath>
 #include <cfloat>
+#include <queue>
+#include <unordered_map>
+#include <chrono>
 
 NavMesh::NavMesh()
     : tile_width(32), tile_height(32)
@@ -440,6 +443,216 @@ void NavMesh::clearPoints()
 {
     printf("NavMesh::clearPoints - Clearing %d points\n", static_cast<int>(points.size()));
     points.clear();
+}
+
+// Generate a path from start position to end position
+std::shared_ptr<NavMeshPath> NavMesh::generatePath(CF_V2 start, CF_V2 end)
+{
+    auto path = std::make_shared<NavMeshPath>();
+
+    // Check if start and end are on the navmesh
+    int start_poly = findPolygonAt(start);
+    int end_poly = findPolygonAt(end);
+
+    if (start_poly == -1)
+    {
+        printf("NavMesh::generatePath - Start position (%.1f, %.1f) is not on navmesh\n", start.x, start.y);
+        return path;
+    }
+
+    if (end_poly == -1)
+    {
+        printf("NavMesh::generatePath - End position (%.1f, %.1f) is not on navmesh\n", end.x, end.y);
+        return path;
+    }
+
+    // Generate the path
+    if (findPath(*path, start, end))
+    {
+        // Add to tracked paths
+        paths.push_back(path);
+        printf("NavMesh::generatePath - Path generated successfully (total paths: %d)\n", static_cast<int>(paths.size()));
+    }
+
+    return path;
+}
+
+// Generate a path from start position to a named point
+std::shared_ptr<NavMeshPath> NavMesh::generatePathToPoint(CF_V2 start, const std::string &point_name)
+{
+    // Get the named point from the navmesh
+    const NavMeshPoint *point = getPoint(point_name);
+
+    if (!point)
+    {
+        printf("NavMesh::generatePathToPoint - Point '%s' not found on navmesh\n", point_name.c_str());
+        return std::make_shared<NavMeshPath>();
+    }
+
+    printf("NavMesh::generatePathToPoint - Pathfinding to point '%s' at (%.1f, %.1f)\n",
+           point_name.c_str(), point->position.x, point->position.y);
+
+    return generatePath(start, point->position);
+}
+
+// Helper function for pathfinding (A* implementation)
+bool NavMesh::findPath(NavMeshPath &path, CF_V2 start, CF_V2 end) const
+{
+    auto start_time = std::chrono::high_resolution_clock::now();
+
+    // Clear the path
+    path.clear();
+
+    int start_poly = findPolygonAt(start);
+    int end_poly = findPolygonAt(end);
+
+    if (start_poly == -1 || end_poly == -1)
+    {
+        return false;
+    }
+
+    // If start and end are in the same polygon, direct path
+    if (start_poly == end_poly)
+    {
+        path.waypoints.push_back(start);
+        path.waypoints.push_back(end);
+        path.is_valid = true;
+        path.calculateLength();
+
+        auto end_time = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+
+        printf("NavMesh::findPath - Direct path (same polygon), length: %.1f, time: %.3f ms\n",
+               path.total_length, duration.count() / 1000.0);
+        return true;
+    }
+
+    // Priority queue for A* (cost, polygon_index)
+    struct Node
+    {
+        int poly_index;
+        float g_cost; // Cost from start
+        float h_cost; // Heuristic cost to end
+        int parent;   // Parent polygon index
+
+        float f_cost() const { return g_cost + h_cost; }
+
+        bool operator>(const Node &other) const
+        {
+            return f_cost() > other.f_cost();
+        }
+    };
+
+    std::priority_queue<Node, std::vector<Node>, std::greater<Node>> open_set;
+    std::unordered_map<int, Node> all_nodes;
+
+    // Helper function to calculate heuristic (Euclidean distance)
+    auto heuristic = [&](int poly_index) -> float
+    {
+        const NavPoly &poly = getPolygon(poly_index);
+        CF_V2 diff = cf_v2(poly.center.x - end.x, poly.center.y - end.y);
+        return cf_len(diff);
+    };
+
+    // Initialize start node
+    Node start_node;
+    start_node.poly_index = start_poly;
+    start_node.g_cost = 0.0f;
+    start_node.h_cost = heuristic(start_poly);
+    start_node.parent = -1;
+
+    open_set.push(start_node);
+    all_nodes[start_poly] = start_node;
+
+    // A* search
+    while (!open_set.empty())
+    {
+        Node current = open_set.top();
+        open_set.pop();
+
+        // Found the goal
+        if (current.poly_index == end_poly)
+        {
+            // Reconstruct path
+            std::vector<int> poly_path;
+            int current_poly = end_poly;
+
+            while (current_poly != -1)
+            {
+                poly_path.push_back(current_poly);
+                current_poly = all_nodes[current_poly].parent;
+            }
+
+            std::reverse(poly_path.begin(), poly_path.end());
+
+            // Convert polygon path to waypoints
+            path.waypoints.push_back(start);
+
+            // Add polygon centers as waypoints
+            for (size_t i = 1; i < poly_path.size(); i++)
+            {
+                const NavPoly &poly = getPolygon(poly_path[i]);
+                path.waypoints.push_back(poly.center);
+            }
+
+            path.waypoints.push_back(end);
+            path.is_valid = true;
+            path.calculateLength();
+
+            auto end_time = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+
+            printf("NavMesh::findPath - Path found with %d waypoints, length: %.1f, time: %.3f ms\n",
+                   path.getWaypointCount(), path.total_length, duration.count() / 1000.0);
+
+            return true;
+        }
+
+        // Check all neighbors
+        const NavPoly &current_poly = getPolygon(current.poly_index);
+
+        for (int neighbor_index : current_poly.neighbors)
+        {
+            if (neighbor_index == -1)
+                continue;
+
+            const NavPoly &neighbor_poly = getPolygon(neighbor_index);
+
+            // Calculate cost to move to this neighbor
+            CF_V2 diff = cf_v2(neighbor_poly.center.x - current_poly.center.x,
+                               neighbor_poly.center.y - current_poly.center.y);
+            float move_cost = cf_len(diff);
+            float new_g_cost = current.g_cost + move_cost;
+
+            // Check if we found a better path to this neighbor
+            auto it = all_nodes.find(neighbor_index);
+            if (it == all_nodes.end() || new_g_cost < it->second.g_cost)
+            {
+                Node neighbor_node;
+                neighbor_node.poly_index = neighbor_index;
+                neighbor_node.g_cost = new_g_cost;
+                neighbor_node.h_cost = heuristic(neighbor_index);
+                neighbor_node.parent = current.poly_index;
+
+                all_nodes[neighbor_index] = neighbor_node;
+                open_set.push(neighbor_node);
+            }
+        }
+    }
+
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+    printf("NavMesh::findPath - No path found, time: %.3f ms\n", duration.count() / 1000.0);
+
+    // No path found
+    return false;
+}
+
+// Clear all tracked paths
+void NavMesh::clearPaths()
+{
+    printf("NavMesh::clearPaths - Clearing %d paths\n", static_cast<int>(paths.size()));
+    paths.clear();
 }
 
 void NavMesh::debugRenderPoints(const class CFNativeCamera &camera, CF_Color color) const

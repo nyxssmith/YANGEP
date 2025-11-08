@@ -11,6 +11,8 @@ class CFNativeCamera;
 // Structure to represent a path through the navigation mesh
 class NavMeshPath
 {
+    friend class NavMesh; // Allow NavMesh to access private members for path generation
+
 private:
     std::vector<CF_V2> waypoints; // Path waypoints (world positions)
     bool is_valid;                // Whether the path is valid and reachable

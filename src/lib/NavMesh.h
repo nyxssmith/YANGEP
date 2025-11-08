@@ -5,6 +5,7 @@
 #include <string>
 #include <cute.h>
 #include "NavMeshPoint.h"
+#include "NavMeshPath.h"
 
 // Forward declarations
 struct TMXLayer;
@@ -37,12 +38,13 @@ struct NavEdge
 class NavMesh
 {
 private:
-    std::vector<NavPoly> polygons;    // Navigation polygons
-    std::vector<NavEdge> edges;       // All edges in the mesh
-    std::vector<NavMeshPoint> points; // Named points on the mesh
-    CF_Aabb bounds;                   // Bounding box of the entire mesh
-    int tile_width;                   // Tile width from TMX
-    int tile_height;                  // Tile height from TMX
+    std::vector<NavPoly> polygons;                   // Navigation polygons
+    std::vector<NavEdge> edges;                      // All edges in the mesh
+    std::vector<NavMeshPoint> points;                // Named points on the mesh
+    std::vector<std::shared_ptr<NavMeshPath>> paths; // All paths generated on this mesh
+    CF_Aabb bounds;                                  // Bounding box of the entire mesh
+    int tile_width;                                  // Tile width from TMX
+    int tile_height;                                 // Tile height from TMX
 
     // Helper functions for mesh generation
     void generateFromTileGrid(const std::vector<bool> &walkable_tiles,
@@ -52,6 +54,9 @@ private:
     void triangulate();
     void calculateNeighbors();
     void calculateCentroids();
+
+    // Helper function for pathfinding (A* implementation)
+    bool findPath(NavMeshPath &path, CF_V2 start, CF_V2 end) const;
 
     // Convert tile grid coordinates to world coordinates
     CF_V2 tileToWorld(int tile_x, int tile_y, float world_x, float world_y) const;
@@ -106,6 +111,22 @@ public:
 
     // Clear all points
     void clearPoints();
+
+    // Path generation and management
+    // Generate a path from start position to end position
+    // Returns a shared pointer to the path (may be invalid if no path found)
+    std::shared_ptr<NavMeshPath> generatePath(CF_V2 start, CF_V2 end);
+
+    // Generate a path from start position to a named point
+    // Returns a shared pointer to the path (may be invalid if no path found)
+    std::shared_ptr<NavMeshPath> generatePathToPoint(CF_V2 start, const std::string &point_name);
+
+    // Get all paths generated on this mesh
+    const std::vector<std::shared_ptr<NavMeshPath>> &getPaths() const { return paths; }
+    int getPathCount() const { return static_cast<int>(paths.size()); }
+
+    // Clear all tracked paths
+    void clearPaths();
 
     // Debug rendering
     void debugRender(const class CFNativeCamera &camera) const;

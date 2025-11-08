@@ -7,6 +7,7 @@ using namespace Cute;
 // Constructor
 AnimatedDataCharacterNavMeshAgent::AnimatedDataCharacterNavMeshAgent()
     : AnimatedDataCharacter(), navmesh(nullptr), currentPolygon(-1),
+      currentNavMeshPath(nullptr),
       backgroundJobRunning(false), backgroundJobComplete(false),
       backgroundMoveVector(cf_v2(0.0f, 0.0f))
 {
@@ -133,19 +134,19 @@ v2 AnimatedDataCharacterNavMeshAgent::getBackgroundMoveVector() const
 }
 
 // Get the current navigation path
-NavMeshPath *AnimatedDataCharacterNavMeshAgent::getCurrentNavMeshPath()
+std::shared_ptr<NavMeshPath> AnimatedDataCharacterNavMeshAgent::getCurrentNavMeshPath()
 {
-    return &currentNavMeshPath;
+    return currentNavMeshPath;
 }
 
 // Get the current navigation path (const version)
-const NavMeshPath *AnimatedDataCharacterNavMeshAgent::getCurrentNavMeshPath() const
+std::shared_ptr<const NavMeshPath> AnimatedDataCharacterNavMeshAgent::getCurrentNavMeshPath() const
 {
-    return &currentNavMeshPath;
+    return currentNavMeshPath;
 }
 
 // Set the current navigation path
-void AnimatedDataCharacterNavMeshAgent::setCurrentNavMeshPath(const NavMeshPath &path)
+void AnimatedDataCharacterNavMeshAgent::setCurrentNavMeshPath(std::shared_ptr<NavMeshPath> path)
 {
     currentNavMeshPath = path;
 }
@@ -153,7 +154,7 @@ void AnimatedDataCharacterNavMeshAgent::setCurrentNavMeshPath(const NavMeshPath 
 // Clear the current navigation path
 void AnimatedDataCharacterNavMeshAgent::clearCurrentNavMeshPath()
 {
-    currentNavMeshPath.clear();
+    currentNavMeshPath = nullptr;
 }
 
 // Get the wander behavior
@@ -183,30 +184,26 @@ void AnimatedDataCharacterNavMeshAgent::OnScreenBackgroundUpdateJob(float dt)
     CF_V2 currentPosition = cf_v2(agentPosition.x, agentPosition.y);
 
     // if has a path
-    if (currentNavMeshPath.isValid())
+    if (currentNavMeshPath && currentNavMeshPath->isValid())
     {
         // if current position is at current waypoint of the path
-        if (currentNavMeshPath.isAtCurrentWaypoint(currentPosition))
+        if (currentNavMeshPath->isAtCurrentWaypoint(currentPosition))
         {
             // call getnext for the path
-            currentNavMeshPath.getNext();
+            currentNavMeshPath->getNext();
         }
 
         // Get the current waypoint (without advancing)
-        CF_V2 *nextWaypoint = currentNavMeshPath.getCurrent();
+        CF_V2 *nextWaypoint = currentNavMeshPath->getCurrent();
 
         // if nextwaypoint is null
         if (nextWaypoint == nullptr)
         {
             // get new path and exit
             const int wanderRadius = 500;
-            NavMeshPath newPath = wanderBehavior.GetNewPath(*navmesh, currentPosition, wanderRadius);
+            currentNavMeshPath = wanderBehavior.GetNewPath(*navmesh, currentPosition, wanderRadius);
 
-            if (newPath.isValid())
-            {
-                currentNavMeshPath = newPath;
-            }
-            else
+            if (!currentNavMeshPath || !currentNavMeshPath->isValid())
             {
                 backgroundMoveVector = cf_v2(0.0f, 0.0f);
             }
@@ -232,12 +229,7 @@ void AnimatedDataCharacterNavMeshAgent::OnScreenBackgroundUpdateJob(float dt)
     {
         // get new path from wander behavior
         const int wanderRadius = 500;
-        NavMeshPath newPath = wanderBehavior.GetNewPath(*navmesh, currentPosition, wanderRadius);
-
-        if (newPath.isValid())
-        {
-            currentNavMeshPath = newPath;
-        }
+        currentNavMeshPath = wanderBehavior.GetNewPath(*navmesh, currentPosition, wanderRadius);
 
         backgroundMoveVector = cf_v2(0.0f, 0.0f);
     }
