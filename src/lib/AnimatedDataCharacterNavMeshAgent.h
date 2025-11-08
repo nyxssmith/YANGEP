@@ -50,11 +50,11 @@ public:
     v2 getBackgroundMoveVector() const;
 
     // Get the current navigation path
-    NavMeshPath *getCurrentNavMeshPath();
-    const NavMeshPath *getCurrentNavMeshPath() const;
+    std::shared_ptr<NavMeshPath> getCurrentNavMeshPath();
+    std::shared_ptr<const NavMeshPath> getCurrentNavMeshPath() const;
 
     // Set the current navigation path
-    void setCurrentNavMeshPath(const NavMeshPath &path);
+    void setCurrentNavMeshPath(std::shared_ptr<NavMeshPath> path);
 
     // Clear the current navigation path
     void clearCurrentNavMeshPath();
@@ -75,7 +75,7 @@ private:
     int currentPolygon;
 
     // Current navigation path
-    NavMeshPath currentNavMeshPath;
+    std::shared_ptr<NavMeshPath> currentNavMeshPath;
 
     // Wander behavior for this agent
     WanderBehavior wanderBehavior;

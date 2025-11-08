@@ -10,5 +10,5 @@ public:
     ~WanderBehavior();
 
     // Get a new random wander path
-    NavMeshPath GetNewPath(const NavMesh &navmesh, CF_V2 currentPosition, int radius) override;
+    std::shared_ptr<NavMeshPath> GetNewPath(NavMesh &navmesh, CF_V2 currentPosition, int radius) override;
 };

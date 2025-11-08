@@ -245,8 +245,8 @@ int main(int argc, char *argv[])
 	bool showNavMeshPoints = debugHighlightNavMeshPoints;
 	bool showAgents = debugHighlightAgents;
 
-	// NavMesh path for pathfinding
-	NavMeshPath navmeshPath;
+	// NavMesh path for pathfinding (stored as shared_ptr)
+	std::shared_ptr<NavMeshPath> navmeshPath = nullptr;
 
 	// Main loop
 	printf("Skeleton Adventure Game:\n");
@@ -365,9 +365,12 @@ int main(int argc, char *argv[])
 				printf("Attempting to pathfind from player (%.1f, %.1f) to marker (%.1f, %.1f)\n",
 					   playerPosition.x, playerPosition.y, targetPoint->position.x, targetPoint->position.y);
 
-				if (navmeshPath.generateToPoint(level.getNavMesh(), playerPosition, "player_marker"))
+				// Generate path using NavMesh (which tracks all paths)
+				navmeshPath = level.getNavMesh().generatePathToPoint(playerPosition, "player_marker");
+
+				if (navmeshPath && navmeshPath->isValid())
 				{
-					printf("Path generated successfully with %d waypoints\n", navmeshPath.getWaypointCount());
+					printf("Path generated successfully with %d waypoints\n", navmeshPath->getWaypointCount());
 				}
 				else
 				{
@@ -460,10 +463,17 @@ int main(int argc, char *argv[])
 			level.getNavMesh().debugRenderPoints(cfCamera);
 		}
 
-		// Render NavMesh path (if valid and points visualization is enabled)
-		if (showNavMeshPoints && navmeshPath.isValid())
+		// Render all NavMesh paths (if visualization is enabled)
+		if (showNavMeshPoints && level.getNavMesh().getPathCount() > 0)
 		{
-			navmeshPath.debugRender(cfCamera);
+			const auto &allPaths = level.getNavMesh().getPaths();
+			for (const auto &path : allPaths)
+			{
+				if (path && path->isValid())
+				{
+					path->debugRender(cfCamera);
+				}
+			}
 		}
 
 		// Render agent position markers (if enabled)

@@ -21,10 +21,8 @@ WanderBehavior::~WanderBehavior()
 }
 
 // Get a new random wander path
-NavMeshPath WanderBehavior::GetNewPath(const NavMesh &navmesh, CF_V2 currentPosition, int radius)
+std::shared_ptr<NavMeshPath> WanderBehavior::GetNewPath(NavMesh &navmesh, CF_V2 currentPosition, int radius)
 {
-    NavMeshPath path;
-
     // Maximum attempts to find a valid point on the navmesh
     const int maxAttempts = 20;
     CF_V2 targetPosition;
@@ -46,11 +44,12 @@ NavMeshPath WanderBehavior::GetNewPath(const NavMesh &navmesh, CF_V2 currentPosi
         }
     }
 
-    // If we found a valid point, generate a path to it
+    // If we found a valid point, generate a path to it using the navmesh
     if (foundValidPoint)
     {
-        path.generate(navmesh, currentPosition, targetPosition);
+        return navmesh.generatePath(currentPosition, targetPosition);
     }
 
-    return path;
+    // Return an empty/invalid path
+    return std::make_shared<NavMeshPath>();
 }
