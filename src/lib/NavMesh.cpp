@@ -450,7 +450,7 @@ std::shared_ptr<NavMeshPath> NavMesh::generatePath(CF_V2 start, CF_V2 end)
 {
     auto path = std::make_shared<NavMeshPath>();
 
-    // Check if start and end are on the navmesh
+    // Snap start and end positions to valid tile centers
     int start_poly = findPolygonAt(start);
     int end_poly = findPolygonAt(end);
 
@@ -466,8 +466,12 @@ std::shared_ptr<NavMeshPath> NavMesh::generatePath(CF_V2 start, CF_V2 end)
         return path;
     }
 
-    // Generate the path
-    if (findPath(*path, start, end))
+    // Use the polygon centers as the actual start and end positions
+    CF_V2 snapped_start = polygons[start_poly].center;
+    CF_V2 snapped_end = polygons[end_poly].center;
+
+    // Generate the path using snapped positions
+    if (findPath(*path, snapped_start, snapped_end))
     {
         // Add to tracked paths
         paths.push_back(path);
