@@ -13,7 +13,7 @@
       "dataFilePath": "/assets/window-config.json"
     },
     {
-      "enabled": true,
+      "enabled": false,
       "title": "Window Config Viewer",
       "dataFilePath": "/assets/DataFiles/EntityFiles/skeleton.json"
     }
