@@ -26,6 +26,7 @@
     "highlightLayers": [],
     "highlightLayerBorders": [],
     "highlightLayerOuterBorders": [],
-    "ShowFPSMetrics": true
+    "ShowFPSMetrics": true,
+    "ShowJobMetrics": true
   }
 }
