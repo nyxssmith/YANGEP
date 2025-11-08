@@ -7,10 +7,12 @@
 #include "lib/DataFileDebugWindow.h"
 #include "lib/DebugWindowList.h"
 #include "lib/DebugFPSWindow.h"
+#include "lib/DebugJobWindow.h"
 #include "lib/Utils.h"
 #include "lib/DataFile.h"
 #include "lib/RealConfigFile.h"
 #include "lib/LevelV1.h"
+#include "lib/JobSystem.h"
 
 #include "lib/CFNativeCamera.h"
 #include "lib/NavMesh.h"
@@ -20,6 +22,7 @@ using namespace Cute;
 
 int main(int argc, char *argv[])
 {
+
 	// Load window configuration BEFORE creating the window (using RealConfigFile)
 	RealConfigFile preConfig("assets/window-config.json");
 	int windowWidth = 640;	// Default fallback
@@ -39,7 +42,11 @@ int main(int argc, char *argv[])
 	{
 		printf("Could not load window config, using defaults: %dx%d\n", windowWidth, windowHeight);
 	}
-
+	// Initialize job system for background tasks
+	if (!JobSystem::initialize())
+	{
+		printf("Warning: Failed to initialize job system\n");
+	}
 	// Create window with the configured size
 	int options = CF_APP_OPTIONS_WINDOW_POS_CENTERED_BIT | CF_APP_OPTIONS_RESIZABLE_BIT;
 	CF_Result result = make_app("Fancy Window Title", 0, 0, 0, windowWidth, windowHeight, options, argv[0]);
@@ -172,9 +179,14 @@ int main(int argc, char *argv[])
 	std::unique_ptr<DebugFPSWindow> fpsWindow;
 	bool showFPSMetrics = false;
 
+	// Create Job system debug window if enabled in config
+	std::unique_ptr<DebugJobWindow> jobWindow;
+	bool showJobMetrics = false;
+
 	if (windowConfig.contains("Debug"))
 	{
 		auto &debug = windowConfig["Debug"];
+
 		if (debug.contains("ShowFPSMetrics"))
 		{
 			showFPSMetrics = debug["ShowFPSMetrics"];
@@ -184,6 +196,18 @@ int main(int argc, char *argv[])
 			{
 				fpsWindow = std::make_unique<DebugFPSWindow>("FPS Metrics");
 				printf("Created FPS metrics debug window\n");
+			}
+		}
+
+		if (debug.contains("ShowJobMetrics"))
+		{
+			showJobMetrics = debug["ShowJobMetrics"];
+			printf("Debug ShowJobMetrics: %s\n", showJobMetrics ? "enabled" : "disabled");
+
+			if (showJobMetrics)
+			{
+				jobWindow = std::make_unique<DebugJobWindow>("Job System");
+				printf("Created Job system debug window\n");
 			}
 		}
 	}
@@ -241,6 +265,12 @@ int main(int argc, char *argv[])
 	printf("  ESC - quit\n");
 	while (cf_app_is_running())
 	{
+		// Begin profiling the frame
+		if (fpsWindow)
+		{
+			fpsWindow->beginFrame();
+		}
+
 		// Update app to handle window events and input (proper CF pattern)
 		cf_app_update(NULL);
 
@@ -364,26 +394,40 @@ int main(int argc, char *argv[])
 			cfCamera.reset();
 		}
 
+		if (fpsWindow)
+		{
+			fpsWindow->markSection("Player Input");
+		}
 		level.updateAgents(dt);
+
+		if (fpsWindow)
+		{
+			fpsWindow->markSection("Agent Update");
+		}
 
 		// Update skeleton animation with move vector
 		skeleton.update(dt, moveVector);
 
 		// Get updated player position from skeleton (for camera following)
 		playerPosition = skeleton.getPosition();
-
+		if (fpsWindow)
+		{
+			fpsWindow->markSection("Player Update");
+		}
 		// Update camera (handles following and smooth movement)
 		cfCamera.update(dt);
 
+		if (fpsWindow)
+		{
+			fpsWindow->markSection("Camera Update");
+		}
 		// Render debug windows
 		debugWindows.renderAll();
 
-		// Render FPS metrics window if enabled
 		if (fpsWindow)
 		{
-			fpsWindow->render();
+			fpsWindow->markSection("Debug Windows");
 		}
-
 		// Clear background
 		CF_Color bg = make_color(0.1f, 0.1f, 0.15f, 1.0f);
 		cf_draw_push_color(bg);
@@ -400,6 +444,10 @@ int main(int argc, char *argv[])
 		// Render TMX level (with CF-native camera transformations and config for layer highlighting)
 		level.render(cfCamera, windowConfig, 0.0f, 0.0f);
 
+		if (fpsWindow)
+		{
+			fpsWindow->markSection("Level Render");
+		}
 		// Render NavMesh debug visualization (if enabled)
 		if (showNavMesh && level.getNavMesh().getPolygonCount() > 0)
 		{
@@ -451,6 +499,10 @@ int main(int argc, char *argv[])
 		// Render skeleton at player position (world space)
 		skeleton.render(playerPosition);
 
+		if (fpsWindow)
+		{
+			fpsWindow->markSection("Agent/Player Render");
+		}
 		// Restore camera transformation
 		cfCamera.restore();
 
@@ -492,8 +544,32 @@ int main(int argc, char *argv[])
 			draw_text(viewportInfo, cf_v2(10.0f, top_y + 40.0f));
 		}
 
+		if (fpsWindow)
+		{
+			fpsWindow->markSection("UI Render");
+		}
+		// End profiling the frame
+		if (fpsWindow)
+		{
+			fpsWindow->endFrame();
+		}
+		// Render FPS metrics window if enabled
+		if (fpsWindow)
+		{
+			fpsWindow->render();
+		}
+
+		// Render Job system window if enabled
+		if (jobWindow)
+		{
+			jobWindow->render();
+		}
+
 		app_draw_onto_screen();
 	}
+
+	// Shutdown job system
+	JobSystem::shutdown();
 
 	destroy_app();
 	return 0;

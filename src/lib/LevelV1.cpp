@@ -1,5 +1,6 @@
 #include "LevelV1.h"
 #include "CFNativeCamera.h"
+#include "JobSystem.h"
 #include <cstdio>
 
 LevelV1::LevelV1(const std::string &directoryPath)
@@ -220,16 +221,28 @@ void LevelV1::clearAgents()
 
 void LevelV1::updateAgents(float dt)
 {
-    // TODO link into job system
-    //  For now, agents are stationary (zero move vector)
-    //  Later, this can be replaced with AI-driven movement or pathfinding
-    v2 zeroMoveVector = cf_v2(10.0f, 0.0f);
-
+    // Update agents using background job system
+    // Submit background AI calculations for all agents
     for (auto &agent : agents)
     {
         if (agent)
         {
-            agent->update(dt, zeroMoveVector);
+            // Try to start a background job for this agent
+            agent->backgroundUpdate(dt);
+        }
+    }
+
+    // Kick off all pending jobs (non-blocking)
+    JobSystem::kick();
+
+    // Update agents with move vectors (using results from completed background jobs)
+    for (auto &agent : agents)
+    {
+        if (agent)
+        {
+            v2 moveVector = agent->getBackgroundMoveVector();
+
+            agent->update(dt, moveVector);
         }
     }
 }
