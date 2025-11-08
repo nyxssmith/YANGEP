@@ -15,6 +15,7 @@ private:
     std::vector<CF_V2> waypoints; // Path waypoints (world positions)
     bool is_valid;                // Whether the path is valid and reachable
     float total_length;           // Total length of the path
+    int currentWaypointIndex;     // Index of the current waypoint
 
     // Internal pathfinding function
     bool findPath(const NavMesh &navmesh, CF_V2 start, CF_V2 end);
@@ -43,6 +44,18 @@ public:
 
     // Get waypoint at specific index
     CF_V2 getWaypoint(int index) const;
+
+    // Get the current waypoint without advancing
+    // Returns nullptr if there is no current waypoint
+    CF_V2 *getCurrent();
+
+    // Get the next waypoint and advance to it
+    // Returns nullptr if there is no next waypoint
+    CF_V2 *getNext();
+
+    // Check if a location is at the current waypoint (within tolerance)
+    // tolerance: maximum distance to consider as "at" the waypoint (default 5.0f)
+    bool isAtCurrentWaypoint(CF_V2 location, float tolerance = 5.0f) const;
 
     // Debug rendering
     void debugRender(const CFNativeCamera &camera, CF_Color color = cf_make_color_rgb(255, 255, 0)) const;

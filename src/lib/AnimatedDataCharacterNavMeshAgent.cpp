@@ -88,7 +88,7 @@ void AnimatedDataCharacterNavMeshAgent::update(float dt, v2 moveVector)
 }
 
 // Background update - submits AI/pathfinding calculations to job system
-bool AnimatedDataCharacterNavMeshAgent::backgroundUpdate(float dt)
+bool AnimatedDataCharacterNavMeshAgent::backgroundUpdate(float dt, bool isOnScreen)
 {
     // Check if a job is already running
     if (backgroundJobRunning.load())
@@ -101,9 +101,16 @@ bool AnimatedDataCharacterNavMeshAgent::backgroundUpdate(float dt)
     backgroundJobComplete.store(false);
 
     // Submit the calculation job to the job system with a name
-    JobSystem::submitJob([this, dt]()
+    JobSystem::submitJob([this, dt, isOnScreen]()
                          {
-        this->calculateMoveVector(dt);
+        if (isOnScreen)
+        {
+            this->OnScreenBackgroundUpdateJob(dt);
+        }
+        else
+        {
+            this->OffScreenBackgroundUpdateJob(dt);
+        }
         
         // Mark job as complete
         this->backgroundJobComplete.store(true);
@@ -125,26 +132,130 @@ v2 AnimatedDataCharacterNavMeshAgent::getBackgroundMoveVector() const
     return backgroundMoveVector;
 }
 
+// Get the current navigation path
+NavMeshPath *AnimatedDataCharacterNavMeshAgent::getCurrentNavMeshPath()
+{
+    return &currentNavMeshPath;
+}
+
+// Get the current navigation path (const version)
+const NavMeshPath *AnimatedDataCharacterNavMeshAgent::getCurrentNavMeshPath() const
+{
+    return &currentNavMeshPath;
+}
+
+// Set the current navigation path
+void AnimatedDataCharacterNavMeshAgent::setCurrentNavMeshPath(const NavMeshPath &path)
+{
+    currentNavMeshPath = path;
+}
+
+// Clear the current navigation path
+void AnimatedDataCharacterNavMeshAgent::clearCurrentNavMeshPath()
+{
+    currentNavMeshPath.clear();
+}
+
+// Get the wander behavior
+WanderBehavior *AnimatedDataCharacterNavMeshAgent::getWanderBehavior()
+{
+    return &wanderBehavior;
+}
+
+// Get the wander behavior (const version)
+const WanderBehavior *AnimatedDataCharacterNavMeshAgent::getWanderBehavior() const
+{
+    return &wanderBehavior;
+}
+
+// Background update job for on-screen agents (more detailed AI)
+void AnimatedDataCharacterNavMeshAgent::OnScreenBackgroundUpdateJob(float dt)
+{
+    // Check if navmesh is available
+    if (navmesh == nullptr)
+    {
+        backgroundMoveVector = cf_v2(0.0f, 0.0f);
+        return;
+    }
+
+    // Get current position
+    v2 agentPosition = getPosition();
+    CF_V2 currentPosition = cf_v2(agentPosition.x, agentPosition.y);
+
+    // if has a path
+    if (currentNavMeshPath.isValid())
+    {
+        // if current position is at current waypoint of the path
+        if (currentNavMeshPath.isAtCurrentWaypoint(currentPosition))
+        {
+            // call getnext for the path
+            currentNavMeshPath.getNext();
+        }
+
+        // Get the current waypoint (without advancing)
+        CF_V2 *nextWaypoint = currentNavMeshPath.getCurrent();
+
+        // if nextwaypoint is null
+        if (nextWaypoint == nullptr)
+        {
+            // get new path and exit
+            const int wanderRadius = 500;
+            NavMeshPath newPath = wanderBehavior.GetNewPath(*navmesh, currentPosition, wanderRadius);
+
+            if (newPath.isValid())
+            {
+                currentNavMeshPath = newPath;
+            }
+            else
+            {
+                backgroundMoveVector = cf_v2(0.0f, 0.0f);
+            }
+            return;
+        }
+
+        // set a new backgroundMoveVector toward next waypoint
+        float dirX = nextWaypoint->x - currentPosition.x;
+        float dirY = nextWaypoint->y - currentPosition.y;
+
+        // Normalize and scale to movement speed
+        float length = sqrt(dirX * dirX + dirY * dirY);
+        if (length > 0.0f)
+        {
+            dirX = (dirX / length) * 100.0f; // Scale to speed
+            dirY = (dirY / length) * 100.0f;
+        }
+
+        backgroundMoveVector = cf_v2(dirX, dirY);
+    }
+    // else
+    else
+    {
+        // get new path from wander behavior
+        const int wanderRadius = 500;
+        NavMeshPath newPath = wanderBehavior.GetNewPath(*navmesh, currentPosition, wanderRadius);
+
+        if (newPath.isValid())
+        {
+            currentNavMeshPath = newPath;
+        }
+
+        backgroundMoveVector = cf_v2(0.0f, 0.0f);
+    }
+}
+
+// Background update job for off-screen agents (simplified AI)
+void AnimatedDataCharacterNavMeshAgent::OffScreenBackgroundUpdateJob(float dt)
+{
+    OnScreenBackgroundUpdateJob(dt);
+    // TODO: Implement simplified AI for off-screen agents
+    // This might include:
+    // - Simpler pathfinding or path following
+    // - Basic behavior updates
+    // - Minimal state changes
+    // - Skip expensive calculations that won't be visible
+}
+
 // Background AI calculation (runs in worker thread)
 void AnimatedDataCharacterNavMeshAgent::calculateMoveVector(float dt)
 {
-    // TODO: Implement actual AI/pathfinding logic here
-    // For now, just a simple movement pattern as placeholder
-
-    // Pick random numbers between -100 and 100
-    float moveX = (rand() % 201) - 100.0f; // Random between -100 and 100
-    float moveY = (rand() % 201) - 100.0f; // Random between -100 and 100
-
-    // Simulate expensive AI calculation by waiting 3 seconds
-    cf_sleep(3000); // Sleep for 3000 milliseconds (3 seconds)
-
-    // Set the move vector
-    backgroundMoveVector = cf_v2(moveX, moveY);
-
-    // In a real implementation, this might:
-    // - Calculate pathfinding to a target
-    // - Evaluate behavioral AI decisions
-    // - Check for obstacles
-    // - Update steering behaviors
-    // etc.
 }

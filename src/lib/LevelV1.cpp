@@ -221,14 +221,18 @@ void LevelV1::clearAgents()
 
 void LevelV1::updateAgents(float dt)
 {
-    // Update agents using background job system
-    // Submit background AI calculations for all agents
+
+    // TODO this!!!!!!
+    // all of this is assuming agents are on screen, todo cull based on camera and do different for offscreen agents
+
+    // trigger background updates for all agents
+    // these will finish on their own and update the agent as needed
     for (auto &agent : agents)
     {
         if (agent)
         {
             // Try to start a background job for this agent
-            agent->backgroundUpdate(dt);
+            agent->backgroundUpdate(dt, true); // TODO change to false if offscreen
         }
     }
 
@@ -240,7 +244,12 @@ void LevelV1::updateAgents(float dt)
     {
         if (agent)
         {
-            v2 moveVector = agent->getBackgroundMoveVector();
+            // Get the background move vector if the job is complete
+            v2 moveVector = cf_v2(0.0f, 0.0f);
+            if (agent->isBackgroundUpdateComplete())
+            {
+                moveVector = agent->getBackgroundMoveVector();
+            }
 
             agent->update(dt, moveVector);
         }

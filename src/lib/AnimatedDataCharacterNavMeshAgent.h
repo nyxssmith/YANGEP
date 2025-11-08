@@ -3,6 +3,8 @@
 
 #include "AnimatedDataCharacter.h"
 #include "NavMesh.h"
+#include "NavMeshPath.h"
+#include "WanderBehavior.h"
 #include <memory>
 #include <atomic>
 
@@ -38,7 +40,7 @@ public:
 
     // Background update - submits AI/pathfinding calculations to job system
     // Returns true if a background job was started, false if one is already running
-    bool backgroundUpdate(float dt);
+    bool backgroundUpdate(float dt, bool isOnScreen);
 
     // Check if background job is complete
     bool isBackgroundUpdateComplete() const;
@@ -47,12 +49,36 @@ public:
     // Returns the move vector calculated in the background
     v2 getBackgroundMoveVector() const;
 
+    // Get the current navigation path
+    NavMeshPath *getCurrentNavMeshPath();
+    const NavMeshPath *getCurrentNavMeshPath() const;
+
+    // Set the current navigation path
+    void setCurrentNavMeshPath(const NavMeshPath &path);
+
+    // Clear the current navigation path
+    void clearCurrentNavMeshPath();
+
+    // Get the wander behavior
+    WanderBehavior *getWanderBehavior();
+    const WanderBehavior *getWanderBehavior() const;
+
+    // Background update jobs for different scenarios
+    void OnScreenBackgroundUpdateJob(float dt);
+    void OffScreenBackgroundUpdateJob(float dt);
+
 private:
     // The navmesh this agent is on (non-owning pointer)
     NavMesh *navmesh;
 
     // Current polygon the agent is in (-1 if not on mesh)
     int currentPolygon;
+
+    // Current navigation path
+    NavMeshPath currentNavMeshPath;
+
+    // Wander behavior for this agent
+    WanderBehavior wanderBehavior;
 
     // Background job state
     std::atomic<bool> backgroundJobRunning;

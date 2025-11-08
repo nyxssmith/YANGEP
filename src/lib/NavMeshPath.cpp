@@ -10,7 +10,7 @@
 #include <chrono>
 
 NavMeshPath::NavMeshPath()
-    : is_valid(false), total_length(0.0f)
+    : is_valid(false), total_length(0.0f), currentWaypointIndex(0)
 {
 }
 
@@ -24,6 +24,7 @@ void NavMeshPath::clear()
     waypoints.clear();
     is_valid = false;
     total_length = 0.0f;
+    currentWaypointIndex = 0;
 }
 
 bool NavMeshPath::generate(const NavMesh &navmesh, CF_V2 start, CF_V2 end)
@@ -242,6 +243,55 @@ CF_V2 NavMeshPath::getWaypoint(int index) const
         return cf_v2(0, 0);
     }
     return waypoints[index];
+}
+
+// Get the current waypoint without advancing
+CF_V2 *NavMeshPath::getCurrent()
+{
+    // Check if we have a valid current waypoint
+    if (currentWaypointIndex < 0 || currentWaypointIndex >= static_cast<int>(waypoints.size()))
+    {
+        return nullptr; // No current waypoint
+    }
+
+    // Return pointer to the current waypoint
+    return &waypoints[currentWaypointIndex];
+}
+
+// Get the next waypoint and advance to it
+CF_V2 *NavMeshPath::getNext()
+{
+    // Check if there is a next waypoint
+    if (currentWaypointIndex + 1 >= static_cast<int>(waypoints.size()))
+    {
+        return nullptr; // No next waypoint
+    }
+
+    // Advance to the next waypoint
+    currentWaypointIndex++;
+
+    // Return pointer to the new current waypoint
+    return &waypoints[currentWaypointIndex];
+}
+
+// Check if a location is at the current waypoint
+bool NavMeshPath::isAtCurrentWaypoint(CF_V2 location, float tolerance) const
+{
+    // Check if we have a valid path and current waypoint
+    if (!is_valid || currentWaypointIndex < 0 || currentWaypointIndex >= static_cast<int>(waypoints.size()))
+    {
+        return false;
+    }
+
+    // Get the current waypoint
+    CF_V2 currentWaypoint = waypoints[currentWaypointIndex];
+
+    // Calculate distance to current waypoint
+    CF_V2 diff = cf_v2(location.x - currentWaypoint.x, location.y - currentWaypoint.y);
+    float distance = cf_len(diff);
+
+    // Check if within tolerance
+    return distance <= tolerance;
 }
 
 void NavMeshPath::debugRender(const CFNativeCamera &camera, CF_Color color) const
