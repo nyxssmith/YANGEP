@@ -100,14 +100,15 @@ bool AnimatedDataCharacterNavMeshAgent::backgroundUpdate(float dt)
     backgroundJobRunning.store(true);
     backgroundJobComplete.store(false);
 
-    // Submit the calculation job to the job system
+    // Submit the calculation job to the job system with a name
     JobSystem::submitJob([this, dt]()
                          {
         this->calculateMoveVector(dt);
         
         // Mark job as complete
         this->backgroundJobComplete.store(true);
-        this->backgroundJobRunning.store(false); });
+        this->backgroundJobRunning.store(false); },
+                         "Agent AI Update");
 
     return true; // Job submitted successfully
 }

@@ -7,6 +7,7 @@
 #include "lib/DataFileDebugWindow.h"
 #include "lib/DebugWindowList.h"
 #include "lib/DebugFPSWindow.h"
+#include "lib/DebugJobWindow.h"
 #include "lib/Utils.h"
 #include "lib/DataFile.h"
 #include "lib/RealConfigFile.h"
@@ -178,9 +179,14 @@ int main(int argc, char *argv[])
 	std::unique_ptr<DebugFPSWindow> fpsWindow;
 	bool showFPSMetrics = false;
 
+	// Create Job system debug window if enabled in config
+	std::unique_ptr<DebugJobWindow> jobWindow;
+	bool showJobMetrics = false;
+
 	if (windowConfig.contains("Debug"))
 	{
 		auto &debug = windowConfig["Debug"];
+
 		if (debug.contains("ShowFPSMetrics"))
 		{
 			showFPSMetrics = debug["ShowFPSMetrics"];
@@ -190,6 +196,18 @@ int main(int argc, char *argv[])
 			{
 				fpsWindow = std::make_unique<DebugFPSWindow>("FPS Metrics");
 				printf("Created FPS metrics debug window\n");
+			}
+		}
+
+		if (debug.contains("ShowJobMetrics"))
+		{
+			showJobMetrics = debug["ShowJobMetrics"];
+			printf("Debug ShowJobMetrics: %s\n", showJobMetrics ? "enabled" : "disabled");
+
+			if (showJobMetrics)
+			{
+				jobWindow = std::make_unique<DebugJobWindow>("Job System");
+				printf("Created Job system debug window\n");
 			}
 		}
 	}
@@ -539,6 +557,12 @@ int main(int argc, char *argv[])
 		if (fpsWindow)
 		{
 			fpsWindow->render();
+		}
+
+		// Render Job system window if enabled
+		if (jobWindow)
+		{
+			jobWindow->render();
 		}
 
 		app_draw_onto_screen();
