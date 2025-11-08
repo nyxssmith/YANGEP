@@ -224,21 +224,6 @@ void LevelV1::updateAgents(float dt)
 
     // TODO this!!!!!!
     // all of this is assuming agents are on screen, todo cull based on camera and do different for offscreen agents
-
-    // trigger background updates for all agents
-    // these will finish on their own and update the agent as needed
-    for (auto &agent : agents)
-    {
-        if (agent)
-        {
-            // Try to start a background job for this agent
-            agent->backgroundUpdate(dt, true); // TODO change to false if offscreen
-        }
-    }
-
-    // Kick off all pending jobs (non-blocking)
-    JobSystem::kick();
-
     // Update agents with move vectors (using results from completed background jobs)
     for (auto &agent : agents)
     {
@@ -254,6 +239,19 @@ void LevelV1::updateAgents(float dt)
             agent->update(dt, moveVector);
         }
     }
+    // trigger background updates for all agents
+    // these will finish on their own and update the agent as needed
+    for (auto &agent : agents)
+    {
+        if (agent)
+        {
+            // Try to start a background job for this agent
+            agent->backgroundUpdate(dt, true); // TODO change to false if offscreen
+        }
+    }
+
+    // Kick off all pending jobs (non-blocking)
+    JobSystem::kick();
 }
 
 void LevelV1::renderAgents(const CFNativeCamera &camera)

@@ -269,6 +269,15 @@ CF_V2 *NavMeshPath::getNext()
 
     // Advance to the next waypoint
     currentWaypointIndex++;
+    // TODO figure out why when end of path, not return nullpointer
+    //  needs to return nullpointer when at end of path
+    //  TODO needs make new path when return nullpointer
+
+    // if currentWaypointIndex is equal to size, return nullptr
+    if (currentWaypointIndex >= static_cast<int>(waypoints.size()))
+    {
+        return nullptr;
+    }
 
     // Return pointer to the new current waypoint
     return &waypoints[currentWaypointIndex];
