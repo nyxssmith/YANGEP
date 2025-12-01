@@ -216,7 +216,7 @@ int main(int argc, char *argv[])
 	AnimatedDataCharacter playerCharacter;
 	v2 playerPosition = cf_v2(0.0f, 0.0f); // Start at world origin
 
-	if (!playerCharacter.init("assets/DataFiles/EntityFiles/skeleton.json"))
+	if (!playerCharacter.init("assets/DataFiles/EntityFiles/player.json"))
 	{
 		destroy_app();
 		return -1;
