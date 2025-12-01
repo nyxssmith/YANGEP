@@ -114,15 +114,34 @@ bool AnimatedDataCharacter::init(const std::string &datafilePath)
         return false;
     }
 
+    // Collect all layer filenames
+    std::vector<std::string> layerFilenames;
+    for (size_t i = 0; i < charConfig["layers"].size(); i++)
+    {
+        auto &layer = charConfig["layers"][i];
+        if (layer.contains("filename"))
+        {
+            std::string filename = layer["filename"];
+            layerFilenames.push_back(filename);
+            printf("AnimatedDataCharacter: Added layer %zu: %s\n", i, filename.c_str());
+        }
+    }
+
+    if (layerFilenames.empty())
+    {
+        printf("AnimatedDataCharacter: ERROR: No valid layer filenames found\n");
+        return false;
+    }
+
     std::string layerFilename = firstLayer["filename"];
     int tileSize = firstLayer["tile_size"];
 
-    printf("AnimatedDataCharacter: Using layer filename: %s\n", layerFilename.c_str());
+    printf("AnimatedDataCharacter: Using %zu layers\n", layerFilenames.size());
     printf("AnimatedDataCharacter: Using tile size: %d\n", tileSize);
 
-    // Construct paths using the layer filename from the datafile
-    std::string idle_body_path = "assets/Art/AnimationsSheets/idle/" + layerFilename;
-    std::string walkcycle_body_path = "assets/Art/AnimationsSheets/walkcycle/" + layerFilename;
+    // Construct paths using the first layer filename from the datafile for dimension checking
+    std::string idle_body_path = "assets/Art/AnimationsSheets/idle/" + layerFilenames[0];
+    std::string walkcycle_body_path = "assets/Art/AnimationsSheets/walkcycle/" + layerFilenames[0];
 
     // Get dimensions for idle animation
     uint32_t idle_width = 0, idle_height = 0;
@@ -154,13 +173,13 @@ bool AnimatedDataCharacter::init(const std::string &datafilePath)
     printf("AnimatedDataCharacter: Walkcycle dimensions: %ux%u (frames: %d, directions: %d)\n",
            walkcycle_width, walkcycle_height, walkcycle_frames_per_direction, walkcycle_direction_count);
 
-    // Define the animation layouts using computed values
+    // Define the animation layouts using computed values and all layer filenames
     std::vector<AnimationLayout> layouts = {
         AnimationLayout(
-            "idle", tileSize, tileSize, idle_frames_per_direction, idle_direction_count,
+            "idle", layerFilenames, tileSize, tileSize, idle_frames_per_direction, idle_direction_count,
             {Direction::UP, Direction::LEFT, Direction::DOWN, Direction::RIGHT}),
         AnimationLayout(
-            "walkcycle", tileSize, tileSize, walkcycle_frames_per_direction, walkcycle_direction_count,
+            "walkcycle", layerFilenames, tileSize, tileSize, walkcycle_frames_per_direction, walkcycle_direction_count,
             {Direction::UP, Direction::LEFT, Direction::DOWN, Direction::RIGHT})};
 
     // Load the animation table using our new system
@@ -397,11 +416,23 @@ void AnimatedDataCharacter::renderCurrentFrame()
 
     if (!currentAnimFrame)
         return;
-    if (currentAnimFrame->sprite.w <= 0 || currentAnimFrame->sprite.h <= 0)
-        return;
 
-    // Render the sprite
-    cf_draw_sprite(&currentAnimFrame->sprite);
+    // Render all sprite layers (bottom to top)
+    if (!currentAnimFrame->spriteLayers.empty())
+    {
+        for (const auto &layerSprite : currentAnimFrame->spriteLayers)
+        {
+            if (layerSprite.w > 0 && layerSprite.h > 0)
+            {
+                cf_draw_sprite(&layerSprite);
+            }
+        }
+    }
+    else if (currentAnimFrame->sprite.w > 0 && currentAnimFrame->sprite.h > 0)
+    {
+        // Fallback to legacy single sprite
+        cf_draw_sprite(&currentAnimFrame->sprite);
+    }
 }
 
 // Render the current animation frame at a specific position
@@ -424,13 +455,27 @@ void AnimatedDataCharacter::renderCurrentFrameAt(v2 renderPosition)
 
     if (!currentAnimFrame)
         return;
-    if (currentAnimFrame->sprite.w <= 0 || currentAnimFrame->sprite.h <= 0)
-        return;
 
-    // Apply position transformation and render sprite
+    // Apply position transformation and render all sprite layers (bottom to top)
     cf_draw_push();
     cf_draw_translate_v2(renderPosition);
-    cf_draw_sprite(&currentAnimFrame->sprite);
+
+    if (!currentAnimFrame->spriteLayers.empty())
+    {
+        for (const auto &layerSprite : currentAnimFrame->spriteLayers)
+        {
+            if (layerSprite.w > 0 && layerSprite.h > 0)
+            {
+                cf_draw_sprite(&layerSprite);
+            }
+        }
+    }
+    else if (currentAnimFrame->sprite.w > 0 && currentAnimFrame->sprite.h > 0)
+    {
+        // Fallback to legacy single sprite
+        cf_draw_sprite(&currentAnimFrame->sprite);
+    }
+
     cf_draw_pop();
 }
 
