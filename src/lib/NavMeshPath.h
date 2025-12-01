@@ -18,6 +18,8 @@ private:
     bool is_valid;                // Whether the path is valid and reachable
     float total_length;           // Total length of the path
     int currentWaypointIndex;     // Index of the current waypoint
+    mutable CF_Color debug_color; // Color used for debug rendering (assigned on first render)
+    mutable bool has_debug_color; // Whether debug_color has been assigned
 
     // Internal pathfinding function
     bool findPath(const NavMesh &navmesh, CF_V2 start, CF_V2 end);
@@ -61,6 +63,6 @@ public:
     // tolerance: maximum distance to consider as "at" the waypoint (default 5.0f)
     bool isAtCurrentWaypoint(CF_V2 location, float tolerance = 5.0f) const;
 
-    // Debug rendering
-    void debugRender(const CFNativeCamera &camera, CF_Color color = cf_make_color_rgb(255, 255, 0)) const;
+    // Debug rendering (uses a unique color assigned on first render)
+    void debugRender(const CFNativeCamera &camera) const;
 };
