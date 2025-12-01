@@ -199,14 +199,17 @@ void AnimatedDataCharacterNavMeshAgent::OnScreenBackgroundUpdateJob(float dt)
         // if nextwaypoint is null
         if (nextWaypoint == nullptr)
         {
-            // if current path is not null, clear it
+            // if current path is not null, mark it as completed for later cleanup
             if (currentNavMeshPath)
             {
-                navmesh->removePathById(currentNavMeshPath->id);
+                currentNavMeshPath->markCompleted();
             }
             // get new path and exit
             const int wanderRadius = 500;
-            currentNavMeshPath = wanderBehavior.GetNewPath(*navmesh, currentPosition, wanderRadius);
+            // wander forever
+            // currentNavMeshPath = wanderBehavior.GetNewPath(*navmesh, currentPosition, wanderRadius);
+            // wander once
+            currentNavMeshPath = wanderOnceBehavior.GetNewPath(*navmesh, currentPosition, wanderRadius);
 
             if (!currentNavMeshPath || !currentNavMeshPath->isValid())
             {
@@ -234,7 +237,10 @@ void AnimatedDataCharacterNavMeshAgent::OnScreenBackgroundUpdateJob(float dt)
     {
         // get new path from wander behavior
         const int wanderRadius = 500;
-        currentNavMeshPath = wanderBehavior.GetNewPath(*navmesh, currentPosition, wanderRadius);
+        // wander forever
+        // currentNavMeshPath = wanderBehavior.GetNewPath(*navmesh, currentPosition, wanderRadius);
+        // wander once
+        currentNavMeshPath = wanderOnceBehavior.GetNewPath(*navmesh, currentPosition, wanderRadius);
 
         backgroundMoveVector = cf_v2(0.0f, 0.0f);
     }

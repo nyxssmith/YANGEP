@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
 
 	// Read debug options from config
 	bool debugHighlightNavmesh = false;		  // Default: don't highlight navmesh
-	bool debugHighlightNavMeshPoints = false; // Default: don't highlight navmesh points
+	bool debughighlightNavMeshPaths = false; // Default: don't highlight navmesh points
 	bool debugHighlightAgents = false;		  // Default: don't highlight agents
 	if (windowConfig.contains("Debug"))
 	{
@@ -97,10 +97,10 @@ int main(int argc, char *argv[])
 			debugHighlightNavmesh = debug["highlightNavmesh"];
 			printf("Debug highlightNavmesh: %s\n", debugHighlightNavmesh ? "enabled" : "disabled");
 		}
-		if (debug.contains("highlightNavMeshPoints"))
+		if (debug.contains("highlightNavMeshPaths"))
 		{
-			debugHighlightNavMeshPoints = debug["highlightNavMeshPoints"];
-			printf("Debug highlightNavMeshPoints: %s\n", debugHighlightNavMeshPoints ? "enabled" : "disabled");
+			debughighlightNavMeshPaths = debug["highlightNavMeshPaths"];
+			printf("Debug highlightNavMeshPaths: %s\n", debughighlightNavMeshPaths ? "enabled" : "disabled");
 		}
 		if (debug.contains("highlightAgents"))
 		{
@@ -242,7 +242,7 @@ int main(int argc, char *argv[])
 
 	// NavMesh debug rendering toggle (initialized from config)
 	bool showNavMesh = debugHighlightNavmesh;
-	bool showNavMeshPoints = debugHighlightNavMeshPoints;
+	bool showNavMeshPoints = debughighlightNavMeshPaths;
 	bool showAgents = debugHighlightAgents;
 
 	// NavMesh path for pathfinding (stored as shared_ptr)

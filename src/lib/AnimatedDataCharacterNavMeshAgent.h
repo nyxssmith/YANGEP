@@ -5,6 +5,7 @@
 #include "NavMesh.h"
 #include "NavMeshPath.h"
 #include "WanderBehavior.h"
+#include "WanderOnceBehavior.h"
 #include <memory>
 #include <atomic>
 
@@ -63,6 +64,9 @@ public:
     WanderBehavior *getWanderBehavior();
     const WanderBehavior *getWanderBehavior() const;
 
+    WanderOnceBehavior *getWanderOnceBehavior();
+    const WanderOnceBehavior *getWanderOnceBehavior() const;
+
     // Background update jobs for different scenarios
     void OnScreenBackgroundUpdateJob(float dt);
     void OffScreenBackgroundUpdateJob(float dt);
@@ -79,7 +83,7 @@ private:
 
     // Wander behavior for this agent
     WanderBehavior wanderBehavior;
-
+    WanderOnceBehavior wanderOnceBehavior;
     // Background job state
     std::atomic<bool> backgroundJobRunning;
     std::atomic<bool> backgroundJobComplete;

@@ -1,12 +1,12 @@
-#include "WanderBehavior.h"
+#include "WanderOnceBehavior.h"
 #include <cstdlib>
 #include <ctime>
 #include <thread>
 #include <chrono>
 
 // Constructor
-WanderBehavior::WanderBehavior()
-    : Behavior()
+WanderOnceBehavior::WanderOnceBehavior()
+    : WanderBehavior()
 {
     // Seed random number generator (only once per behavior instance)
     static bool seeded = false;
@@ -18,16 +18,20 @@ WanderBehavior::WanderBehavior()
 }
 
 // Destructor
-WanderBehavior::~WanderBehavior()
+WanderOnceBehavior::~WanderOnceBehavior()
 {
 }
 
 // Get a new random wander path
-std::shared_ptr<NavMeshPath> WanderBehavior::GetNewPath(NavMesh &navmesh, CF_V2 currentPosition, int radius)
+std::shared_ptr<NavMeshPath> WanderOnceBehavior::GetNewPath(NavMesh &navmesh, CF_V2 currentPosition, int radius)
 {
     // DEBUG: 2 second wait
     // std::this_thread::sleep_for(std::chrono::seconds(2));
-
+    if (hasWandered)
+    {
+        // empty path
+        return std::make_shared<NavMeshPath>();
+    }
     // Maximum attempts to find a valid point on the navmesh
     const int maxAttempts = 20;
     CF_V2 targetPosition;
@@ -52,6 +56,7 @@ std::shared_ptr<NavMeshPath> WanderBehavior::GetNewPath(NavMesh &navmesh, CF_V2 
     // If we found a valid point, generate a path to it using the navmesh
     if (foundValidPoint)
     {
+        hasWandered = true;
         return navmesh.generatePath(currentPosition, targetPosition);
     }
 
