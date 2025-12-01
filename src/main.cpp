@@ -1,22 +1,28 @@
 #include <cute.h>
 #include <stdio.h>
 #include <cstdlib>
+#include <memory>
 #include <dcimgui.h>
 #include "lib/DebugWindow.h"
 #include "lib/DataFileDebugWindow.h"
 #include "lib/DebugWindowList.h"
+#include "lib/DebugFPSWindow.h"
+#include "lib/DebugJobWindow.h"
 #include "lib/Utils.h"
 #include "lib/DataFile.h"
 #include "lib/RealConfigFile.h"
-#include "lib/tsx.h"
-#include "lib/tmx.h"
+#include "lib/LevelV1.h"
+#include "lib/JobSystem.h"
 
 #include "lib/CFNativeCamera.h"
-#include "lib/SpriteAnimationDemo.h"
+#include "lib/NavMesh.h"
+#include "lib/NavMeshPath.h"
+#include "lib/AnimatedDataCharacter.h"
 using namespace Cute;
 
 int main(int argc, char *argv[])
 {
+
 	// Load window configuration BEFORE creating the window (using RealConfigFile)
 	RealConfigFile preConfig("assets/window-config.json");
 	int windowWidth = 640;	// Default fallback
@@ -36,7 +42,11 @@ int main(int argc, char *argv[])
 	{
 		printf("Could not load window config, using defaults: %dx%d\n", windowWidth, windowHeight);
 	}
-
+	// Initialize job system for background tasks
+	if (!JobSystem::initialize())
+	{
+		printf("Warning: Failed to initialize job system\n");
+	}
 	// Create window with the configured size
 	int options = CF_APP_OPTIONS_WINDOW_POS_CENTERED_BIT | CF_APP_OPTIONS_RESIZABLE_BIT;
 	CF_Result result = make_app("Fancy Window Title", 0, 0, 0, windowWidth, windowHeight, options, argv[0]);
@@ -71,6 +81,9 @@ int main(int argc, char *argv[])
 	}
 
 	// Read debug options from config
+	bool debugHighlightNavmesh = false;		  // Default: don't highlight navmesh
+	bool debugHighlightNavMeshPoints = false; // Default: don't highlight navmesh points
+	bool debugHighlightAgents = false;		  // Default: don't highlight agents
 	if (windowConfig.contains("Debug"))
 	{
 		auto &debug = windowConfig["Debug"];
@@ -79,18 +92,39 @@ int main(int argc, char *argv[])
 			debugHighlightViewport = debug["highlightViewport"];
 			printf("Debug highlightViewport: %s\n", debugHighlightViewport ? "enabled" : "disabled");
 		}
+		if (debug.contains("highlightNavmesh"))
+		{
+			debugHighlightNavmesh = debug["highlightNavmesh"];
+			printf("Debug highlightNavmesh: %s\n", debugHighlightNavmesh ? "enabled" : "disabled");
+		}
+		if (debug.contains("highlightNavMeshPoints"))
+		{
+			debugHighlightNavMeshPoints = debug["highlightNavMeshPoints"];
+			printf("Debug highlightNavMeshPoints: %s\n", debugHighlightNavMeshPoints ? "enabled" : "disabled");
+		}
+		if (debug.contains("highlightAgents"))
+		{
+			debugHighlightAgents = debug["highlightAgents"];
+			printf("Debug highlightAgents: %s\n", debugHighlightAgents ? "enabled" : "disabled");
+		}
 	}
 
-	// Create TMX parser for the level
-	tmx levelMap("/assets/Levels/test_one/test_one.tmx");
-	levelMap.debugPrint();
+	// Create LevelV1 instance - handles all TMX and NavMesh initialization
+	LevelV1 level("/assets/Levels/test_two");
+
+	if (!level.isInitialized())
+	{
+		printf("Error: Failed to initialize level\n");
+		destroy_app();
+		return -1;
+	}
 
 	// Configure layer highlighting from config (parse once, use map for lookups)
-	levelMap.setLayerHighlightConfig(windowConfig);
+	level.getLevelMap().setLayerHighlightConfig(windowConfig);
 
-	// Get tile dimensions for proper spacing
-	int tile_width = levelMap.getTileWidth();
-	int tile_height = levelMap.getTileHeight();
+	// Get tile dimensions from level for proper spacing
+	int tile_width = level.getTileWidth();
+	int tile_height = level.getTileHeight();
 
 	// Create debug window list and populate from config
 	DebugWindowList debugWindows;
@@ -141,11 +175,48 @@ int main(int argc, char *argv[])
 
 	printf("Loaded %zu debug windows from config\n", debugWindows.count());
 
+	// Create FPS metrics debug window if enabled in config
+	std::unique_ptr<DebugFPSWindow> fpsWindow;
+	bool showFPSMetrics = false;
+
+	// Create Job system debug window if enabled in config
+	std::unique_ptr<DebugJobWindow> jobWindow;
+	bool showJobMetrics = false;
+
+	if (windowConfig.contains("Debug"))
+	{
+		auto &debug = windowConfig["Debug"];
+
+		if (debug.contains("ShowFPSMetrics"))
+		{
+			showFPSMetrics = debug["ShowFPSMetrics"];
+			printf("Debug ShowFPSMetrics: %s\n", showFPSMetrics ? "enabled" : "disabled");
+
+			if (showFPSMetrics)
+			{
+				fpsWindow = std::make_unique<DebugFPSWindow>("FPS Metrics");
+				printf("Created FPS metrics debug window\n");
+			}
+		}
+
+		if (debug.contains("ShowJobMetrics"))
+		{
+			showJobMetrics = debug["ShowJobMetrics"];
+			printf("Debug ShowJobMetrics: %s\n", showJobMetrics ? "enabled" : "disabled");
+
+			if (showJobMetrics)
+			{
+				jobWindow = std::make_unique<DebugJobWindow>("Job System");
+				printf("Created Job system debug window\n");
+			}
+		}
+	}
+
 	// Create skeleton player character
-	SpriteAnimationDemo skeleton;
+	AnimatedDataCharacter skeleton;
 	v2 playerPosition = cf_v2(0.0f, 0.0f); // Start at world origin
 
-	if (!skeleton.init())
+	if (!skeleton.init("assets/DataFiles/EntityFiles/skeleton.json"))
 	{
 		destroy_app();
 		return -1;
@@ -169,6 +240,14 @@ int main(int argc, char *argv[])
 	float bottom_left_y = -1.0f * (window_height / 2.0f);
 	// printf("Window size: %dx%d, bottom-left at (%.1f, %.1f)\n", window_width, window_height, bottom_left_x, bottom_left_y);
 
+	// NavMesh debug rendering toggle (initialized from config)
+	bool showNavMesh = debugHighlightNavmesh;
+	bool showNavMeshPoints = debugHighlightNavMeshPoints;
+	bool showAgents = debugHighlightAgents;
+
+	// NavMesh path for pathfinding (stored as shared_ptr)
+	std::shared_ptr<NavMeshPath> navmeshPath = nullptr;
+
 	// Main loop
 	printf("Skeleton Adventure Game:\n");
 	printf("  WASD - move skeleton\n");
@@ -179,9 +258,19 @@ int main(int argc, char *argv[])
 	printf("  U - test camera shake\n");
 	printf("  1/2 - switch animations (idle/walk)\n");
 	printf("  SPACE - reset skeleton position\n");
+	printf("  N - toggle navmesh visualization\n");
+	printf("  M - toggle navmesh points visualization\n");
+	printf("  P - place/update navmesh point at player position\n");
+	printf("  L - pathfind to navmesh point from player\n");
 	printf("  ESC - quit\n");
 	while (cf_app_is_running())
 	{
+		// Begin profiling the frame
+		if (fpsWindow)
+		{
+			fpsWindow->beginFrame();
+		}
+
 		// Update app to handle window events and input (proper CF pattern)
 		cf_app_update(NULL);
 
@@ -194,35 +283,34 @@ int main(int argc, char *argv[])
 		// Player movement (WASD)
 		float dt = CF_DELTA_TIME;
 		float playerSpeed = 200.0f; // pixels per second
-		bool playerMoved = false;
+
+		// Calculate move vector from input
+		v2 moveVector = cf_v2(0.0f, 0.0f);
 
 		if (cf_key_down(CF_KEY_W) || cf_key_down(CF_KEY_UP))
 		{
-			playerPosition.y += playerSpeed * dt;
-			playerMoved = true;
+			moveVector.y += playerSpeed;
 		}
 		if (cf_key_down(CF_KEY_S) || cf_key_down(CF_KEY_DOWN))
 		{
-			playerPosition.y -= playerSpeed * dt;
-			playerMoved = true;
+			moveVector.y -= playerSpeed;
 		}
 		if (cf_key_down(CF_KEY_A) || cf_key_down(CF_KEY_LEFT))
 		{
-			playerPosition.x -= playerSpeed * dt;
-			playerMoved = true;
+			moveVector.x -= playerSpeed;
 		}
 		if (cf_key_down(CF_KEY_D) || cf_key_down(CF_KEY_RIGHT))
 		{
-			playerPosition.x += playerSpeed * dt;
-			playerMoved = true;
+			moveVector.x += playerSpeed;
 		}
 
 		// Handle skeleton animation input (1/2 for idle/walk)
-		skeleton.handleInput();
+		// skeleton.handleInput();
 
 		// Reset skeleton position
 		if (cf_key_just_pressed(CF_KEY_SPACE))
 		{
+			skeleton.setPosition(cf_v2(0.0f, 0.0f));
 			playerPosition = cf_v2(0.0f, 0.0f);
 		}
 
@@ -240,6 +328,61 @@ int main(int argc, char *argv[])
 			cfCamera.shake(20.0f, 1.5f);
 		}
 
+		// NavMesh visualization toggle
+		if (cf_key_just_pressed(CF_KEY_N))
+		{
+			showNavMesh = !showNavMesh;
+			printf("NavMesh visualization: %s\n", showNavMesh ? "ON" : "OFF");
+		}
+
+		// NavMesh points visualization toggle
+		if (cf_key_just_pressed(CF_KEY_M))
+		{
+			showNavMeshPoints = !showNavMeshPoints;
+			printf("NavMesh points visualization: %s\n", showNavMeshPoints ? "ON" : "OFF");
+		}
+
+		// Place/update NavMesh point at player position
+		if (cf_key_just_pressed(CF_KEY_P))
+		{
+			// Remove existing point if it exists
+			if (level.getNavMesh().getPoint("player_marker") != nullptr)
+			{
+				level.getNavMesh().removePoint("player_marker");
+			}
+			// Add new point at player position
+			level.getNavMesh().addPoint("player_marker", playerPosition);
+			printf("NavMesh point placed at player position (%.1f, %.1f)\n", playerPosition.x, playerPosition.y);
+		}
+
+		// Pathfind to NavMesh point from player position
+		if (cf_key_just_pressed(CF_KEY_L))
+		{
+			// Check if there's a player_marker point to pathfind to
+			const NavMeshPoint *targetPoint = level.getNavMesh().getPoint("player_marker");
+			if (targetPoint != nullptr)
+			{
+				printf("Attempting to pathfind from player (%.1f, %.1f) to marker (%.1f, %.1f)\n",
+					   playerPosition.x, playerPosition.y, targetPoint->position.x, targetPoint->position.y);
+
+				// Generate path using NavMesh (which tracks all paths)
+				navmeshPath = level.getNavMesh().generatePathToPoint(playerPosition, "player_marker");
+
+				if (navmeshPath && navmeshPath->isValid())
+				{
+					printf("Path generated successfully with %d waypoints\n", navmeshPath->getWaypointCount());
+				}
+				else
+				{
+					printf("Failed to generate path\n");
+				}
+			}
+			else
+			{
+				printf("No 'player_marker' point found. Press P to place a marker first.\n");
+			}
+		}
+
 		// Camera zoom controls (Q/E) and reset (R)
 		if (cf_key_just_pressed(CF_KEY_Q))
 		{
@@ -254,15 +397,40 @@ int main(int argc, char *argv[])
 			cfCamera.reset();
 		}
 
-		// Update skeleton animation
-		skeleton.update(dt);
+		if (fpsWindow)
+		{
+			fpsWindow->markSection("Player Input");
+		}
+		level.updateAgents(dt);
 
+		if (fpsWindow)
+		{
+			fpsWindow->markSection("Agent Update");
+		}
+
+		// Update skeleton animation with move vector
+		skeleton.update(dt, moveVector);
+
+		// Get updated player position from skeleton (for camera following)
+		playerPosition = skeleton.getPosition();
+		if (fpsWindow)
+		{
+			fpsWindow->markSection("Player Update");
+		}
 		// Update camera (handles following and smooth movement)
 		cfCamera.update(dt);
 
+		if (fpsWindow)
+		{
+			fpsWindow->markSection("Camera Update");
+		}
 		// Render debug windows
 		debugWindows.renderAll();
 
+		if (fpsWindow)
+		{
+			fpsWindow->markSection("Debug Windows");
+		}
 		// Clear background
 		CF_Color bg = make_color(0.1f, 0.1f, 0.15f, 1.0f);
 		cf_draw_push_color(bg);
@@ -277,11 +445,74 @@ int main(int argc, char *argv[])
 		draw_text("Skeleton Adventure - TMX Level Map", text_position1);
 
 		// Render TMX level (with CF-native camera transformations and config for layer highlighting)
-		levelMap.renderAllLayers(cfCamera, windowConfig, 0.0f, 0.0f);
+		level.render(cfCamera, windowConfig, 0.0f, 0.0f);
+
+		if (fpsWindow)
+		{
+			fpsWindow->markSection("Level Render");
+		}
+		// Render NavMesh debug visualization (if enabled)
+		if (showNavMesh && level.getNavMesh().getPolygonCount() > 0)
+		{
+			level.getNavMesh().debugRender(cfCamera);
+		}
+
+		// Render NavMesh points debug visualization (if enabled)
+		if (showNavMeshPoints && level.getNavMesh().getPointCount() > 0)
+		{
+			level.getNavMesh().debugRenderPoints(cfCamera);
+		}
+
+		// Render all NavMesh paths (if visualization is enabled)
+		if (showNavMeshPoints && level.getNavMesh().getPathCount() > 0)
+		{
+			const auto &allPaths = level.getNavMesh().getPaths();
+			for (const auto &path : allPaths)
+			{
+				if (path && path->isValid())
+				{
+					path->debugRender(cfCamera);
+				}
+			}
+		}
+
+		// Render agent position markers (if enabled)
+		if (showAgents && level.getAgentCount() > 0)
+		{
+			cf_draw_push_color(cf_make_color_rgb(0, 255, 0)); // Green color
+
+			for (size_t i = 0; i < level.getAgentCount(); ++i)
+			{
+				const AnimatedDataCharacterNavMeshAgent *agent = level.getAgent(i);
+				if (agent)
+				{
+					v2 agentPos = agent->getPosition();
+
+					// Draw agent as a green dot
+					const float size = 8.0f; // Size of the agent marker
+					CF_Aabb agent_rect = make_aabb(
+						cf_v2(agentPos.x - size / 2, agentPos.y - size / 2),
+						cf_v2(agentPos.x + size / 2, agentPos.y + size / 2));
+
+					cf_draw_quad_fill(agent_rect, 0.0f);
+
+					// Draw a border around the dot for better visibility
+					cf_draw_push_color(cf_make_color_rgb(0, 0, 0)); // Black border
+					cf_draw_quad(agent_rect, 0.0f, 1.5f);
+					cf_draw_pop_color();
+				}
+			}
+
+			cf_draw_pop_color();
+		}
 
 		// Render skeleton at player position (world space)
 		skeleton.render(playerPosition);
 
+		if (fpsWindow)
+		{
+			fpsWindow->markSection("Agent/Player Render");
+		}
 		// Restore camera transformation
 		cfCamera.restore();
 
@@ -323,8 +554,32 @@ int main(int argc, char *argv[])
 			draw_text(viewportInfo, cf_v2(10.0f, top_y + 40.0f));
 		}
 
+		if (fpsWindow)
+		{
+			fpsWindow->markSection("UI Render");
+		}
+		// End profiling the frame
+		if (fpsWindow)
+		{
+			fpsWindow->endFrame();
+		}
+		// Render FPS metrics window if enabled
+		if (fpsWindow)
+		{
+			fpsWindow->render();
+		}
+
+		// Render Job system window if enabled
+		if (jobWindow)
+		{
+			jobWindow->render();
+		}
+
 		app_draw_onto_screen();
 	}
+
+	// Shutdown job system
+	JobSystem::shutdown();
 
 	destroy_app();
 	return 0;
