@@ -28,6 +28,7 @@ private:
 public:
     NavMeshPath();
     ~NavMeshPath();
+    int id; // Unique identifier for this path (assigned by NavMesh)
 
     // Generate a path from start position to end position using the navmesh
     bool generate(const NavMesh &navmesh, CF_V2 start, CF_V2 end);
@@ -39,6 +40,7 @@ public:
     void clear();
 
     // Query functions
+    int getId() const { return id; }
     bool isValid() const { return is_valid; }
     int getWaypointCount() const { return static_cast<int>(waypoints.size()); }
     float getLength() const { return total_length; }

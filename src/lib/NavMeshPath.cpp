@@ -10,7 +10,7 @@
 #include <chrono>
 
 NavMeshPath::NavMeshPath()
-    : is_valid(false), total_length(0.0f), currentWaypointIndex(0)
+    : id(0), is_valid(false), total_length(0.0f), currentWaypointIndex(0)
 {
 }
 
@@ -249,7 +249,7 @@ CF_V2 NavMeshPath::getWaypoint(int index) const
 CF_V2 *NavMeshPath::getCurrent()
 {
     // Check if we have a valid current waypoint
-    if (currentWaypointIndex < 0 || currentWaypointIndex >= static_cast<int>(waypoints.size()))
+    if (currentWaypointIndex < 0 || currentWaypointIndex + 2 >= static_cast<int>(waypoints.size()))
     {
         return nullptr; // No current waypoint
     }
@@ -262,16 +262,15 @@ CF_V2 *NavMeshPath::getCurrent()
 CF_V2 *NavMeshPath::getNext()
 {
     // Check if there is a next waypoint
-    if (currentWaypointIndex + 1 >= static_cast<int>(waypoints.size()))
+    // printf("NavMeshPath::getNext - comparing currentWaypointIndex (%d) + 2 (%d) >= waypoints.size() (%zu)\n",
+    //       currentWaypointIndex, currentWaypointIndex + 2, waypoints.size());
+    if (currentWaypointIndex + 2 >= static_cast<int>(waypoints.size()))
     {
         return nullptr; // No next waypoint
     }
 
     // Advance to the next waypoint
     currentWaypointIndex++;
-    // TODO figure out why when end of path, not return nullpointer
-    //  needs to return nullpointer when at end of path
-    //  TODO needs make new path when return nullpointer
 
     // if currentWaypointIndex is equal to size, return nullptr
     if (currentWaypointIndex >= static_cast<int>(waypoints.size()))

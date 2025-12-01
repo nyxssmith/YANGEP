@@ -42,6 +42,7 @@ private:
     std::vector<NavEdge> edges;                      // All edges in the mesh
     std::vector<NavMeshPoint> points;                // Named points on the mesh
     std::vector<std::shared_ptr<NavMeshPath>> paths; // All paths generated on this mesh
+    int next_path_id;                                // Next path ID to assign (starts at 1)
     CF_Aabb bounds;                                  // Bounding box of the entire mesh
     int tile_width;                                  // Tile width from TMX
     int tile_height;                                 // Tile height from TMX
@@ -124,6 +125,10 @@ public:
     // Get all paths generated on this mesh
     const std::vector<std::shared_ptr<NavMeshPath>> &getPaths() const { return paths; }
     int getPathCount() const { return static_cast<int>(paths.size()); }
+
+    // Remove a path by its ID
+    // Returns true if the path was found and removed, false otherwise
+    bool removePathById(int path_id);
 
     // Clear all tracked paths
     void clearPaths();
