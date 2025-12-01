@@ -199,6 +199,11 @@ void AnimatedDataCharacterNavMeshAgent::OnScreenBackgroundUpdateJob(float dt)
         // if nextwaypoint is null
         if (nextWaypoint == nullptr)
         {
+            // if current path is not null, clear it
+            if (currentNavMeshPath)
+            {
+                navmesh->removePathById(currentNavMeshPath->id);
+            }
             // get new path and exit
             const int wanderRadius = 500;
             currentNavMeshPath = wanderBehavior.GetNewPath(*navmesh, currentPosition, wanderRadius);

@@ -9,7 +9,7 @@
 #include <chrono>
 
 NavMesh::NavMesh()
-    : tile_width(32), tile_height(32)
+    : tile_width(32), tile_height(32), next_path_id(1)
 {
     bounds = make_aabb(cf_v2(0, 0), cf_v2(0, 0));
 }
@@ -473,9 +473,10 @@ std::shared_ptr<NavMeshPath> NavMesh::generatePath(CF_V2 start, CF_V2 end)
     // Generate the path using snapped positions
     if (findPath(*path, snapped_start, snapped_end))
     {
-        // Add to tracked paths
+        // Assign ID and add to tracked paths
+        path->id = next_path_id++;
         paths.push_back(path);
-        printf("NavMesh::generatePath - Path generated successfully (total paths: %d)\n", static_cast<int>(paths.size()));
+        printf("NavMesh::generatePath - Path generated successfully (id: %d, total paths: %d)\n", path->id, static_cast<int>(paths.size()));
     }
 
     return path;
@@ -649,6 +650,23 @@ bool NavMesh::findPath(NavMeshPath &path, CF_V2 start, CF_V2 end) const
     printf("NavMesh::findPath - No path found, time: %.3f ms\n", duration.count() / 1000.0);
 
     // No path found
+    return false;
+}
+
+// Remove a path by its ID
+bool NavMesh::removePathById(int path_id)
+{
+    for (auto it = paths.begin(); it != paths.end(); ++it)
+    {
+        if ((*it)->getId() == path_id)
+        {
+            printf("NavMesh::removePathById - Removed path with id %d\n", path_id);
+            paths.erase(it);
+            return true;
+        }
+    }
+
+    printf("NavMesh::removePathById - Path with id %d not found\n", path_id);
     return false;
 }
 
