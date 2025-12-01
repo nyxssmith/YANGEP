@@ -17,3 +17,4 @@
 0.0.17-nyx-feature-navmesh-62bb2f3
 0.0.18-nyx-feature-fps-profiler-634911c
 0.0.19-nyx-feature-libjobs-0ce3149
+0.0.20-nyx-feature-followpaths-3ab5bd2
