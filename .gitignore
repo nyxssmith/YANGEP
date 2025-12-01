@@ -2,3 +2,4 @@ build*/
 versions/*
 .DS_Store
 imgui.ini
+.cache/
