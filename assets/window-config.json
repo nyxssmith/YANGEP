@@ -3,8 +3,8 @@
   "window": {
     "width": 1280,
     "height": 720,
-    "viewportWidth": 640,
-    "viewportHeight": 360
+    "viewportWidth": 820,
+    "viewportHeight": 560
   },
   "DebugWindows": [
     {
@@ -13,15 +13,20 @@
       "dataFilePath": "/assets/window-config.json"
     },
     {
-      "enabled": true,
+      "enabled": false,
       "title": "Window Config Viewer",
       "dataFilePath": "/assets/DataFiles/EntityFiles/skeleton.json"
     }
   ],
   "Debug": {
     "highlightViewport": true,
-    "highlightLayers": ["layer_one"],
-    "highlightLayerBorders": ["layer_two"],
-    "highlightLayerOuterBorders": ["layer_one"]
+    "highlightNavmesh": false,
+    "highlightNavMeshPoints": true,
+    "highlightAgents": true,
+    "highlightLayers": [],
+    "highlightLayerBorders": [],
+    "highlightLayerOuterBorders": [],
+    "ShowFPSMetrics": true,
+    "ShowJobMetrics": true
   }
 }
