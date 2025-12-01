@@ -10,7 +10,7 @@
 #include <chrono>
 
 NavMeshPath::NavMeshPath()
-    : id(0), is_valid(false), total_length(0.0f), currentWaypointIndex(0)
+    : id(0), is_valid(false), total_length(0.0f), currentWaypointIndex(0), has_debug_color(false)
 {
 }
 
@@ -302,12 +302,22 @@ bool NavMeshPath::isAtCurrentWaypoint(CF_V2 location, float tolerance) const
     return distance <= tolerance;
 }
 
-void NavMeshPath::debugRender(const CFNativeCamera &camera, CF_Color color) const
+void NavMeshPath::debugRender(const CFNativeCamera &camera) const
 {
     if (!is_valid || waypoints.size() < 2)
         return;
 
-    cf_draw_push_color(color);
+    // Assign a random color on first render
+    if (!has_debug_color)
+    {
+        debug_color = cf_make_color_rgb(
+            static_cast<uint8_t>(50 + (rand() % 206)), // 50-255 to avoid too dark colors
+            static_cast<uint8_t>(50 + (rand() % 206)),
+            static_cast<uint8_t>(50 + (rand() % 206)));
+        has_debug_color = true;
+    }
+
+    cf_draw_push_color(debug_color);
 
     // Draw lines connecting waypoints
     for (size_t i = 1; i < waypoints.size(); i++)
