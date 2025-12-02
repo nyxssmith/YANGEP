@@ -5,6 +5,7 @@
 #include <functional>
 #include <sstream>
 #include <algorithm>
+#include "DebugPrint.h"
 
 tmx::tmx(const std::string &path) : path(path), map_width(0), map_height(0), tile_width(32), tile_height(32)
 {
@@ -13,7 +14,7 @@ tmx::tmx(const std::string &path) : path(path), map_width(0), map_height(0), til
 
 bool tmx::parse(const std::string &path)
 {
-    printf("Attempting to read TMX file: %s\n", path.c_str());
+    DebugPrint::Print("Level", "Attempting to read TMX file: %s\n", path.c_str());
 
     // Read the entire file using Cute Framework's VFS
     size_t file_size = 0;
@@ -21,22 +22,22 @@ bool tmx::parse(const std::string &path)
 
     if (file_data == nullptr)
     {
-        printf("Failed to read TMX file: %s (file_data is null)\n", path.c_str());
-        printf("Check if:\n");
-        printf("  1. The file exists at the specified path\n");
-        printf("  2. The file system is properly mounted\n");
-        printf("  3. The path format is correct (use forward slashes)\n");
+        DebugPrint::Print("Level", "Failed to read TMX file: %s (file_data is null)\n", path.c_str());
+        DebugPrint::Print("Level", "Check if:\n");
+        DebugPrint::Print("Level", "  1. The file exists at the specified path\n");
+        DebugPrint::Print("Level", "  2. The file system is properly mounted\n");
+        DebugPrint::Print("Level", "  3. The path format is correct (use forward slashes)\n");
         return false;
     }
 
     if (file_size == 0)
     {
-        printf("Failed to read TMX file: %s (file_size is 0)\n", path.c_str());
+        DebugPrint::Print("Level", "Failed to read TMX file: %s (file_size is 0)\n", path.c_str());
         cf_free(file_data);
         return false;
     }
 
-    printf("Successfully read %zu bytes from TMX file: %s\n", file_size, path.c_str());
+    DebugPrint::Print("Level", "Successfully read %zu bytes from TMX file: %s\n", file_size, path.c_str());
 
     // Parse the XML data using pugixml
     pugi::xml_parse_result result = load_buffer(file_data, file_size);
@@ -46,8 +47,8 @@ bool tmx::parse(const std::string &path)
 
     if (!result)
     {
-        printf("XML parsing failed for TMX file '%s': %s at offset %td\n",
-               path.c_str(), result.description(), result.offset);
+        DebugPrint::Print("Level", "XML parsing failed for TMX file '%s': %s at offset %td\n",
+                          path.c_str(), result.description(), result.offset);
         return false;
     }
 
@@ -58,7 +59,7 @@ bool tmx::parse(const std::string &path)
     pugi::xml_node map_node = document_element();
     if (strcmp(map_node.name(), "map") != 0)
     {
-        printf("Invalid TMX file: root element is not 'map'\n");
+        DebugPrint::Print("Level", "Invalid TMX file: root element is not 'map'\n");
         return false;
     }
 
@@ -68,24 +69,24 @@ bool tmx::parse(const std::string &path)
     tile_width = map_node.attribute("tilewidth").as_int(32);
     tile_height = map_node.attribute("tileheight").as_int(32);
 
-    printf("TMX Map properties: %dx%d tiles, %dx%d pixels per tile\n",
-           map_width, map_height, tile_width, tile_height);
+    DebugPrint::Print("Level", "TMX Map properties: %dx%d tiles, %dx%d pixels per tile\n",
+                      map_width, map_height, tile_width, tile_height);
 
     // Load tilesets and layers
     if (!loadTilesets())
     {
-        printf("Failed to load tilesets from TMX file\n");
+        DebugPrint::Print("Level", "Failed to load tilesets from TMX file\n");
         return false;
     }
 
     if (!loadLayers())
     {
-        printf("Failed to load layers from TMX file\n");
+        DebugPrint::Print("Level", "Failed to load layers from TMX file\n");
         return false;
     }
 
-    printf("Successfully parsed TMX file: %s (%d tilesets, %d layers)\n",
-           path.c_str(), static_cast<int>(tilesets.size()), static_cast<int>(layers.size()));
+    DebugPrint::Print("Level", "Successfully parsed TMX file: %s (%d tilesets, %d layers)\n",
+                      path.c_str(), static_cast<int>(tilesets.size()), static_cast<int>(layers.size()));
 
     return true;
 }
@@ -102,8 +103,8 @@ bool tmx::loadTilesets()
         tileset->source = tileset_node.attribute("source").value();
         tileset->name = tileset_node.attribute("name").value();
 
-        printf("Loading tileset: firstgid=%d, source=%s, name=%s\n",
-               tileset->first_gid, tileset->source.c_str(), tileset->name.c_str());
+        DebugPrint::Print("Level", "Loading tileset: firstgid=%d, source=%s, name=%s\n",
+                          tileset->first_gid, tileset->source.c_str(), tileset->name.c_str());
 
         // Load external TSX file if source is specified
         if (!tileset->source.empty())
@@ -125,23 +126,23 @@ bool tmx::loadTilesets()
 
             if (tileset->tsx_data->empty())
             {
-                printf("Failed to load TSX file: %s\n", tsx_path.c_str());
+                DebugPrint::Print("Level", "Failed to load TSX file: %s\n", tsx_path.c_str());
                 continue;
             }
 
-            printf("Successfully loaded TSX file: %s\n", tsx_path.c_str());
+            DebugPrint::Print("Level", "Successfully loaded TSX file: %s\n", tsx_path.c_str());
         }
         else
         {
             // Inline tileset data (not implemented for now)
-            printf("Warning: Inline tileset data not supported yet\n");
+            DebugPrint::Print("Level", "Warning: Inline tileset data not supported yet\n");
             continue;
         }
 
         tilesets.push_back(tileset);
     }
 
-    printf("Loaded %d tilesets\n", static_cast<int>(tilesets.size()));
+    DebugPrint::Print("Level", "Loaded %d tilesets\n", static_cast<int>(tilesets.size()));
     return !tilesets.empty();
 }
 
@@ -160,15 +161,15 @@ bool tmx::loadLayers()
         layer->visible = layer_node.attribute("visible").as_bool(true);
         layer->opacity = layer_node.attribute("opacity").as_float(1.0f);
 
-        printf("Loading layer: id=%d, name=%s, size=%dx%d, visible=%s, opacity=%.2f\n",
-               layer->id, layer->name.c_str(), layer->width, layer->height,
-               layer->visible ? "true" : "false", layer->opacity);
+        DebugPrint::Print("Level", "Loading layer: id=%d, name=%s, size=%dx%d, visible=%s, opacity=%.2f\n",
+                          layer->id, layer->name.c_str(), layer->width, layer->height,
+                          layer->visible ? "true" : "false", layer->opacity);
 
         // Load layer data
         pugi::xml_node data_node = layer_node.child("data");
         if (!data_node)
         {
-            printf("Warning: Layer '%s' has no data node\n", layer->name.c_str());
+            DebugPrint::Print("Level", "Warning: Layer '%s' has no data node\n", layer->name.c_str());
             continue;
         }
 
@@ -182,13 +183,13 @@ bool tmx::loadLayers()
         }
         else
         {
-            printf("Warning: Unsupported encoding '%s' for layer '%s'\n",
-                   encoding.c_str(), layer->name.c_str());
+            DebugPrint::Print("Level", "Warning: Unsupported encoding '%s' for layer '%s'\n",
+                              encoding.c_str(), layer->name.c_str());
             continue;
         }
 
-        printf("Layer '%s' loaded with %d tiles\n",
-               layer->name.c_str(), static_cast<int>(layer->data.size()));
+        DebugPrint::Print("Level", "Layer '%s' loaded with %d tiles\n",
+                          layer->name.c_str(), static_cast<int>(layer->data.size()));
 
         // Determine if this is a navmesh layer based on naming convention
         // NavMesh layers have names starting with "navmesh", "nav_", or contain "collision"
@@ -201,17 +202,17 @@ bool tmx::loadLayers()
         if (is_navmesh_layer)
         {
             navmesh_layers.push_back(layer);
-            printf("  -> Added to navmesh layers\n");
+            DebugPrint::Print("Level", "  -> Added to navmesh layers\n");
         }
         else
         {
             layers.push_back(layer);
-            printf("  -> Added to regular layers\n");
+            DebugPrint::Print("Level", "  -> Added to regular layers\n");
         }
     }
 
-    printf("Loaded %d regular layers and %d navmesh layers\n",
-           static_cast<int>(layers.size()), static_cast<int>(navmesh_layers.size()));
+    DebugPrint::Print("Level", "Loaded %d regular layers and %d navmesh layers\n",
+                      static_cast<int>(layers.size()), static_cast<int>(navmesh_layers.size()));
     return !layers.empty() || !navmesh_layers.empty();
 }
 
@@ -266,40 +267,40 @@ std::shared_ptr<TMXTileset> tmx::findTilesetForGID(int gid) const
 
 void tmx::debugPrint() const
 {
-    printf("\n=== TMX Content Analysis ===\n");
-    printf("File: %s\n", path.c_str());
-    printf("Map size: %dx%d tiles (%dx%d pixels per tile)\n",
-           map_width, map_height, tile_width, tile_height);
+    DebugPrint::Print("Level", "\n=== TMX Content Analysis ===\n");
+    DebugPrint::Print("Level", "File: %s\n", path.c_str());
+    DebugPrint::Print("Level", "Map size: %dx%d tiles (%dx%d pixels per tile)\n",
+                      map_width, map_height, tile_width, tile_height);
 
-    printf("\nTilesets (%d):\n", static_cast<int>(tilesets.size()));
+    DebugPrint::Print("Level", "\nTilesets (%d):\n", static_cast<int>(tilesets.size()));
     for (size_t i = 0; i < tilesets.size(); i++)
     {
         const auto &tileset = tilesets[i];
-        printf("  [%zu] firstgid=%d, source=%s, name=%s\n",
-               i, tileset->first_gid, tileset->source.c_str(), tileset->name.c_str());
+        DebugPrint::Print("Level", "  [%zu] firstgid=%d, source=%s, name=%s\n",
+                          i, tileset->first_gid, tileset->source.c_str(), tileset->name.c_str());
     }
 
-    printf("\nLayers (%d):\n", static_cast<int>(layers.size()));
+    DebugPrint::Print("Level", "\nLayers (%d):\n", static_cast<int>(layers.size()));
     for (size_t i = 0; i < layers.size(); i++)
     {
         const auto &layer = layers[i];
-        printf("  [%zu] id=%d, name=%s, size=%dx%d, visible=%s, opacity=%.2f, tiles=%d\n",
-               i, layer->id, layer->name.c_str(), layer->width, layer->height,
-               layer->visible ? "true" : "false", layer->opacity,
-               static_cast<int>(layer->data.size()));
+        DebugPrint::Print("Level", "  [%zu] id=%d, name=%s, size=%dx%d, visible=%s, opacity=%.2f, tiles=%d\n",
+                          i, layer->id, layer->name.c_str(), layer->width, layer->height,
+                          layer->visible ? "true" : "false", layer->opacity,
+                          static_cast<int>(layer->data.size()));
     }
 
-    printf("\nNavMesh Layers (%d):\n", static_cast<int>(navmesh_layers.size()));
+    DebugPrint::Print("Level", "\nNavMesh Layers (%d):\n", static_cast<int>(navmesh_layers.size()));
     for (size_t i = 0; i < navmesh_layers.size(); i++)
     {
         const auto &layer = navmesh_layers[i];
-        printf("  [%zu] id=%d, name=%s, size=%dx%d, visible=%s, opacity=%.2f, tiles=%d\n",
-               i, layer->id, layer->name.c_str(), layer->width, layer->height,
-               layer->visible ? "true" : "false", layer->opacity,
-               static_cast<int>(layer->data.size()));
+        DebugPrint::Print("Level", "  [%zu] id=%d, name=%s, size=%dx%d, visible=%s, opacity=%.2f, tiles=%d\n",
+                          i, layer->id, layer->name.c_str(), layer->width, layer->height,
+                          layer->visible ? "true" : "false", layer->opacity,
+                          static_cast<int>(layer->data.size()));
     }
 
-    printf("=== End TMX Content ===\n\n");
+    DebugPrint::Print("Level", "=== End TMX Content ===\n\n");
 }
 
 std::shared_ptr<TMXLayer> tmx::getLayer(int index) const
@@ -358,7 +359,7 @@ CF_Sprite tmx::getTileAt(int layer_index, int map_x, int map_y) const
     auto layer = getLayer(layer_index);
     if (!layer)
     {
-        printf("Invalid layer index: %d\n", layer_index);
+        DebugPrint::Print("Level", "Invalid layer index: %d\n", layer_index);
         return cf_sprite_defaults();
     }
 
@@ -371,7 +372,7 @@ CF_Sprite tmx::getTileAt(int layer_index, int map_x, int map_y) const
     auto tileset = findTilesetForGID(gid);
     if (!tileset)
     {
-        printf("No tileset found for GID: %d\n", gid);
+        DebugPrint::Print("Level", "No tileset found for GID: %d\n", gid);
         return cf_sprite_defaults();
     }
 
@@ -383,7 +384,7 @@ CF_Sprite tmx::getTileAt(const std::string &layer_name, int map_x, int map_y) co
     auto layer = getLayer(layer_name);
     if (!layer)
     {
-        printf("Layer not found: %s\n", layer_name.c_str());
+        DebugPrint::Print("Level", "Layer not found: %s\n", layer_name.c_str());
         return cf_sprite_defaults();
     }
 
@@ -396,7 +397,7 @@ CF_Sprite tmx::getTileAt(const std::string &layer_name, int map_x, int map_y) co
     auto tileset = findTilesetForGID(gid);
     if (!tileset)
     {
-        printf("No tileset found for GID: %d\n", gid);
+        DebugPrint::Print("Level", "No tileset found for GID: %d\n", gid);
         return cf_sprite_defaults();
     }
 
@@ -411,8 +412,8 @@ void tmx::renderLayer(int layer_index, float world_x, float world_y) const
         return;
     }
 
-    printf("Rendering layer %d: '%s' with %dx%d tiles at world position (%.1f, %.1f)\n",
-           layer_index, layer->name.c_str(), layer->width, layer->height, world_x, world_y);
+    DebugPrint::Print("Level", "Rendering layer %d: '%s' with %dx%d tiles at world position (%.1f, %.1f)\n",
+                      layer_index, layer->name.c_str(), layer->width, layer->height, world_x, world_y);
 
     for (int y = 0; y < layer->height; y++)
     {
@@ -443,8 +444,8 @@ void tmx::renderLayer(int layer_index, float world_x, float world_y) const
             // Debug: Print first few tile positions to verify coordinate system
             if (x < 3 && y < 3)
             {
-                printf("  Tile[%d][%d] GID=%d at world position (%.1f, %.1f)\n",
-                       x, y, gid, tile_world_x, tile_world_y);
+                DebugPrint::Print("Level", "  Tile[%d][%d] GID=%d at world position (%.1f, %.1f)\n",
+                                  x, y, gid, tile_world_x, tile_world_y);
             }
 
             // Draw the sprite at the tile position with slight overlap to prevent seams
@@ -704,8 +705,8 @@ void tmx::renderAllLayers(const CFNativeCamera &camera, const DataFile &config, 
                 {
                     // Not cached, calculate and cache the border edges
                     layer_border_cache[i] = calculateLayerBorderEdges(i, world_x, world_y);
-                    printf("Cached border edges for layer '%s': %zu edges\n",
-                           layer_name.c_str(), layer_border_cache[i].size());
+                    DebugPrint::Print("Level", "Cached border edges for layer '%s': %zu edges\n",
+                                      layer_name.c_str(), layer_border_cache[i].size());
                 }
 
                 // Draw the cached border edges in cyan
@@ -732,8 +733,8 @@ void tmx::renderAllLayers(const CFNativeCamera &camera, const DataFile &config, 
                 {
                     // Not cached, calculate and cache the outer border lines
                     layer_outer_border_cache[i] = calculateLayerOuterBorderLines(i, world_x, world_y);
-                    printf("Cached outer border lines for layer '%s': %zu lines\n",
-                           layer_name.c_str(), layer_outer_border_cache[i].size());
+                    DebugPrint::Print("Level", "Cached outer border lines for layer '%s': %zu lines\n",
+                                      layer_name.c_str(), layer_outer_border_cache[i].size());
                 }
 
                 // Draw the cached outer border lines in magenta
@@ -822,9 +823,9 @@ void tmx::setLayerHighlightConfig(const DataFile &config)
         }
     }
 
-    printf("Configured layer highlighting for %zu layers\n", layer_highlight_map.size());
-    printf("Configured layer border highlighting for %zu layers\n", layer_border_highlight_map.size());
-    printf("Configured layer outer border highlighting for %zu layers\n", layer_outer_border_highlight_map.size());
+    DebugPrint::Print("Level", "Configured layer highlighting for %zu layers\n", layer_highlight_map.size());
+    DebugPrint::Print("Level", "Configured layer border highlighting for %zu layers\n", layer_border_highlight_map.size());
+    DebugPrint::Print("Level", "Configured layer outer border highlighting for %zu layers\n", layer_outer_border_highlight_map.size());
 }
 
 std::vector<CF_Aabb> tmx::calculateLayerBorderEdges(int layer_index, float world_x, float world_y) const
@@ -963,7 +964,7 @@ std::vector<EdgeLine> tmx::calculateLayerOuterBorderLines(int layer_index, float
 
 void tmx::clearAllSpriteCaches()
 {
-    printf("Clearing all sprite caches for TMX map '%s'\n", path.c_str());
+    DebugPrint::Print("Level", "Clearing all sprite caches for TMX map '%s'\n", path.c_str());
     for (auto &tileset : tilesets)
     {
         if (tileset)
@@ -1029,7 +1030,7 @@ bool TMXTileset::getLocalTileCoords(int gid, int &tile_x, int &tile_y) const
 
     tile_x = local_id % tiles_per_row;
     tile_y = local_id / tiles_per_row;
-    printf("Local tile coords for GID %d: (%d, %d)\n", gid, tile_x, tile_y);
+    DebugPrint::Print("Level", "Local tile coords for GID %d: (%d, %d)\n", gid, tile_x, tile_y);
     return true;
 }
 
@@ -1049,7 +1050,7 @@ CF_Sprite TMXTileset::getSpriteForGID(int gid) const
     }
 
     // Not in cache, need to create the sprite
-    printf("Creating sprite for GID %d\n", gid);
+    DebugPrint::Print("Level", "Creating sprite for GID %d\n", gid);
     int tile_x, tile_y;
     if (!getLocalTileCoords(gid, tile_x, tile_y))
     {
@@ -1059,21 +1060,21 @@ CF_Sprite TMXTileset::getSpriteForGID(int gid) const
     // tile_x = 2;
     // tile_y = 1;
     // Create the sprite using TSX
-    printf("Creating sprite for GID %d at tile coords (%d, %d)\n", gid, tile_x, tile_y);
+    DebugPrint::Print("Level", "Creating sprite for GID %d at tile coords (%d, %d)\n", gid, tile_x, tile_y);
     CF_Sprite sprite = tsx_data->getTile(tile_x, tile_y);
 
     // Cache the sprite for future use
     sprite_cache[gid] = sprite;
 
-    printf("Cached new sprite for GID %d at tile coords (%d, %d)\n", gid, tile_x, tile_y);
+    DebugPrint::Print("Level", "Cached new sprite for GID %d at tile coords (%d, %d)\n", gid, tile_x, tile_y);
 
     return sprite;
 }
 
 void TMXTileset::clearCache()
 {
-    printf("Clearing sprite cache for tileset '%s' (%zu cached sprites)\n",
-           name.c_str(), sprite_cache.size());
+    DebugPrint::Print("Level", "Clearing sprite cache for tileset '%s' (%zu cached sprites)\n",
+                      name.c_str(), sprite_cache.size());
     sprite_cache.clear();
 }
 

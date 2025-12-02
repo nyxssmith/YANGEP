@@ -1,4 +1,5 @@
 #include "NavMesh.h"
+#include "DebugPrint.h"
 #include "tmx.h"
 #include "CFNativeCamera.h"
 #include <algorithm>
@@ -33,7 +34,7 @@ bool NavMesh::buildFromLayer(const std::shared_ptr<TMXLayer> &layer,
 {
     if (!layer)
     {
-        printf("NavMesh::buildFromLayer - Invalid layer\n");
+        DebugPrint::Print("NavMesh", "NavMesh::buildFromLayer - Invalid layer\n");
         return false;
     }
 
@@ -42,8 +43,8 @@ bool NavMesh::buildFromLayer(const std::shared_ptr<TMXLayer> &layer,
     this->tile_width = tile_width;
     this->tile_height = tile_height;
 
-    printf("NavMesh: Building from layer '%s' (%dx%d tiles)\n",
-           layer->name.c_str(), layer->width, layer->height);
+    DebugPrint::Print("NavMesh", "NavMesh: Building from layer '%s' (%dx%d tiles)\n",
+                      layer->name.c_str(), layer->width, layer->height);
 
     // Create a boolean grid of walkable tiles
     std::vector<bool> walkable_tiles(layer->width * layer->height, false);
@@ -72,8 +73,8 @@ bool NavMesh::buildFromLayer(const std::shared_ptr<TMXLayer> &layer,
     // Generate navigation mesh from the walkable tile grid
     generateFromTileGrid(walkable_tiles, layer->width, layer->height, world_x, world_y);
 
-    printf("NavMesh: Generated %d polygons and %d edges\n",
-           getPolygonCount(), getEdgeCount());
+    DebugPrint::Print("NavMesh", "NavMesh: Generated %d polygons and %d edges\n",
+                      getPolygonCount(), getEdgeCount());
 
     return getPolygonCount() > 0;
 }
@@ -93,7 +94,7 @@ bool NavMesh::buildFromLayer(const tmx &map, const std::string &layer_name,
 
     if (!layer)
     {
-        printf("NavMesh::buildFromLayer - Layer '%s' not found in navmesh or regular layers\n", layer_name.c_str());
+        DebugPrint::Print("NavMesh", "NavMesh::buildFromLayer - Layer '%s' not found in navmesh or regular layers\n", layer_name.c_str());
         return false;
     }
 
@@ -172,8 +173,8 @@ void NavMesh::generateFromTileGrid(const std::vector<bool> &walkable_tiles,
     // Calculate neighbor relationships
     calculateNeighbors();
 
-    printf("NavMesh: Bounds: (%.1f, %.1f) to (%.1f, %.1f)\n",
-           bounds.min.x, bounds.min.y, bounds.max.x, bounds.max.y);
+    DebugPrint::Print("NavMesh", "NavMesh: Bounds: (%.1f, %.1f) to (%.1f, %.1f)\n",
+                      bounds.min.x, bounds.min.y, bounds.max.x, bounds.max.y);
 }
 
 void NavMesh::calculateNeighbors()
@@ -234,8 +235,8 @@ void NavMesh::calculateNeighbors()
     int debug_count = std::min(5, static_cast<int>(polygons.size()));
     for (int i = 0; i < debug_count; i++)
     {
-        printf("NavMesh: Polygon %d has %d neighbors\n",
-               i, static_cast<int>(polygons[i].neighbors.size()));
+        DebugPrint::Print("NavMesh", "NavMesh: Polygon %d has %d neighbors\n",
+                          i, static_cast<int>(polygons[i].neighbors.size()));
     }
 }
 
@@ -390,7 +391,7 @@ bool NavMesh::addPoint(const std::string &name, CF_V2 position)
     {
         if (point.name == name)
         {
-            printf("NavMesh::addPoint - Point '%s' already exists\n", name.c_str());
+            DebugPrint::Print("NavMesh", "NavMesh::addPoint - Point '%s' already exists\n", name.c_str());
             return false;
         }
     }
@@ -400,14 +401,14 @@ bool NavMesh::addPoint(const std::string &name, CF_V2 position)
 
     if (poly_idx == -1)
     {
-        printf("NavMesh::addPoint - Warning: Point '%s' at (%.1f, %.1f) is not on the navigation mesh\n",
-               name.c_str(), position.x, position.y);
+        DebugPrint::Print("NavMesh", "NavMesh::addPoint - Warning: Point '%s' at (%.1f, %.1f) is not on the navigation mesh\n",
+                          name.c_str(), position.x, position.y);
         // Still add it, but mark as not on mesh
     }
 
     points.push_back(NavMeshPoint(name, position, poly_idx));
-    printf("NavMesh::addPoint - Added point '%s' at (%.1f, %.1f) [polygon: %d]\n",
-           name.c_str(), position.x, position.y, poly_idx);
+    DebugPrint::Print("NavMesh", "NavMesh::addPoint - Added point '%s' at (%.1f, %.1f) [polygon: %d]\n",
+                      name.c_str(), position.x, position.y, poly_idx);
     return true;
 }
 
@@ -418,12 +419,12 @@ bool NavMesh::removePoint(const std::string &name)
         if (it->name == name)
         {
             points.erase(it);
-            printf("NavMesh::removePoint - Removed point '%s'\n", name.c_str());
+            DebugPrint::Print("NavMesh", "NavMesh::removePoint - Removed point '%s'\n", name.c_str());
             return true;
         }
     }
 
-    printf("NavMesh::removePoint - Point '%s' not found\n", name.c_str());
+    DebugPrint::Print("NavMesh", "NavMesh::removePoint - Point '%s' not found\n", name.c_str());
     return false;
 }
 
@@ -441,7 +442,7 @@ const NavMeshPoint *NavMesh::getPoint(const std::string &name) const
 
 void NavMesh::clearPoints()
 {
-    printf("NavMesh::clearPoints - Clearing %d points\n", static_cast<int>(points.size()));
+    DebugPrint::Print("NavMesh", "NavMesh::clearPoints - Clearing %d points\n", static_cast<int>(points.size()));
     points.clear();
 }
 
@@ -456,13 +457,13 @@ std::shared_ptr<NavMeshPath> NavMesh::generatePath(CF_V2 start, CF_V2 end)
 
     if (start_poly == -1)
     {
-        printf("NavMesh::generatePath - Start position (%.1f, %.1f) is not on navmesh\n", start.x, start.y);
+        DebugPrint::Print("NavMesh", "NavMesh::generatePath - Start position (%.1f, %.1f) is not on navmesh\n", start.x, start.y);
         return path;
     }
 
     if (end_poly == -1)
     {
-        printf("NavMesh::generatePath - End position (%.1f, %.1f) is not on navmesh\n", end.x, end.y);
+        DebugPrint::Print("NavMesh", "NavMesh::generatePath - End position (%.1f, %.1f) is not on navmesh\n", end.x, end.y);
         return path;
     }
 
@@ -476,7 +477,7 @@ std::shared_ptr<NavMeshPath> NavMesh::generatePath(CF_V2 start, CF_V2 end)
         // Assign ID and add to tracked paths
         path->id = next_path_id++;
         paths.push_back(path);
-        printf("NavMesh::generatePath - Path generated successfully (id: %d, total paths: %d)\n", path->id, static_cast<int>(paths.size()));
+        DebugPrint::Print("NavMesh", "NavMesh::generatePath - Path generated successfully (id: %d, total paths: %d)\n", path->id, static_cast<int>(paths.size()));
     }
 
     return path;
@@ -490,12 +491,12 @@ std::shared_ptr<NavMeshPath> NavMesh::generatePathToPoint(CF_V2 start, const std
 
     if (!point)
     {
-        printf("NavMesh::generatePathToPoint - Point '%s' not found on navmesh\n", point_name.c_str());
+        DebugPrint::Print("NavMesh", "NavMesh::generatePathToPoint - Point '%s' not found on navmesh\n", point_name.c_str());
         return std::make_shared<NavMeshPath>();
     }
 
-    printf("NavMesh::generatePathToPoint - Pathfinding to point '%s' at (%.1f, %.1f)\n",
-           point_name.c_str(), point->position.x, point->position.y);
+    DebugPrint::Print("NavMesh", "NavMesh::generatePathToPoint - Pathfinding to point '%s' at (%.1f, %.1f)\n",
+                      point_name.c_str(), point->position.x, point->position.y);
 
     return generatePath(start, point->position);
 }
@@ -527,8 +528,8 @@ bool NavMesh::findPath(NavMeshPath &path, CF_V2 start, CF_V2 end) const
         auto end_time = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
 
-        printf("NavMesh::findPath - Direct path (same polygon), length: %.1f, time: %.3f ms\n",
-               path.total_length, duration.count() / 1000.0);
+        DebugPrint::Print("NavMesh", "NavMesh::findPath - Direct path (same polygon), length: %.1f, time: %.3f ms\n",
+                          path.total_length, duration.count() / 1000.0);
         return true;
     }
 
@@ -607,8 +608,8 @@ bool NavMesh::findPath(NavMeshPath &path, CF_V2 start, CF_V2 end) const
             auto end_time = std::chrono::high_resolution_clock::now();
             auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
 
-            printf("NavMesh::findPath - Path found with %d waypoints, length: %.1f, time: %.3f ms\n",
-                   path.getWaypointCount(), path.total_length, duration.count() / 1000.0);
+            DebugPrint::Print("NavMesh", "NavMesh::findPath - Path found with %d waypoints, length: %.1f, time: %.3f ms\n",
+                              path.getWaypointCount(), path.total_length, duration.count() / 1000.0);
 
             return true;
         }
@@ -647,7 +648,7 @@ bool NavMesh::findPath(NavMeshPath &path, CF_V2 start, CF_V2 end) const
 
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
-    printf("NavMesh::findPath - No path found, time: %.3f ms\n", duration.count() / 1000.0);
+    DebugPrint::Print("NavMesh", "NavMesh::findPath - No path found, time: %.3f ms\n", duration.count() / 1000.0);
 
     // No path found
     return false;
@@ -660,20 +661,20 @@ bool NavMesh::removePathById(int path_id)
     {
         if ((*it)->getId() == path_id)
         {
-            printf("NavMesh::removePathById - Removed path with id %d\n", path_id);
+            DebugPrint::Print("NavMesh", "NavMesh::removePathById - Removed path with id %d\n", path_id);
             paths.erase(it);
             return true;
         }
     }
 
-    printf("NavMesh::removePathById - Path with id %d not found\n", path_id);
+    DebugPrint::Print("NavMesh", "NavMesh::removePathById - Path with id %d not found\n", path_id);
     return false;
 }
 
 // Clear all tracked paths
 void NavMesh::clearPaths()
 {
-    printf("NavMesh::clearPaths - Clearing %d paths\n", static_cast<int>(paths.size()));
+    DebugPrint::Print("NavMesh", "NavMesh::clearPaths - Clearing %d paths\n", static_cast<int>(paths.size()));
     paths.clear();
 }
 

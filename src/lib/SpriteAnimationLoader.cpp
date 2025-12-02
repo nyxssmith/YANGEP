@@ -1,4 +1,5 @@
 #include "SpriteAnimationLoader.h"
+#include "DebugPrint.h"
 #include <cute.h>
 #include <spng.h>
 #include <cstdlib>
@@ -26,7 +27,7 @@ namespace AnimationLayouts
 // Constructor
 SpriteAnimationLoader::SpriteAnimationLoader()
 {
-    printf("SpriteAnimationLoader: Initialized\n");
+    DebugPrint::Print("SpriteAnimationLoader", "SpriteAnimationLoader: Initialized\n");
 }
 
 // Destructor
@@ -38,7 +39,7 @@ SpriteAnimationLoader::~SpriteAnimationLoader()
 // Clear PNG cache
 void SpriteAnimationLoader::clearCache()
 {
-    printf("SpriteAnimationLoader: Clearing PNG cache (%zu PNGs)\n", pngCache.size());
+    DebugPrint::Print("SpriteAnimationLoader", "SpriteAnimationLoader: Clearing PNG cache (%zu PNGs)\n", pngCache.size());
     // std::vector manages its own memory, just clear the map
     pngCache.clear();
 }
@@ -48,11 +49,11 @@ bool SpriteAnimationLoader::loadAndCachePNG(const std::string &png_path)
 {
     if (isPNGCached(png_path))
     {
-        printf("SpriteAnimationLoader: PNG already cached: %s\n", png_path.c_str());
+        DebugPrint::Print("SpriteAnimationLoader", "SpriteAnimationLoader: PNG already cached: %s\n", png_path.c_str());
         return true;
     }
 
-    printf("SpriteAnimationLoader: Loading and caching PNG: %s\n", png_path.c_str());
+    DebugPrint::Print("SpriteAnimationLoader", "SpriteAnimationLoader: Loading and caching PNG: %s\n", png_path.c_str());
 
     // Read the entire PNG file using Cute Framework's VFS (same as tsx.cpp)
     size_t file_size = 0;
@@ -63,18 +64,18 @@ bool SpriteAnimationLoader::loadAndCachePNG(const std::string &png_path)
         char cwd[1024];
         if (getcwd(cwd, sizeof(cwd)) != nullptr)
         {
-            printf("SpriteAnimationLoader: Failed to read PNG file: %s (cwd: %s)\n", png_path.c_str(), cwd);
+            DebugPrint::Print("SpriteAnimationLoader", "SpriteAnimationLoader: Failed to read PNG file: %s (cwd: %s)\n", png_path.c_str(), cwd);
         }
         else
         {
-            printf("SpriteAnimationLoader: Failed to read PNG file: %s (cwd: unknown)\n", png_path.c_str());
+            DebugPrint::Print("SpriteAnimationLoader", "SpriteAnimationLoader: Failed to read PNG file: %s (cwd: unknown)\n", png_path.c_str());
         }
         return false;
     }
 
     if (file_size == 0)
     {
-        printf("SpriteAnimationLoader: PNG file is empty: %s\n", png_path.c_str());
+        DebugPrint::Print("SpriteAnimationLoader", "SpriteAnimationLoader: PNG file is empty: %s\n", png_path.c_str());
         cf_free(file_data);
         return false;
     }
@@ -89,8 +90,8 @@ bool SpriteAnimationLoader::loadAndCachePNG(const std::string &png_path)
     // Store in cache
     pngCache[png_path] = std::move(png_data);
 
-    printf("SpriteAnimationLoader: Successfully cached PNG: %s (%zu bytes)\n",
-           png_path.c_str(), file_size);
+    DebugPrint::Print("SpriteAnimationLoader", "SpriteAnimationLoader: Successfully cached PNG: %s (%zu bytes)\n",
+                      png_path.c_str(), file_size);
     return true;
 }
 
@@ -132,20 +133,20 @@ CF_Sprite SpriteAnimationLoader::extractSpriteFrame(const std::string &png_path,
                                                     int frame_x, int frame_y,
                                                     int frame_width, int frame_height)
 {
-    printf("SpriteAnimationLoader: Extracting frame (%d, %d) size (%dx%d) from %s\n",
-           frame_x, frame_y, frame_width, frame_height, png_path.c_str());
+    DebugPrint::Print("SpriteAnimationLoader", "SpriteAnimationLoader: Extracting frame (%d, %d) size (%dx%d) from %s\n",
+                      frame_x, frame_y, frame_width, frame_height, png_path.c_str());
 
     // Ensure PNG is loaded and cached
     if (!loadAndCachePNG(png_path))
     {
-        printf("SpriteAnimationLoader: Failed to load PNG for frame extraction: %s\n", png_path.c_str());
+        DebugPrint::Print("SpriteAnimationLoader", "SpriteAnimationLoader: Failed to load PNG for frame extraction: %s\n", png_path.c_str());
         return cf_sprite_defaults();
     }
 
     const std::vector<uint8_t> *png_data = getCachedPNG(png_path);
     if (!png_data || png_data->empty())
     {
-        printf("SpriteAnimationLoader: No cached PNG data for: %s\n", png_path.c_str());
+        DebugPrint::Print("SpriteAnimationLoader", "SpriteAnimationLoader: No cached PNG data for: %s\n", png_path.c_str());
         return cf_sprite_defaults();
     }
 
@@ -153,7 +154,7 @@ CF_Sprite SpriteAnimationLoader::extractSpriteFrame(const std::string &png_path,
     spng_ctx *ctx = spng_ctx_new(0);
     if (ctx == nullptr)
     {
-        printf("SpriteAnimationLoader: Failed to create spng context\n");
+        DebugPrint::Print("SpriteAnimationLoader", "SpriteAnimationLoader: Failed to create spng context\n");
         return cf_sprite_defaults();
     }
 
@@ -161,7 +162,7 @@ CF_Sprite SpriteAnimationLoader::extractSpriteFrame(const std::string &png_path,
     int ret = spng_set_png_buffer(ctx, png_data->data(), png_data->size());
     if (ret != 0)
     {
-        printf("SpriteAnimationLoader: spng_set_png_buffer error: %s\n", spng_strerror(ret));
+        DebugPrint::Print("SpriteAnimationLoader", "SpriteAnimationLoader: spng_set_png_buffer error: %s\n", spng_strerror(ret));
         spng_ctx_free(ctx);
         return cf_sprite_defaults();
     }
@@ -171,19 +172,19 @@ CF_Sprite SpriteAnimationLoader::extractSpriteFrame(const std::string &png_path,
     ret = spng_get_ihdr(ctx, &ihdr);
     if (ret != 0)
     {
-        printf("SpriteAnimationLoader: spng_get_ihdr error: %s\n", spng_strerror(ret));
+        DebugPrint::Print("SpriteAnimationLoader", "SpriteAnimationLoader: spng_get_ihdr error: %s\n", spng_strerror(ret));
         spng_ctx_free(ctx);
         return cf_sprite_defaults();
     }
 
-    printf("SpriteAnimationLoader: PNG dimensions: %dx%d, bit depth: %d, color type: %d\n",
-           ihdr.width, ihdr.height, ihdr.bit_depth, ihdr.color_type);
+    DebugPrint::Print("SpriteAnimationLoader", "SpriteAnimationLoader: PNG dimensions: %dx%d, bit depth: %d, color type: %d\n",
+                      ihdr.width, ihdr.height, ihdr.bit_depth, ihdr.color_type);
 
     // Validate frame bounds
     if (frame_x + frame_width > (int)ihdr.width || frame_y + frame_height > (int)ihdr.height)
     {
-        printf("SpriteAnimationLoader: Frame bounds exceed image dimensions. Frame: (%d,%d)+(%dx%d), Image: %dx%d\n",
-               frame_x, frame_y, frame_width, frame_height, ihdr.width, ihdr.height);
+        DebugPrint::Print("SpriteAnimationLoader", "SpriteAnimationLoader: Frame bounds exceed image dimensions. Frame: (%d,%d)+(%dx%d), Image: %dx%d\n",
+                          frame_x, frame_y, frame_width, frame_height, ihdr.width, ihdr.height);
         spng_ctx_free(ctx);
         return cf_sprite_defaults();
     }
@@ -193,7 +194,7 @@ CF_Sprite SpriteAnimationLoader::extractSpriteFrame(const std::string &png_path,
     ret = spng_decoded_image_size(ctx, SPNG_FMT_RGBA8, &image_size);
     if (ret != 0)
     {
-        printf("SpriteAnimationLoader: spng_decoded_image_size error: %s\n", spng_strerror(ret));
+        DebugPrint::Print("SpriteAnimationLoader", "SpriteAnimationLoader: spng_decoded_image_size error: %s\n", spng_strerror(ret));
         spng_ctx_free(ctx);
         return cf_sprite_defaults();
     }
@@ -203,7 +204,7 @@ CF_Sprite SpriteAnimationLoader::extractSpriteFrame(const std::string &png_path,
     ret = spng_decode_image(ctx, full_image.data(), image_size, SPNG_FMT_RGBA8, 0);
     if (ret != 0)
     {
-        printf("SpriteAnimationLoader: spng_decode_image error: %s\n", spng_strerror(ret));
+        DebugPrint::Print("SpriteAnimationLoader", "SpriteAnimationLoader: spng_decode_image error: %s\n", spng_strerror(ret));
         spng_ctx_free(ctx);
         return cf_sprite_defaults();
     }
@@ -235,8 +236,8 @@ CF_Sprite SpriteAnimationLoader::extractSpriteFrame(const std::string &png_path,
     // Create sprite from pixel data using Cute Framework (same as tsx.cpp)
     CF_Sprite frame_sprite = cf_make_easy_sprite_from_pixels(frame_pixels.data(), frame_width, frame_height);
 
-    printf("SpriteAnimationLoader: Successfully extracted frame (%d, %d) -> pixel region (%d, %d) size (%dx%d)\n",
-           frame_x, frame_y, frame_x, frame_y, frame_width, frame_height);
+    DebugPrint::Print("SpriteAnimationLoader", "SpriteAnimationLoader: Successfully extracted frame (%d, %d) -> pixel region (%d, %d) size (%dx%d)\n",
+                      frame_x, frame_y, frame_x, frame_y, frame_width, frame_height);
 
     return frame_sprite;
 }
@@ -245,8 +246,8 @@ CF_Sprite SpriteAnimationLoader::extractSpriteFrame(const std::string &png_path,
 std::vector<CF_Sprite> SpriteAnimationLoader::loadAnimationFrames(const std::string &png_path,
                                                                   const AnimationLayout &layout)
 {
-    printf("SpriteAnimationLoader: Loading animation frames for %s from %s\n",
-           layout.name.c_str(), png_path.c_str());
+    DebugPrint::Print("SpriteAnimationLoader", "SpriteAnimationLoader: Loading animation frames for %s from %s\n",
+                      layout.name.c_str(), png_path.c_str());
 
     std::vector<CF_Sprite> frames;
 
@@ -259,8 +260,8 @@ std::vector<CF_Sprite> SpriteAnimationLoader::loadAnimationFrames(const std::str
             int frame_x = frame * layout.frame_width;
             int frame_y = dir * layout.frame_height;
 
-            printf("SpriteAnimationLoader: Extracting frame %d, direction %d at (%d, %d)\n",
-                   frame, static_cast<int>(layout.directions[dir]), frame_x, frame_y);
+            DebugPrint::Print("SpriteAnimationLoader", "SpriteAnimationLoader: Extracting frame %d, direction %d at (%d, %d)\n",
+                              frame, static_cast<int>(layout.directions[dir]), frame_x, frame_y);
 
             // Use the existing working PNG extraction method
             CF_Sprite frame_sprite = extractSpriteFrame(png_path, frame_x, frame_y,
@@ -268,11 +269,11 @@ std::vector<CF_Sprite> SpriteAnimationLoader::loadAnimationFrames(const std::str
 
             // Assume the sprite creation succeeded if we got here
             frames.push_back(frame_sprite);
-            printf("SpriteAnimationLoader: Added frame %zu\n", frames.size());
+            DebugPrint::Print("SpriteAnimationLoader", "SpriteAnimationLoader: Added frame %zu\n", frames.size());
         }
     }
 
-    printf("SpriteAnimationLoader: Loaded %zu frames for animation %s\n", frames.size(), layout.name.c_str());
+    DebugPrint::Print("SpriteAnimationLoader", "SpriteAnimationLoader: Loaded %zu frames for animation %s\n", frames.size(), layout.name.c_str());
     return frames;
 }
 
@@ -282,7 +283,7 @@ Animation SpriteAnimationLoader::createAnimation(const std::string &name,
                                                  const AnimationLayout &layout,
                                                  float frameDelay)
 {
-    printf("SpriteAnimationLoader: Creating animation %s from %s\n", name.c_str(), png_path.c_str());
+    DebugPrint::Print("SpriteAnimationLoader", "SpriteAnimationLoader: Creating animation %s from %s\n", name.c_str(), png_path.c_str());
 
     Animation anim;
     anim.name = name;
@@ -293,7 +294,7 @@ Animation SpriteAnimationLoader::createAnimation(const std::string &name,
 
     if (sprites.empty())
     {
-        printf("SpriteAnimationLoader: No frames loaded for animation %s\n", name.c_str());
+        DebugPrint::Print("SpriteAnimationLoader", "SpriteAnimationLoader: No frames loaded for animation %s\n", name.c_str());
         return anim;
     }
 
@@ -314,8 +315,8 @@ Animation SpriteAnimationLoader::createAnimation(const std::string &name,
     // Calculate total duration
     anim.calculateDuration();
 
-    printf("SpriteAnimationLoader: Created animation %s with %zu frames, duration: %.2fms\n",
-           name.c_str(), anim.frames.size(), anim.totalDuration);
+    DebugPrint::Print("SpriteAnimationLoader", "SpriteAnimationLoader: Created animation %s with %zu frames, duration: %.2fms\n",
+                      name.c_str(), anim.frames.size(), anim.totalDuration);
 
     return anim;
 }
@@ -326,8 +327,8 @@ Animation SpriteAnimationLoader::createAnimationWithLayers(const std::string &na
                                                            const AnimationLayout &layout,
                                                            float frameDelay)
 {
-    printf("SpriteAnimationLoader: Creating layered animation %s with %zu layers\n",
-           name.c_str(), layout.filenames.size());
+    DebugPrint::Print("SpriteAnimationLoader", "SpriteAnimationLoader: Creating layered animation %s with %zu layers\n",
+                      name.c_str(), layout.filenames.size());
 
     Animation anim;
     anim.name = name;
@@ -339,13 +340,13 @@ Animation SpriteAnimationLoader::createAnimationWithLayers(const std::string &na
     for (const auto &filename : layout.filenames)
     {
         std::string png_path = base_path + "/" + filename;
-        printf("SpriteAnimationLoader: Loading layer from %s\n", png_path.c_str());
+        DebugPrint::Print("SpriteAnimationLoader", "SpriteAnimationLoader: Loading layer from %s\n", png_path.c_str());
 
         std::vector<CF_Sprite> layerSprites = loadAnimationFrames(png_path, layout);
 
         if (layerSprites.empty())
         {
-            printf("SpriteAnimationLoader: WARNING: No frames loaded from layer %s\n", filename.c_str());
+            DebugPrint::Print("SpriteAnimationLoader", "SpriteAnimationLoader: WARNING: No frames loaded from layer %s\n", filename.c_str());
             continue;
         }
 
@@ -354,7 +355,7 @@ Animation SpriteAnimationLoader::createAnimationWithLayers(const std::string &na
 
     if (allLayerSprites.empty())
     {
-        printf("SpriteAnimationLoader: ERROR: No layers loaded for animation %s\n", name.c_str());
+        DebugPrint::Print("SpriteAnimationLoader", "SpriteAnimationLoader: ERROR: No layers loaded for animation %s\n", name.c_str());
         return anim;
     }
 
@@ -391,8 +392,8 @@ Animation SpriteAnimationLoader::createAnimationWithLayers(const std::string &na
     // Calculate total duration
     anim.calculateDuration();
 
-    printf("SpriteAnimationLoader: Created layered animation %s with %zu frames and %zu layers, duration: %.2fms\n",
-           name.c_str(), anim.frames.size(), allLayerSprites.size(), anim.totalDuration);
+    DebugPrint::Print("SpriteAnimationLoader", "SpriteAnimationLoader: Created layered animation %s with %zu frames and %zu layers, duration: %.2fms\n",
+                      name.c_str(), anim.frames.size(), allLayerSprites.size(), anim.totalDuration);
 
     return anim;
 }
@@ -401,7 +402,7 @@ Animation SpriteAnimationLoader::createAnimationWithLayers(const std::string &na
 AnimationTable SpriteAnimationLoader::loadAnimationTable(const std::string &base_path,
                                                          const std::vector<AnimationLayout> &layouts)
 {
-    printf("SpriteAnimationLoader: Loading animation table from base path: %s\n", base_path.c_str());
+    DebugPrint::Print("SpriteAnimationLoader", "SpriteAnimationLoader: Loading animation table from base path: %s\n", base_path.c_str());
 
     AnimationTable table;
 
@@ -412,8 +413,8 @@ AnimationTable SpriteAnimationLoader::loadAnimationTable(const std::string &base
         // Also, animations are in subdirectories (idle/, walkcycle/)
         std::string anim_base_path = "/" + base_path + "/" + layout.name;
 
-        printf("SpriteAnimationLoader: Loading animation %s from %s with %zu layers\n",
-               layout.name.c_str(), anim_base_path.c_str(), layout.filenames.size());
+        DebugPrint::Print("SpriteAnimationLoader", "SpriteAnimationLoader: Loading animation %s from %s with %zu layers\n",
+                          layout.name.c_str(), anim_base_path.c_str(), layout.filenames.size());
 
         // Create animation with all layers
         Animation anim = createAnimationWithLayers(layout.name, anim_base_path, layout);
@@ -421,16 +422,16 @@ AnimationTable SpriteAnimationLoader::loadAnimationTable(const std::string &base
         if (!anim.frames.empty())
         {
             table.addAnimation(layout.name, anim);
-            printf("SpriteAnimationLoader: Added animation %s to table\n", layout.name.c_str());
+            DebugPrint::Print("SpriteAnimationLoader", "SpriteAnimationLoader: Added animation %s to table\n", layout.name.c_str());
         }
         else
         {
-            printf("SpriteAnimationLoader: Failed to create animation %s\n", layout.name.c_str());
+            DebugPrint::Print("SpriteAnimationLoader", "SpriteAnimationLoader: Failed to create animation %s\n", layout.name.c_str());
         }
     }
 
-    printf("SpriteAnimationLoader: Animation table loaded with %zu animations\n",
-           table.getAnimationNames().size());
+    DebugPrint::Print("SpriteAnimationLoader", "SpriteAnimationLoader: Animation table loaded with %zu animations\n",
+                      table.getAnimationNames().size());
 
     return table;
 }

@@ -3,11 +3,13 @@
 #include <cstdlib>
 #include <memory>
 #include <dcimgui.h>
+#include "lib/DebugPrint.h"
 #include "lib/DebugWindow.h"
 #include "lib/DataFileDebugWindow.h"
 #include "lib/DebugWindowList.h"
 #include "lib/DebugFPSWindow.h"
 #include "lib/DebugJobWindow.h"
+#include "lib/DebugPrintControlWindow.h"
 #include "lib/Utils.h"
 #include "lib/DataFile.h"
 #include "lib/RealConfigFile.h"
@@ -35,17 +37,17 @@ int main(int argc, char *argv[])
 		{
 			windowWidth = window["width"];
 			windowHeight = window["height"];
-			printf("Loaded window config: %dx%d\n", windowWidth, windowHeight);
+			DebugPrint::Print("main", "Loaded window config: %dx%d\n", windowWidth, windowHeight);
 		}
 	}
 	else
 	{
-		printf("Could not load window config, using defaults: %dx%d\n", windowWidth, windowHeight);
+		DebugPrint::Print("main", "Could not load window config, using defaults: %dx%d\n", windowWidth, windowHeight);
 	}
 	// Initialize job system for background tasks
 	if (!JobSystem::initialize())
 	{
-		printf("Warning: Failed to initialize job system\n");
+		DebugPrint::Print("main", "Warning: Failed to initialize job system\n");
 	}
 	// Create window with the configured size
 	int options = CF_APP_OPTIONS_WINDOW_POS_CENTERED_BIT | CF_APP_OPTIONS_RESIZABLE_BIT;
@@ -72,11 +74,11 @@ int main(int argc, char *argv[])
 		{
 			viewportWidth = window["viewportWidth"];
 			viewportHeight = window["viewportHeight"];
-			printf("Loaded viewport config: %.0fx%.0f\n", viewportWidth, viewportHeight);
+			DebugPrint::Print("main", "Loaded viewport config: %.0fx%.0f\n", viewportWidth, viewportHeight);
 		}
 		else
 		{
-			printf("No viewport size in config, using window size: %.0fx%.0f\n", viewportWidth, viewportHeight);
+			DebugPrint::Print("main", "No viewport size in config, using window size: %.0fx%.0f\n", viewportWidth, viewportHeight);
 		}
 	}
 
@@ -90,22 +92,22 @@ int main(int argc, char *argv[])
 		if (debug.contains("highlightViewport"))
 		{
 			debugHighlightViewport = debug["highlightViewport"];
-			printf("Debug highlightViewport: %s\n", debugHighlightViewport ? "enabled" : "disabled");
+			DebugPrint::Print("main", "Debug highlightViewport: %s\n", debugHighlightViewport ? "enabled" : "disabled");
 		}
 		if (debug.contains("highlightNavmesh"))
 		{
 			debugHighlightNavmesh = debug["highlightNavmesh"];
-			printf("Debug highlightNavmesh: %s\n", debugHighlightNavmesh ? "enabled" : "disabled");
+			DebugPrint::Print("main", "Debug highlightNavmesh: %s\n", debugHighlightNavmesh ? "enabled" : "disabled");
 		}
 		if (debug.contains("highlightNavMeshPaths"))
 		{
 			debughighlightNavMeshPaths = debug["highlightNavMeshPaths"];
-			printf("Debug highlightNavMeshPaths: %s\n", debughighlightNavMeshPaths ? "enabled" : "disabled");
+			DebugPrint::Print("main", "Debug highlightNavMeshPaths: %s\n", debughighlightNavMeshPaths ? "enabled" : "disabled");
 		}
 		if (debug.contains("highlightAgents"))
 		{
 			debugHighlightAgents = debug["highlightAgents"];
-			printf("Debug highlightAgents: %s\n", debugHighlightAgents ? "enabled" : "disabled");
+			DebugPrint::Print("main", "Debug highlightAgents: %s\n", debugHighlightAgents ? "enabled" : "disabled");
 		}
 	}
 
@@ -114,7 +116,7 @@ int main(int argc, char *argv[])
 
 	if (!level.isInitialized())
 	{
-		printf("Error: Failed to initialize level\n");
+		DebugPrint::Print("main", "Error: Failed to initialize level\n");
 		destroy_app();
 		return -1;
 	}
@@ -130,27 +132,27 @@ int main(int argc, char *argv[])
 	DebugWindowList debugWindows;
 
 	// Load debug windows from config
-	printf("Checking for DebugWindows in config...\n");
-	printf("Config contains DebugWindows: %s\n", windowConfig.contains("DebugWindows") ? "yes" : "no");
+	DebugPrint::Print("main", "Checking for DebugWindows in config...\n");
+	DebugPrint::Print("main", "Config contains DebugWindows: %s\n", windowConfig.contains("DebugWindows") ? "yes" : "no");
 
 	if (windowConfig.contains("DebugWindows"))
 	{
-		printf("DebugWindows is_array: %s\n", windowConfig["DebugWindows"].is_array() ? "yes" : "no");
+		DebugPrint::Print("main", "DebugWindows is_array: %s\n", windowConfig["DebugWindows"].is_array() ? "yes" : "no");
 	}
 
 	if (windowConfig.contains("DebugWindows") && windowConfig["DebugWindows"].is_array())
 	{
-		printf("Number of entries in DebugWindows array: %zu\n", windowConfig["DebugWindows"].size());
+		DebugPrint::Print("main", "Number of entries in DebugWindows array: %zu\n", windowConfig["DebugWindows"].size());
 
 		for (const auto &debugWindowEntry : windowConfig["DebugWindows"])
 		{
-			printf("Processing debug window entry...\n");
-			printf("  Contains 'enabled': %s\n", debugWindowEntry.contains("enabled") ? "yes" : "no");
+			DebugPrint::Print("main", "Processing debug window entry...\n");
+			DebugPrint::Print("main", "  Contains 'enabled': %s\n", debugWindowEntry.contains("enabled") ? "yes" : "no");
 
 			if (debugWindowEntry.contains("enabled"))
 			{
 				bool enabled = debugWindowEntry["enabled"].get<bool>();
-				printf("  Enabled: %s\n", enabled ? "yes" : "no");
+				DebugPrint::Print("main", "  Enabled: %s\n", enabled ? "yes" : "no");
 			}
 
 			if (debugWindowEntry.contains("enabled") && debugWindowEntry["enabled"].get<bool>())
@@ -158,22 +160,22 @@ int main(int argc, char *argv[])
 				if (debugWindowEntry.contains("dataFilePath"))
 				{
 					std::string path = debugWindowEntry["dataFilePath"];
-					printf("  Loading debug window for: %s\n", path.c_str());
+					DebugPrint::Print("main", "  Loading debug window for: %s\n", path.c_str());
 					debugWindows.add(path);
 				}
 				else
 				{
-					printf("  No dataFilePath found\n");
+					DebugPrint::Print("main", "  No dataFilePath found\n");
 				}
 			}
 		}
 	}
 	else
 	{
-		printf("DebugWindows not found or not an array\n");
+		DebugPrint::Print("main", "DebugWindows not found or not an array\n");
 	}
 
-	printf("Loaded %zu debug windows from config\n", debugWindows.count());
+	DebugPrint::Print("main", "Loaded %zu debug windows from config\n", debugWindows.count());
 
 	// Create FPS metrics debug window if enabled in config
 	std::unique_ptr<DebugFPSWindow> fpsWindow;
@@ -183,6 +185,10 @@ int main(int argc, char *argv[])
 	std::unique_ptr<DebugJobWindow> jobWindow;
 	bool showJobMetrics = false;
 
+	// Create Print control debug window if enabled in config
+	std::unique_ptr<DebugPrintControlWindow> printControlWindow;
+	bool showPrintControls = false;
+
 	if (windowConfig.contains("Debug"))
 	{
 		auto &debug = windowConfig["Debug"];
@@ -190,24 +196,36 @@ int main(int argc, char *argv[])
 		if (debug.contains("ShowFPSMetrics"))
 		{
 			showFPSMetrics = debug["ShowFPSMetrics"];
-			printf("Debug ShowFPSMetrics: %s\n", showFPSMetrics ? "enabled" : "disabled");
+			DebugPrint::Print("main", "Debug ShowFPSMetrics: %s\n", showFPSMetrics ? "enabled" : "disabled");
 
 			if (showFPSMetrics)
 			{
 				fpsWindow = std::make_unique<DebugFPSWindow>("FPS Metrics");
-				printf("Created FPS metrics debug window\n");
+				DebugPrint::Print("main", "Created FPS metrics debug window\n");
 			}
 		}
 
 		if (debug.contains("ShowJobMetrics"))
 		{
 			showJobMetrics = debug["ShowJobMetrics"];
-			printf("Debug ShowJobMetrics: %s\n", showJobMetrics ? "enabled" : "disabled");
+			DebugPrint::Print("main", "Debug ShowJobMetrics: %s\n", showJobMetrics ? "enabled" : "disabled");
 
 			if (showJobMetrics)
 			{
 				jobWindow = std::make_unique<DebugJobWindow>("Job System");
-				printf("Created Job system debug window\n");
+				DebugPrint::Print("main", "Created Job system debug window\n");
+			}
+		}
+
+		if (debug.contains("ShowPrintControls"))
+		{
+			showPrintControls = debug["ShowPrintControls"];
+			DebugPrint::Print("main", "Debug ShowPrintControls: %s\n", showPrintControls ? "enabled" : "disabled");
+
+			if (showPrintControls)
+			{
+				printControlWindow = std::make_unique<DebugPrintControlWindow>("Print Controls");
+				DebugPrint::Print("main", "Created Print control debug window\n");
 			}
 		}
 	}
@@ -249,20 +267,20 @@ int main(int argc, char *argv[])
 	std::shared_ptr<NavMeshPath> navmeshPath = nullptr;
 
 	// Main loop
-	printf("Skeleton Adventure Game:\n");
-	printf("  WASD - move playerCharacter\n");
-	printf("  Q/E - camera zoom in/out\n");
-	printf("  R - reset camera\n");
-	printf("  T - test camera smooth movement\n");
-	printf("  Y - test camera smooth zoom\n");
-	printf("  U - test camera shake\n");
-	printf("  1/2 - switch animations (idle/walk)\n");
-	printf("  SPACE - reset playerCharacter position\n");
-	printf("  N - toggle navmesh visualization\n");
-	printf("  M - toggle navmesh points visualization\n");
-	printf("  P - place/update navmesh point at player position\n");
-	printf("  L - pathfind to navmesh point from player\n");
-	printf("  ESC - quit\n");
+	DebugPrint::Print("main", "Skeleton Adventure Game:\n");
+	DebugPrint::Print("main", "  WASD - move playerCharacter\n");
+	DebugPrint::Print("main", "  Q/E - camera zoom in/out\n");
+	DebugPrint::Print("main", "  R - reset camera\n");
+	DebugPrint::Print("main", "  T - test camera smooth movement\n");
+	DebugPrint::Print("main", "  Y - test camera smooth zoom\n");
+	DebugPrint::Print("main", "  U - test camera shake\n");
+	DebugPrint::Print("main", "  1/2 - switch animations (idle/walk)\n");
+	DebugPrint::Print("main", "  SPACE - reset playerCharacter position\n");
+	DebugPrint::Print("main", "  N - toggle navmesh visualization\n");
+	DebugPrint::Print("main", "  M - toggle navmesh points visualization\n");
+	DebugPrint::Print("main", "  P - place/update navmesh point at player position\n");
+	DebugPrint::Print("main", "  L - pathfind to navmesh point from player\n");
+	DebugPrint::Print("main", "  ESC - quit\n");
 	while (cf_app_is_running())
 	{
 		// Begin profiling the frame
@@ -332,14 +350,14 @@ int main(int argc, char *argv[])
 		if (cf_key_just_pressed(CF_KEY_N))
 		{
 			showNavMesh = !showNavMesh;
-			printf("NavMesh visualization: %s\n", showNavMesh ? "ON" : "OFF");
+			DebugPrint::Print("main", "NavMesh visualization: %s\n", showNavMesh ? "ON" : "OFF");
 		}
 
 		// NavMesh points visualization toggle
 		if (cf_key_just_pressed(CF_KEY_M))
 		{
 			showNavMeshPoints = !showNavMeshPoints;
-			printf("NavMesh points visualization: %s\n", showNavMeshPoints ? "ON" : "OFF");
+			DebugPrint::Print("main", "NavMesh points visualization: %s\n", showNavMeshPoints ? "ON" : "OFF");
 		}
 
 		// Place/update NavMesh point at player position
@@ -352,7 +370,7 @@ int main(int argc, char *argv[])
 			}
 			// Add new point at player position
 			level.getNavMesh().addPoint("player_marker", playerPosition);
-			printf("NavMesh point placed at player position (%.1f, %.1f)\n", playerPosition.x, playerPosition.y);
+			DebugPrint::Print("main", "NavMesh point placed at player position (%.1f, %.1f)\n", playerPosition.x, playerPosition.y);
 		}
 
 		// Pathfind to NavMesh point from player position
@@ -362,7 +380,7 @@ int main(int argc, char *argv[])
 			const NavMeshPoint *targetPoint = level.getNavMesh().getPoint("player_marker");
 			if (targetPoint != nullptr)
 			{
-				printf("Attempting to pathfind from player (%.1f, %.1f) to marker (%.1f, %.1f)\n",
+				DebugPrint::Print("main", "Attempting to pathfind from player (%.1f, %.1f) to marker (%.1f, %.1f)\n",
 					   playerPosition.x, playerPosition.y, targetPoint->position.x, targetPoint->position.y);
 
 				// Generate path using NavMesh (which tracks all paths)
@@ -370,16 +388,16 @@ int main(int argc, char *argv[])
 
 				if (navmeshPath && navmeshPath->isValid())
 				{
-					printf("Path generated successfully with %d waypoints\n", navmeshPath->getWaypointCount());
+					DebugPrint::Print("main", "Path generated successfully with %d waypoints\n", navmeshPath->getWaypointCount());
 				}
 				else
 				{
-					printf("Failed to generate path\n");
+					DebugPrint::Print("main", "Failed to generate path\n");
 				}
 			}
 			else
 			{
-				printf("No 'player_marker' point found. Press P to place a marker first.\n");
+				DebugPrint::Print("main", "No 'player_marker' point found. Press P to place a marker first.\n");
 			}
 		}
 
@@ -573,6 +591,12 @@ int main(int argc, char *argv[])
 		if (jobWindow)
 		{
 			jobWindow->render();
+		}
+
+		// Render Print control window if enabled
+		if (printControlWindow)
+		{
+			printControlWindow->render();
 		}
 
 		app_draw_onto_screen();

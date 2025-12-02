@@ -3,6 +3,7 @@
 #include <functional>
 #include <spng.h>
 #include <vector>
+#include "DebugPrint.h"
 
 tsx::tsx(const std::string &path) : path(path)
 {
@@ -11,7 +12,7 @@ tsx::tsx(const std::string &path) : path(path)
 
 bool tsx::parse(const std::string &path)
 {
-    printf("Attempting to read TSX file: %s\n", path.c_str());
+    DebugPrint::Print("Level", "Attempting to read TSX file: %s\n", path.c_str());
 
     // Read the entire file using Cute Framework's VFS
     size_t file_size = 0;
@@ -19,22 +20,22 @@ bool tsx::parse(const std::string &path)
 
     if (file_data == nullptr)
     {
-        printf("Failed to read TSX file: %s (file_data is null)\n", path.c_str());
-        printf("Check if:\n");
-        printf("  1. The file exists at the specified path\n");
-        printf("  2. The file system is properly mounted\n");
-        printf("  3. The path format is correct (use forward slashes)\n");
+        DebugPrint::Print("Level", "Failed to read TSX file: %s (file_data is null)\n", path.c_str());
+        DebugPrint::Print("Level", "Check if:\n");
+        DebugPrint::Print("Level", "  1. The file exists at the specified path\n");
+        DebugPrint::Print("Level", "  2. The file system is properly mounted\n");
+        DebugPrint::Print("Level", "  3. The path format is correct (use forward slashes)\n");
         return false;
     }
 
     if (file_size == 0)
     {
-        printf("Failed to read TSX file: %s (file_size is 0)\n", path.c_str());
+        DebugPrint::Print("Level", "Failed to read TSX file: %s (file_size is 0)\n", path.c_str());
         cf_free(file_data);
         return false;
     }
 
-    printf("Successfully read %zu bytes from file: %s\n", file_size, path.c_str());
+    DebugPrint::Print("Level", "Successfully read %zu bytes from file: %s\n", file_size, path.c_str());
 
     // Parse the XML data using pugixml
     pugi::xml_parse_result result = load_buffer(file_data, file_size);
@@ -44,38 +45,38 @@ bool tsx::parse(const std::string &path)
 
     if (!result)
     {
-        printf("XML parsing failed for file '%s': %s at offset %td\n",
-               path.c_str(), result.description(), result.offset);
+        DebugPrint::Print("Level", "XML parsing failed for file '%s': %s at offset %td\n",
+                          path.c_str(), result.description(), result.offset);
         return false;
     }
 
     // Store the path after successful parsing
     this->path = path;
-    printf("Successfully parsed TSX file: %s\n", path.c_str());
+    DebugPrint::Print("Level", "Successfully parsed TSX file: %s\n", path.c_str());
 
     return true;
 }
 
 void tsx::debugPrint() const
 {
-    printf("\n=== TSX Content Analysis ===\n");
-    printf("File: %s\n", path.c_str());
+    DebugPrint::Print("Level", "\n=== TSX Content Analysis ===\n");
+    DebugPrint::Print("Level", "File: %s\n", path.c_str());
 
     if (empty())
     {
-        printf("TSX document is empty or failed to load\n");
-        printf("=== End TSX Content ===\n\n");
+        DebugPrint::Print("Level", "TSX document is empty or failed to load\n");
+        DebugPrint::Print("Level", "=== End TSX Content ===\n\n");
         return;
     }
 
     // Get the root element
     pugi::xml_node root = document_element();
-    printf("Root element: %s\n", root.name());
+    DebugPrint::Print("Level", "Root element: %s\n", root.name());
 
     // Print all attributes of the root
     for (pugi::xml_attribute attr : root.attributes())
     {
-        printf("  Attribute: %s = %s\n", attr.name(), attr.value());
+        DebugPrint::Print("Level", "  Attribute: %s = %s\n", attr.name(), attr.value());
     }
 
     // Recursively print all child elements
@@ -86,20 +87,20 @@ void tsx::debugPrint() const
         // Print element name
         if (node.type() == pugi::node_element)
         {
-            printf("%sElement: %s", indent.c_str(), node.name());
+            DebugPrint::Print("Level", "%sElement: %s", indent.c_str(), node.name());
 
             // Print attributes
             for (pugi::xml_attribute attr : node.attributes())
             {
-                printf(" [%s=%s]", attr.name(), attr.value());
+                DebugPrint::Print("Level", " [%s=%s]", attr.name(), attr.value());
             }
 
             // Print text content if any
             if (node.text() && strlen(node.text().get()) > 0)
             {
-                printf(" Text: \"%s\"", node.text().get());
+                DebugPrint::Print("Level", " Text: \"%s\"", node.text().get());
             }
-            printf("\n");
+            DebugPrint::Print("Level", "\n");
 
             // Print children
             for (pugi::xml_node child : node.children())
@@ -115,14 +116,14 @@ void tsx::debugPrint() const
         printNode(child, 1);
     }
 
-    printf("=== End TSX Content ===\n\n");
+    DebugPrint::Print("Level", "=== End TSX Content ===\n\n");
 }
 
 // Helper function to crop a tile from PNG data using libspng
 CF_Sprite tsx::cropTileFromPNG(const std::string &image_path, int tile_x, int tile_y, int tile_width, int tile_height) const
 {
-    printf("Cropping tile (%d, %d) from %s with size (%dx%d)\n",
-           tile_x, tile_y, image_path.c_str(), tile_width, tile_height);
+    DebugPrint::Print("Level", "Cropping tile (%d, %d) from %s with size (%dx%d)\n",
+                      tile_x, tile_y, image_path.c_str(), tile_width, tile_height);
 
     // Read the entire PNG file using Cute Framework's VFS
     size_t file_size = 0;
@@ -130,7 +131,7 @@ CF_Sprite tsx::cropTileFromPNG(const std::string &image_path, int tile_x, int ti
 
     if (file_data == nullptr)
     {
-        printf("Failed to read PNG file: %s\n", image_path.c_str());
+        DebugPrint::Print("Level", "Failed to read PNG file: %s\n", image_path.c_str());
         return cf_sprite_defaults();
     }
 
@@ -138,7 +139,7 @@ CF_Sprite tsx::cropTileFromPNG(const std::string &image_path, int tile_x, int ti
     spng_ctx *ctx = spng_ctx_new(0);
     if (ctx == nullptr)
     {
-        printf("Failed to create spng context\n");
+        DebugPrint::Print("Level", "Failed to create spng context\n");
         cf_free(file_data);
         return cf_sprite_defaults();
     }
@@ -147,7 +148,7 @@ CF_Sprite tsx::cropTileFromPNG(const std::string &image_path, int tile_x, int ti
     int ret = spng_set_png_buffer(ctx, file_data, file_size);
     if (ret != 0)
     {
-        printf("spng_set_png_buffer error: %s\n", spng_strerror(ret));
+        DebugPrint::Print("Level", "spng_set_png_buffer error: %s\n", spng_strerror(ret));
         spng_ctx_free(ctx);
         cf_free(file_data);
         return cf_sprite_defaults();
@@ -158,14 +159,14 @@ CF_Sprite tsx::cropTileFromPNG(const std::string &image_path, int tile_x, int ti
     ret = spng_get_ihdr(ctx, &ihdr);
     if (ret != 0)
     {
-        printf("spng_get_ihdr error: %s\n", spng_strerror(ret));
+        DebugPrint::Print("Level", "spng_get_ihdr error: %s\n", spng_strerror(ret));
         spng_ctx_free(ctx);
         cf_free(file_data);
         return cf_sprite_defaults();
     }
 
-    printf("Original image size: %dx%d, bit depth: %d, color type: %d\n",
-           ihdr.width, ihdr.height, ihdr.bit_depth, ihdr.color_type);
+    DebugPrint::Print("Level", "Original image size: %dx%d, bit depth: %d, color type: %d\n",
+                      ihdr.width, ihdr.height, ihdr.bit_depth, ihdr.color_type);
 
     // Calculate tile coordinates in pixels
     int pixel_x = tile_x * tile_width;
@@ -174,8 +175,8 @@ CF_Sprite tsx::cropTileFromPNG(const std::string &image_path, int tile_x, int ti
     // Validate tile bounds
     if (pixel_x + tile_width > (int)ihdr.width || pixel_y + tile_height > (int)ihdr.height)
     {
-        printf("Tile bounds exceed image dimensions. Tile: (%d,%d)+(%dx%d), Image: %dx%d\n",
-               pixel_x, pixel_y, tile_width, tile_height, ihdr.width, ihdr.height);
+        DebugPrint::Print("Level", "Tile bounds exceed image dimensions. Tile: (%d,%d)+(%dx%d), Image: %dx%d\n",
+                          pixel_x, pixel_y, tile_width, tile_height, ihdr.width, ihdr.height);
         spng_ctx_free(ctx);
         cf_free(file_data);
         return cf_sprite_defaults();
@@ -186,7 +187,7 @@ CF_Sprite tsx::cropTileFromPNG(const std::string &image_path, int tile_x, int ti
     ret = spng_decoded_image_size(ctx, SPNG_FMT_RGBA8, &image_size);
     if (ret != 0)
     {
-        printf("spng_decoded_image_size error: %s\n", spng_strerror(ret));
+        DebugPrint::Print("Level", "spng_decoded_image_size error: %s\n", spng_strerror(ret));
         spng_ctx_free(ctx);
         cf_free(file_data);
         return cf_sprite_defaults();
@@ -197,7 +198,7 @@ CF_Sprite tsx::cropTileFromPNG(const std::string &image_path, int tile_x, int ti
     ret = spng_decode_image(ctx, full_image.data(), image_size, SPNG_FMT_RGBA8, 0);
     if (ret != 0)
     {
-        printf("spng_decode_image error: %s\n", spng_strerror(ret));
+        DebugPrint::Print("Level", "spng_decode_image error: %s\n", spng_strerror(ret));
         spng_ctx_free(ctx);
         cf_free(file_data);
         return cf_sprite_defaults();
@@ -235,8 +236,8 @@ CF_Sprite tsx::cropTileFromPNG(const std::string &image_path, int tile_x, int ti
     // This prevents the GPU from interpolating between neighboring texels
     // cf_sprite_set_filter(&tile_sprite, CF_FILTER_NEAREST);
 
-    printf("Successfully cropped tile (%d, %d) -> pixel region (%d, %d) size (%dx%d)\n",
-           tile_x, tile_y, pixel_x, pixel_y, tile_width, tile_height);
+    DebugPrint::Print("Level", "Successfully cropped tile (%d, %d) -> pixel region (%d, %d) size (%dx%d)\n",
+                      tile_x, tile_y, pixel_x, pixel_y, tile_width, tile_height);
 
     return tile_sprite;
 }
@@ -247,7 +248,7 @@ CF_Sprite tsx::getTile(int tile_x, int tile_y) const
     //  Return default sprite if document is empty
     if (empty())
     {
-        printf("TSX document is empty, returning default sprite\n");
+        DebugPrint::Print("Level", "TSX document is empty, returning default sprite\n");
         return cf_sprite_defaults();
     }
 
@@ -260,7 +261,7 @@ CF_Sprite tsx::getTile(int tile_x, int tile_y) const
     pugi::xml_node image_node = root.child("image");
     if (!image_node)
     {
-        printf("No image node found in TSX file\n");
+        DebugPrint::Print("Level", "No image node found in TSX file\n");
         return cf_sprite_defaults();
     }
 
@@ -268,7 +269,7 @@ CF_Sprite tsx::getTile(int tile_x, int tile_y) const
     std::string image_source = image_node.attribute("source").value();
     if (image_source.empty())
     {
-        printf("No image source found in TSX file\n");
+        DebugPrint::Print("Level", "No image source found in TSX file\n");
         return cf_sprite_defaults();
     }
 
@@ -284,8 +285,8 @@ CF_Sprite tsx::getTile(int tile_x, int tile_y) const
         image_path = image_source;
     }
 
-    printf("Creating tile sprite from: %s at tile coordinates (%d, %d)\n",
-           image_path.c_str(), tile_x, tile_y);
+    DebugPrint::Print("Level", "Creating tile sprite from: %s at tile coordinates (%d, %d)\n",
+                      image_path.c_str(), tile_x, tile_y);
 
     // Use the new PNG cropping function
     CF_Sprite tile_sprite = cropTileFromPNG(image_path, tile_x, tile_y, tile_width, tile_height);

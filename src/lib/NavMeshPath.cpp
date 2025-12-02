@@ -1,4 +1,5 @@
 #include "NavMeshPath.h"
+#include "DebugPrint.h"
 #include "NavMesh.h"
 #include "NavMeshPoint.h"
 #include "CFNativeCamera.h"
@@ -40,13 +41,13 @@ bool NavMeshPath::generate(const NavMesh &navmesh, CF_V2 start, CF_V2 end)
 
     if (start_poly == -1)
     {
-        printf("NavMeshPath::generate - Start position (%.1f, %.1f) is not on navmesh\n", start.x, start.y);
+        DebugPrint::Print("NavMesh", "NavMeshPath::generate - Start position (%.1f, %.1f) is not on navmesh\n", start.x, start.y);
         return false;
     }
 
     if (end_poly == -1)
     {
-        printf("NavMeshPath::generate - End position (%.1f, %.1f) is not on navmesh\n", end.x, end.y);
+        DebugPrint::Print("NavMesh", "NavMeshPath::generate - End position (%.1f, %.1f) is not on navmesh\n", end.x, end.y);
         return false;
     }
 
@@ -61,8 +62,8 @@ bool NavMeshPath::generate(const NavMesh &navmesh, CF_V2 start, CF_V2 end)
         auto end_time = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
 
-        printf("NavMeshPath::generate - Direct path (same polygon), length: %.1f, time: %.3f ms\n",
-               total_length, duration.count() / 1000.0);
+        DebugPrint::Print("NavMesh", "NavMeshPath::generate - Direct path (same polygon), length: %.1f, time: %.3f ms\n",
+                          total_length, duration.count() / 1000.0);
         return true;
     }
 
@@ -75,12 +76,12 @@ bool NavMeshPath::generate(const NavMesh &navmesh, CF_V2 start, CF_V2 end)
     if (is_valid)
     {
         calculateLength();
-        printf("NavMeshPath::generate - Path found with %d waypoints, length: %.1f, time: %.3f ms\n",
-               getWaypointCount(), total_length, duration.count() / 1000.0);
+        DebugPrint::Print("NavMesh", "NavMeshPath::generate - Path found with %d waypoints, length: %.1f, time: %.3f ms\n",
+                          getWaypointCount(), total_length, duration.count() / 1000.0);
     }
     else
     {
-        printf("NavMeshPath::generate - No path found, time: %.3f ms\n", duration.count() / 1000.0);
+        DebugPrint::Print("NavMesh", "NavMeshPath::generate - No path found, time: %.3f ms\n", duration.count() / 1000.0);
     }
 
     return is_valid;
@@ -93,13 +94,13 @@ bool NavMeshPath::generateToPoint(const NavMesh &navmesh, CF_V2 start, const std
 
     if (!point)
     {
-        printf("NavMeshPath::generateToPoint - Point '%s' not found on navmesh\n", point_name.c_str());
+        DebugPrint::Print("NavMesh", "NavMeshPath::generateToPoint - Point '%s' not found on navmesh\n", point_name.c_str());
         clear();
         return false;
     }
 
-    printf("NavMeshPath::generateToPoint - Pathfinding to point '%s' at (%.1f, %.1f)\n",
-           point_name.c_str(), point->position.x, point->position.y);
+    DebugPrint::Print("NavMesh", "NavMeshPath::generateToPoint - Pathfinding to point '%s' at (%.1f, %.1f)\n",
+                      point_name.c_str(), point->position.x, point->position.y);
 
     return generate(navmesh, start, point->position);
 }

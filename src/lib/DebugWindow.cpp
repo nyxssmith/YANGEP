@@ -1,4 +1,5 @@
 #include "DebugWindow.h"
+#include "DebugPrint.h"
 #include <stdio.h>
 
 DebugWindow::DebugWindow(const std::string &title)
@@ -14,7 +15,7 @@ void DebugWindow::render()
         ImGui_Text("Debug Window: %s", m_title.c_str());
         if (ImGui_ButtonEx("Press me!", (ImVec2){0, 0}))
         {
-            printf("Debug button clicked!\n");
+            DebugPrint::Print("DebugWindows", "Debug button clicked!\n");
         }
         static char buffer[256] = "Debug input...";
         ImGui_InputTextEx("Debug Input", buffer, sizeof(buffer), 0, NULL, NULL);

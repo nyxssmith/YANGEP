@@ -2,11 +2,12 @@
 #include "CFNativeCamera.h"
 #include "JobSystem.h"
 #include <cstdio>
+#include "DebugPrint.h"
 
 LevelV1::LevelV1(const std::string &directoryPath)
     : levelDirectory(directoryPath), levelName(""), levelMap(nullptr), navmesh(nullptr), entities(), details(), tileWidth(0), tileHeight(0), initialized(false)
 {
-    printf("LevelV1: Loading level from directory: %s\n", directoryPath.c_str());
+    DebugPrint::Print("Level", "LevelV1: Loading level from directory: %s\n", directoryPath.c_str());
 
     // Extract level name from directory path (last component)
     size_t lastSlash = directoryPath.find_last_of('/');
@@ -24,19 +25,19 @@ LevelV1::LevelV1(const std::string &directoryPath)
     try
     {
         details = DataFile(detailsPath);
-        printf("LevelV1: Loaded details from: %s\n", detailsPath.c_str());
+        DebugPrint::Print("Level", "LevelV1: Loaded details from: %s\n", detailsPath.c_str());
 
         // Override level name if present in details
         if (details.contains("name"))
         {
             levelName = details["name"].get<std::string>();
-            printf("LevelV1: Level name from details: %s\n", levelName.c_str());
+            DebugPrint::Print("Level", "LevelV1: Level name from details: %s\n", levelName.c_str());
         }
     }
     catch (const std::exception &e)
     {
-        printf("LevelV1 Warning: Could not load details.json: %s\n", e.what());
-        printf("LevelV1: Using extracted directory name: %s\n", levelName.c_str());
+        DebugPrint::Print("Level", "LevelV1 Warning: Could not load details.json: %s\n", e.what());
+        DebugPrint::Print("Level", "LevelV1: Using extracted directory name: %s\n", levelName.c_str());
     }
 
     // Load entities.json
@@ -44,11 +45,11 @@ LevelV1::LevelV1(const std::string &directoryPath)
     try
     {
         entities = DataFile(entitiesPath);
-        printf("LevelV1: Loaded entities from: %s\n", entitiesPath.c_str());
+        DebugPrint::Print("Level", "LevelV1: Loaded entities from: %s\n", entitiesPath.c_str());
     }
     catch (const std::exception &e)
     {
-        printf("LevelV1 Warning: Could not load entities.json: %s\n", e.what());
+        DebugPrint::Print("Level", "LevelV1 Warning: Could not load entities.json: %s\n", e.what());
         // Initialize with empty entities structure
         entities = DataFile();
         entities["entities"] = nlohmann::json::array();
@@ -59,19 +60,19 @@ LevelV1::LevelV1(const std::string &directoryPath)
     try
     {
         levelMap = std::make_unique<tmx>(tmxPath);
-        printf("LevelV1: Loaded TMX map from: %s\n", tmxPath.c_str());
+        DebugPrint::Print("Level", "LevelV1: Loaded TMX map from: %s\n", tmxPath.c_str());
 
         // Cache tile dimensions
         tileWidth = levelMap->getTileWidth();
         tileHeight = levelMap->getTileHeight();
-        printf("LevelV1: Tile dimensions: %dx%d\n", tileWidth, tileHeight);
+        DebugPrint::Print("Level", "LevelV1: Tile dimensions: %dx%d\n", tileWidth, tileHeight);
 
         // Debug print TMX info
         levelMap->debugPrint();
     }
     catch (const std::exception &e)
     {
-        printf("LevelV1 Error: Could not load TMX map from %s: %s\n", tmxPath.c_str(), e.what());
+        DebugPrint::Print("Level", "LevelV1 Error: Could not load TMX map from %s: %s\n", tmxPath.c_str(), e.what());
         return;
     }
 
@@ -82,34 +83,34 @@ LevelV1::LevelV1(const std::string &directoryPath)
     if (levelMap->getNavMeshLayerCount() > 0)
     {
         auto navLayer = levelMap->getNavMeshLayer(0);
-        printf("LevelV1: Building navmesh from layer: %s\n", navLayer->name.c_str());
+        DebugPrint::Print("Level", "LevelV1: Building navmesh from layer: %s\n", navLayer->name.c_str());
 
         navmesh->buildFromLayer(navLayer, tileWidth, tileHeight, 0.0f, 0.0f, false);
-        printf("LevelV1: NavMesh created with %d polygons\n", navmesh->getPolygonCount());
+        DebugPrint::Print("Level", "LevelV1: NavMesh created with %d polygons\n", navmesh->getPolygonCount());
     }
     else
     {
-        printf("LevelV1 Warning: No navmesh layers found in level. Navigation mesh not created.\n");
+        DebugPrint::Print("Level", "LevelV1 Warning: No navmesh layers found in level. Navigation mesh not created.\n");
     }
 
     // Create agents from entities.json
     if (entities.contains("entities") && entities["entities"].is_array())
     {
-        printf("LevelV1: Creating agents from entities.json...\n");
+        DebugPrint::Print("Level", "LevelV1: Creating agents from entities.json...\n");
 
         for (const auto &entityEntry : entities["entities"])
         {
             // Check if entity has required fields
             if (!entityEntry.contains("datafilePath"))
             {
-                printf("LevelV1 Warning: Entity missing 'datafilePath' field, skipping\n");
+                DebugPrint::Print("Level", "LevelV1 Warning: Entity missing 'datafilePath' field, skipping\n");
                 continue;
             }
 
             std::string datafilePath = entityEntry["datafilePath"].get<std::string>();
             std::string entityName = entityEntry.contains("name") ? entityEntry["name"].get<std::string>() : "unnamed";
 
-            printf("LevelV1: Creating agent '%s' from: %s\n", entityName.c_str(), datafilePath.c_str());
+            DebugPrint::Print("Level", "LevelV1: Creating agent '%s' from: %s\n", entityName.c_str(), datafilePath.c_str());
 
             // Create the agent
             auto agent = createAgentFromFile(datafilePath);
@@ -132,36 +133,36 @@ LevelV1::LevelV1(const std::string &directoryPath)
                         float worldY = tileY * tileHeight;
 
                         agent->setPosition(cf_v2(worldX, worldY));
-                        printf("LevelV1:   Set agent position to tile (%.1f, %.1f) = world (%.1f, %.1f)\n",
-                               tileX, tileY, worldX, worldY);
+                        DebugPrint::Print("Level", "LevelV1:   Set agent position to tile (%.1f, %.1f) = world (%.1f, %.1f)\n",
+                                          tileX, tileY, worldX, worldY);
                     }
                 }
 
-                printf("LevelV1:   Agent '%s' created successfully\n", entityName.c_str());
+                DebugPrint::Print("Level", "LevelV1:   Agent '%s' created successfully\n", entityName.c_str());
             }
             else
             {
-                printf("LevelV1 Error: Failed to create agent '%s'\n", entityName.c_str());
+                DebugPrint::Print("Level", "LevelV1 Error: Failed to create agent '%s'\n", entityName.c_str());
             }
         }
 
-        printf("LevelV1: Created %zu agents from entities.json\n", agents.size());
+        DebugPrint::Print("Level", "LevelV1: Created %zu agents from entities.json\n", agents.size());
     }
     else
     {
-        printf("LevelV1: No entities array found in entities.json\n");
+        DebugPrint::Print("Level", "LevelV1: No entities array found in entities.json\n");
     }
 
     // Mark as successfully initialized
     initialized = true;
-    printf("LevelV1: Level '%s' initialized successfully\n", levelName.c_str());
+    DebugPrint::Print("Level", "LevelV1: Level '%s' initialized successfully\n", levelName.c_str());
 }
 
 AnimatedDataCharacterNavMeshAgent *LevelV1::addAgent(std::unique_ptr<AnimatedDataCharacterNavMeshAgent> agent)
 {
     if (!agent)
     {
-        printf("LevelV1 Warning: Attempted to add null agent\n");
+        DebugPrint::Print("Level", "LevelV1 Warning: Attempted to add null agent\n");
         return nullptr;
     }
 
@@ -172,7 +173,7 @@ AnimatedDataCharacterNavMeshAgent *LevelV1::addAgent(std::unique_ptr<AnimatedDat
     }
 
     agents.push_back(std::move(agent));
-    printf("LevelV1: Added agent (total: %zu)\n", agents.size());
+    DebugPrint::Print("Level", "LevelV1: Added agent (total: %zu)\n", agents.size());
 
     return agents.back().get();
 }
@@ -183,11 +184,11 @@ AnimatedDataCharacterNavMeshAgent *LevelV1::createAgentFromFile(const std::strin
 
     if (!agent->init(entityDataPath))
     {
-        printf("LevelV1 Error: Failed to initialize agent from: %s\n", entityDataPath.c_str());
+        DebugPrint::Print("Level", "LevelV1 Error: Failed to initialize agent from: %s\n", entityDataPath.c_str());
         return nullptr;
     }
 
-    printf("LevelV1: Created agent from: %s\n", entityDataPath.c_str());
+    DebugPrint::Print("Level", "LevelV1: Created agent from: %s\n", entityDataPath.c_str());
     return addAgent(std::move(agent));
 }
 
@@ -195,7 +196,7 @@ AnimatedDataCharacterNavMeshAgent *LevelV1::getAgent(size_t index)
 {
     if (index >= agents.size())
     {
-        printf("LevelV1 Warning: Agent index %zu out of bounds (size: %zu)\n", index, agents.size());
+        DebugPrint::Print("Level", "LevelV1 Warning: Agent index %zu out of bounds (size: %zu)\n", index, agents.size());
         return nullptr;
     }
 
@@ -206,7 +207,7 @@ const AnimatedDataCharacterNavMeshAgent *LevelV1::getAgent(size_t index) const
 {
     if (index >= agents.size())
     {
-        printf("LevelV1 Warning: Agent index %zu out of bounds (size: %zu)\n", index, agents.size());
+        DebugPrint::Print("Level", "LevelV1 Warning: Agent index %zu out of bounds (size: %zu)\n", index, agents.size());
         return nullptr;
     }
 
@@ -216,7 +217,7 @@ const AnimatedDataCharacterNavMeshAgent *LevelV1::getAgent(size_t index) const
 void LevelV1::clearAgents()
 {
     agents.clear();
-    printf("LevelV1: Cleared all agents\n");
+    DebugPrint::Print("Level", "LevelV1: Cleared all agents\n");
 }
 
 void LevelV1::updateAgents(float dt)
@@ -310,45 +311,45 @@ void LevelV1::render(const CFNativeCamera &camera, const DataFile &config, float
 
 void LevelV1::debugPrint() const
 {
-    printf("=== LevelV1 Debug Info ===\n");
-    printf("  Directory: %s\n", levelDirectory.c_str());
-    printf("  Name: %s\n", levelName.c_str());
-    printf("  Initialized: %s\n", initialized ? "yes" : "no");
-    printf("  Tile Size: %dx%d\n", tileWidth, tileHeight);
+    DebugPrint::Print("Level", "=== LevelV1 Debug Info ===\n");
+    DebugPrint::Print("Level", "  Directory: %s\n", levelDirectory.c_str());
+    DebugPrint::Print("Level", "  Name: %s\n", levelName.c_str());
+    DebugPrint::Print("Level", "  Initialized: %s\n", initialized ? "yes" : "no");
+    DebugPrint::Print("Level", "  Tile Size: %dx%d\n", tileWidth, tileHeight);
 
     if (levelMap)
     {
-        printf("  TMX Map: loaded\n");
+        DebugPrint::Print("Level", "  TMX Map: loaded\n");
     }
     else
     {
-        printf("  TMX Map: NOT loaded\n");
+        DebugPrint::Print("Level", "  TMX Map: NOT loaded\n");
     }
 
     if (navmesh)
     {
-        printf("  NavMesh: %d polygons, %d points\n",
-               navmesh->getPolygonCount(), navmesh->getPointCount());
+        DebugPrint::Print("Level", "  NavMesh: %d polygons, %d points\n",
+                          navmesh->getPolygonCount(), navmesh->getPointCount());
     }
     else
     {
-        printf("  NavMesh: NOT created\n");
+        DebugPrint::Print("Level", "  NavMesh: NOT created\n");
     }
 
-    printf("  Agents: %zu\n", agents.size());
+    DebugPrint::Print("Level", "  Agents: %zu\n", agents.size());
     for (size_t i = 0; i < agents.size(); ++i)
     {
         if (agents[i])
         {
             v2 pos = agents[i]->getPosition();
-            printf("    Agent %zu: pos=(%.1f, %.1f), polygon=%d, walkable=%s\n",
-                   i, pos.x, pos.y,
-                   agents[i]->getCurrentPolygon(),
-                   agents[i]->isOnWalkableArea() ? "yes" : "no");
+            DebugPrint::Print("Level", "    Agent %zu: pos=(%.1f, %.1f), polygon=%d, walkable=%s\n",
+                              i, pos.x, pos.y,
+                              agents[i]->getCurrentPolygon(),
+                              agents[i]->isOnWalkableArea() ? "yes" : "no");
         }
     }
 
-    printf("  Entities: %s\n", entities.dump(2).c_str());
-    printf("  Details: %s\n", details.dump(2).c_str());
-    printf("========================\n");
+    DebugPrint::Print("Level", "  Entities: %s\n", entities.dump(2).c_str());
+    DebugPrint::Print("Level", "  Details: %s\n", details.dump(2).c_str());
+    DebugPrint::Print("Level", "========================\n");
 }

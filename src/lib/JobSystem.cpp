@@ -1,4 +1,5 @@
 #include "JobSystem.h"
+#include "DebugPrint.h"
 #include <thread>
 #include <stdio.h>
 
@@ -22,7 +23,7 @@ bool JobSystem::initialize(int num_threads)
 {
     if (s_initialized)
     {
-        printf("JobSystem: Already initialized\n");
+        DebugPrint::Print("JobSystem", "JobSystem: Already initialized\n");
         return true;
     }
 
@@ -40,13 +41,13 @@ bool JobSystem::initialize(int num_threads)
     //  double the number of worker threads
     num_threads *= 2;
     s_workerCount = num_threads;
-    printf("JobSystem: Initializing with %d worker threads (detected %d CPU cores)\n",
-           num_threads, cf_core_count());
+    DebugPrint::Print("JobSystem", "JobSystem: Initializing with %d worker threads (detected %d CPU cores)\n",
+                      num_threads, cf_core_count());
 
     s_threadpool = cf_make_threadpool(num_threads);
     if (s_threadpool == nullptr)
     {
-        printf("JobSystem: Failed to create threadpool\n");
+        DebugPrint::Print("JobSystem", "JobSystem: Failed to create threadpool\n");
         return false;
     }
 
@@ -71,7 +72,7 @@ void JobSystem::shutdown()
         return;
     }
 
-    printf("JobSystem: Shutting down\n");
+    DebugPrint::Print("JobSystem", "JobSystem: Shutting down\n");
 
     cf_destroy_threadpool(s_threadpool);
     s_threadpool = nullptr;
@@ -164,7 +165,7 @@ void JobSystem::submitJob(std::function<void()> work, const std::string &jobName
 {
     if (!s_initialized)
     {
-        printf("JobSystem: Not initialized, cannot submit job\n");
+        DebugPrint::Print("JobSystem", "JobSystem: Not initialized, cannot submit job\n");
         return;
     }
 
@@ -210,7 +211,7 @@ void JobSystem::kickAndWait()
 {
     if (!s_initialized)
     {
-        printf("JobSystem: Not initialized, cannot kick jobs\n");
+        DebugPrint::Print("JobSystem", "JobSystem: Not initialized, cannot kick jobs\n");
         return;
     }
 
@@ -237,7 +238,7 @@ void JobSystem::kick()
 {
     if (!s_initialized)
     {
-        printf("JobSystem: Not initialized, cannot kick jobs\n");
+        DebugPrint::Print("JobSystem", "JobSystem: Not initialized, cannot kick jobs\n");
         return;
     }
 

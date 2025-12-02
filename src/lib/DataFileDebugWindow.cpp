@@ -1,4 +1,5 @@
 #include "DataFileDebugWindow.h"
+#include "DebugPrint.h"
 #include <stdio.h>
 #include <dcimgui.h>
 #include <algorithm>
@@ -565,11 +566,11 @@ void DataFileDebugWindow::render()
         {
             if (m_dataFile.save())
             {
-                printf("DataFile saved successfully\n");
+                DebugPrint::Print("DebugWindows", "DataFile saved successfully\n");
             }
             else
             {
-                printf("Failed to save DataFile\n");
+                DebugPrint::Print("DebugWindows", "Failed to save DataFile\n");
             }
         }
 
@@ -579,11 +580,11 @@ void DataFileDebugWindow::render()
             if (m_dataFile.load())
             {
                 populateFromJson();
-                printf("DataFile reloaded successfully\n");
+                DebugPrint::Print("DebugWindows", "DataFile reloaded successfully\n");
             }
             else
             {
-                printf("Failed to reload DataFile\n");
+                DebugPrint::Print("DebugWindows", "Failed to reload DataFile\n");
             }
         }
 

@@ -2,6 +2,7 @@
 #include <cute.h>
 #include <cmath>
 #include <algorithm>
+#include "DebugPrint.h"
 
 // Constants
 static const float DEFAULT_MIN_ZOOM = 0.1f;
@@ -117,7 +118,7 @@ void Camera::apply()
 {
     if (m_is_applied)
     {
-        printf("Warning: Camera::apply() called when camera is already applied. Call restore() first.\n");
+        DebugPrint::Print("Camera", "Warning: Camera::apply() called when camera is already applied. Call restore() first.\n");
         return;
     }
 
@@ -166,7 +167,7 @@ void Camera::restore()
 {
     if (!m_is_applied)
     {
-        printf("Warning: Camera::restore() called when camera is not applied.\n");
+        DebugPrint::Print("Camera", "Warning: Camera::restore() called when camera is not applied.\n");
         return;
     }
 
