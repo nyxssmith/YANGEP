@@ -36,7 +36,9 @@ bool JobSystem::initialize(int num_threads)
             num_threads = 1; // At least one worker thread
         }
     }
-
+    // TODO tune this either 1 per core pinned, or N processes
+    //  double the number of worker threads
+    num_threads *= 2;
     s_workerCount = num_threads;
     printf("JobSystem: Initializing with %d worker threads (detected %d CPU cores)\n",
            num_threads, cf_core_count());

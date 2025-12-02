@@ -393,7 +393,7 @@ void AnimatedDataCharacter::render(v2 renderPosition)
         return;
 
     renderCurrentFrameAt(renderPosition);
-    renderDebugInfo();
+    // renderDebugInfo();
 }
 
 // Render the current animation frame

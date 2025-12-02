@@ -26,7 +26,7 @@ WanderBehavior::~WanderBehavior()
 std::shared_ptr<NavMeshPath> WanderBehavior::GetNewPath(NavMesh &navmesh, CF_V2 currentPosition, int radius)
 {
     // DEBUG: 2 second wait
-    // std::this_thread::sleep_for(std::chrono::seconds(2));
+    std::this_thread::sleep_for(std::chrono::seconds(2));
 
     // Maximum attempts to find a valid point on the navmesh
     const int maxAttempts = 20;
