@@ -4,18 +4,14 @@
 #include <cute.h>
 #include "SpriteAnimationLoader.h"
 #include "DataFile.h"
+#include "HitBox.h"
+#include "lib/HitBox.h"
 
 using namespace Cute;
 
 // Forward declaration
 class LevelV1;
-
-enum class HitboxShape
-{
-    SQUARE,
-    T_SHAPE,
-    L_SHAPE
-};
+class HitBox;
 
 // Demo class to showcase the new SpriteAnimationLoader system
 class AnimatedDataCharacter
@@ -52,10 +48,7 @@ public:
     void setLevel(LevelV1* level);
 
     // Get hitbox in world coordinates
-    CF_Aabb getHitbox() const;
-
-    // Hitbox shape methods
-    void setShape(HitboxShape shape);
+    HitBox* getHitbox() const;
 
 private:
     // The animation loader
@@ -95,7 +88,8 @@ private:
     bool hitboxActive;
     float hitboxSize;
     float hitboxDistance;
-    HitboxShape hitboxShape;
+    HitBox* hitbox;
+    HitboxShape hitboxShape; // for constructor
     LevelV1* level; // Pointer to level for agent queries
 
     // Helper methods
@@ -106,10 +100,6 @@ private:
     void renderCurrentFrameAt(v2 renderPosition);
     void renderDebugInfo();
     void renderHitbox();
-
-
-    std::vector<CF_Aabb> getHitboxTShape() const;
-    std::vector<CF_Aabb> getHitboxLShape() const;
 };
 
 #endif // ANIMATED_DATA_CHARACTER_H

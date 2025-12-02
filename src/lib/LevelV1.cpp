@@ -356,7 +356,8 @@ void LevelV1::debugPrint() const
     printf("========================\n");
 }
 
-bool LevelV1::checkAgentsInArea(const std::vector<CF_Aabb>& areas, const AnimatedDataCharacter* excludeAgent) const
+bool LevelV1::checkAgentsInArea(const std::vector<CF_Aabb>& areas, CF_Aabb areasBounds,
+    const AnimatedDataCharacter* excludeAgent) const
 {
     for (const auto& agent : agents)
     {
@@ -375,6 +376,10 @@ bool LevelV1::checkAgentsInArea(const std::vector<CF_Aabb>& areas, const Animate
             cf_v2(agentPos.x - agentRadius, agentPos.y - agentRadius),
             cf_v2(agentPos.x + agentRadius, agentPos.y + agentRadius)
         );
+
+        // check if agent is in the areas bounds
+        if (!cf_overlaps(areasBounds, agentBox))
+            continue;
 
         // Check if agent overlaps with any of the areas
         for (const auto& area : areas)
