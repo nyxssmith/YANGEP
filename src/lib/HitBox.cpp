@@ -9,7 +9,7 @@ HitBox::~HitBox()
 {
 }
 
-static HitBox* createHitBox(HitboxShape shape, float hitboxSize, float hitboxDistance)
+HitBox* HitBox::createHitBox(HitboxShape shape, float hitboxSize, float hitboxDistance)
 {
     HitBox* hitBox = new HitBox();
     switch (shape)

@@ -109,6 +109,7 @@ add_executable(
 	src/lib/NavMeshPoint.cpp
 	src/lib/NavMeshPath.cpp
 	src/lib/AnimatedDataCharacter.cpp
+	src/lib/HitBox.cpp
 	src/lib/AnimatedDataCharacterNavMeshAgent.cpp
 	src/lib/Behavior.cpp
 	src/lib/WanderBehavior.cpp
@@ -172,6 +173,7 @@ add_executable(${PROJECT_NAME}_tests
     src/lib/NavMeshPoint.cpp
     src/lib/NavMeshPath.cpp
     src/lib/AnimatedDataCharacter.cpp
+    src/lib/HitBox.cpp
     src/lib/AnimatedDataCharacterNavMeshAgent.cpp
     src/lib/Behavior.cpp
     src/lib/WanderBehavior.cpp
