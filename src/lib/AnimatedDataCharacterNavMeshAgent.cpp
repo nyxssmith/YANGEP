@@ -101,9 +101,10 @@ bool AnimatedDataCharacterNavMeshAgent::backgroundUpdate(float dt, bool isOnScre
     backgroundJobRunning.store(true);
     backgroundJobComplete.store(false);
 
-    // Submit the calculation job to the job system with a name
-    JobSystem::submitJob([this, dt, isOnScreen]()
-                         {
+    // Submit the calculation job to the job system with fair scheduling
+    // Using 'this' as owner ID ensures round-robin processing across all agents
+    JobSystem::submitFairJob([this, dt, isOnScreen]()
+                             {
         if (isOnScreen)
         {
             this->OnScreenBackgroundUpdateJob(dt);
@@ -116,7 +117,8 @@ bool AnimatedDataCharacterNavMeshAgent::backgroundUpdate(float dt, bool isOnScre
         // Mark job as complete
         this->backgroundJobComplete.store(true);
         this->backgroundJobRunning.store(false); },
-                         "Agent AI Update");
+                             this,
+                             "Agent AI Update");
 
     return true; // Job submitted successfully
 }
