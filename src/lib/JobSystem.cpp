@@ -1,7 +1,6 @@
 #include "JobSystem.h"
 #include <thread>
 #include <stdio.h>
-#include <unordered_map>
 
 // Static member initialization
 CF_Threadpool *JobSystem::s_threadpool = nullptr;
@@ -11,12 +10,6 @@ std::vector<std::string> JobSystem::s_workerCurrentJobs;
 std::vector<bool> JobSystem::s_workerBusy;
 std::mutex JobSystem::s_trackingMutex;
 int JobSystem::s_pendingJobs = 0;
-
-// Fair queue static member initialization
-std::queue<void *> JobSystem::s_ownerQueue;
-std::unordered_map<void *, std::queue<JobSystem::FairJobData>> JobSystem::s_ownerJobs;
-std::unordered_set<void *> JobSystem::s_ownersInProgress;
-std::mutex JobSystem::s_fairQueueMutex;
 
 bool JobSystem::initialize(int num_threads)
 {
@@ -75,15 +68,6 @@ void JobSystem::shutdown()
     s_workerCurrentJobs.clear();
     s_workerBusy.clear();
     s_pendingJobs = 0;
-
-    // Clear fair queue data
-    {
-        std::lock_guard<std::mutex> lock(s_fairQueueMutex);
-        while (!s_ownerQueue.empty())
-            s_ownerQueue.pop();
-        s_ownerJobs.clear();
-        s_ownersInProgress.clear();
-    }
 }
 
 bool JobSystem::isInitialized()
@@ -154,12 +138,6 @@ void JobSystem::kick()
         return;
     }
 
-    // Process fair queue jobs first - submit up to worker count jobs
-    for (int i = 0; i < s_workerCount; ++i)
-    {
-        processNextFairJob();
-    }
-
     cf_threadpool_kick(s_threadpool);
 }
 
@@ -202,107 +180,4 @@ int JobSystem::getPendingJobCount()
 {
     std::lock_guard<std::mutex> lock(s_trackingMutex);
     return s_pendingJobs;
-}
-
-int JobSystem::getFairQueueOwnerCount()
-{
-    std::lock_guard<std::mutex> lock(s_fairQueueMutex);
-    return static_cast<int>(s_ownerQueue.size());
-}
-
-void JobSystem::submitFairJob(std::function<void()> work, void *ownerId, const std::string &jobName)
-{
-    if (!s_initialized)
-    {
-        printf("JobSystem: Not initialized, cannot submit fair job\n");
-        return;
-    }
-
-    std::lock_guard<std::mutex> lock(s_fairQueueMutex);
-
-    // Create the job data
-    FairJobData jobData{work, jobName, ownerId};
-
-    // Check if this owner already has jobs queued
-    bool ownerExists = (s_ownerJobs.find(ownerId) != s_ownerJobs.end() && !s_ownerJobs[ownerId].empty());
-    bool ownerInProgress = (s_ownersInProgress.find(ownerId) != s_ownersInProgress.end());
-
-    // Add the job to this owner's queue
-    s_ownerJobs[ownerId].push(jobData);
-
-    // If this owner isn't already in the round-robin queue and not currently being processed, add them
-    if (!ownerExists && !ownerInProgress)
-    {
-        s_ownerQueue.push(ownerId);
-    }
-
-    {
-        std::lock_guard<std::mutex> trackLock(s_trackingMutex);
-        s_pendingJobs++;
-    }
-}
-
-void JobSystem::fairJobCallback(void *userData)
-{
-    FairJobData *data = static_cast<FairJobData *>(userData);
-    if (data && data->work)
-    {
-        // Execute the job
-        data->work();
-
-        // Decrement pending jobs counter
-        {
-            std::lock_guard<std::mutex> lock(s_trackingMutex);
-            if (s_pendingJobs > 0)
-            {
-                s_pendingJobs--;
-            }
-        }
-
-        // After job completes, re-queue the owner if they have more jobs
-        void *ownerId = data->ownerId;
-        {
-            std::lock_guard<std::mutex> lock(s_fairQueueMutex);
-
-            // Remove from in-progress set
-            s_ownersInProgress.erase(ownerId);
-
-            // If owner has more jobs, add them back to the end of the queue
-            if (s_ownerJobs.find(ownerId) != s_ownerJobs.end() && !s_ownerJobs[ownerId].empty())
-            {
-                s_ownerQueue.push(ownerId);
-            }
-        }
-    }
-    delete data;
-}
-
-void JobSystem::processNextFairJob()
-{
-    std::lock_guard<std::mutex> lock(s_fairQueueMutex);
-
-    if (s_ownerQueue.empty())
-    {
-        return;
-    }
-
-    // Get the next owner in round-robin order
-    void *ownerId = s_ownerQueue.front();
-    s_ownerQueue.pop();
-
-    // Get their next job
-    if (s_ownerJobs.find(ownerId) == s_ownerJobs.end() || s_ownerJobs[ownerId].empty())
-    {
-        return; // No jobs for this owner (shouldn't happen)
-    }
-
-    FairJobData jobData = s_ownerJobs[ownerId].front();
-    s_ownerJobs[ownerId].pop();
-
-    // Mark this owner as in-progress so they don't get re-queued until their job completes
-    s_ownersInProgress.insert(ownerId);
-
-    // Submit the job to the threadpool
-    FairJobData *data = new FairJobData{jobData.work, jobData.name, jobData.ownerId};
-    cf_threadpool_add_task(s_threadpool, fairJobCallback, data);
 }
