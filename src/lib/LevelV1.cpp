@@ -171,6 +171,9 @@ AnimatedDataCharacterNavMeshAgent *LevelV1::addAgent(std::unique_ptr<AnimatedDat
         agent->setNavMesh(navmesh.get());
     }
 
+    // Set the agent's level pointer so it can query other agents
+    agent->setLevel(this);
+
     agents.push_back(std::move(agent));
     printf("LevelV1: Added agent (total: %zu)\n", agents.size());
 
@@ -351,4 +354,42 @@ void LevelV1::debugPrint() const
     printf("  Entities: %s\n", entities.dump(2).c_str());
     printf("  Details: %s\n", details.dump(2).c_str());
     printf("========================\n");
+}
+
+bool LevelV1::checkAgentsInArea(const std::vector<CF_Aabb>& areas, CF_Aabb areasBounds,
+    const AnimatedDataCharacter* excludeAgent) const
+{
+    for (const auto& agent : agents)
+    {
+        if (!agent)
+            continue;
+
+        // Skip the excluded agent
+        // AnimatedDataCharacterNavMeshAgent inherits from AnimatedDataCharacter, so we can compare directly
+        if (excludeAgent && static_cast<const AnimatedDataCharacter*>(agent.get()) == excludeAgent)
+            continue;
+
+        // Get agent position and create a simple AABB for the agent
+        v2 agentPos = agent->getPosition();
+        float agentRadius = 32.0f; // Approximate agent size
+        CF_Aabb agentBox = cf_make_aabb(
+            cf_v2(agentPos.x - agentRadius, agentPos.y - agentRadius),
+            cf_v2(agentPos.x + agentRadius, agentPos.y + agentRadius)
+        );
+
+        // check if agent is in the areas bounds
+        if (!cf_overlaps(areasBounds, agentBox))
+            continue;
+
+        // Check if agent overlaps with any of the areas
+        for (const auto& area : areas)
+        {
+            if (cf_overlaps(area, agentBox))
+            {
+                return true;
+            }
+        }
+    }
+
+    return false;
 }

@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug YANGEP",
+            "name": "Debug YANGEP (Linux)",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/yangep",
@@ -30,6 +30,15 @@
                 "MIMode": "gdb",
                 "miDebuggerPath": "/usr/bin/gdb"
             }
+        },
+        {
+            "name": "Debug YANGEP (macOS)",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/yangep",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "Build Project"
         }
     ]
 }

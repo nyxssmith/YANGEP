@@ -1,9 +1,11 @@
-#include "AnimatedDataCharacter.h"
-#include "DataFile.h"
 #include <cute.h>
 #include <cute_draw.h>
 #include <cute_math.h>
 #include <spng.h>
+#include "AnimatedDataCharacter.h"
+#include "DataFile.h"
+#include "LevelV1.h"
+#include "HitBox.h"
 
 using namespace Cute;
 
@@ -46,7 +48,8 @@ static bool getPNGDimensions(const std::string &path, uint32_t &width, uint32_t 
 AnimatedDataCharacter::AnimatedDataCharacter()
     : initialized(false), demoTime(0.0f), directionChangeTime(0.0f), animationChangeTime(0.0f),
       currentAnimation("idle"), currentDirection(Direction::DOWN), currentFrame(0), frameTimer(0.0f),
-      position(v2(0, 0)), wasMoving(false)
+      position(v2(0, 0)), wasMoving(false), hitboxActive(false), hitboxSize(32.0f), hitboxDistance(48.0f),
+      hitboxShape(HitboxShape::SQUARE), level(nullptr)
 {
     // Initialize input state
     for (int i = 0; i < 4; i++)
@@ -90,6 +93,34 @@ bool AnimatedDataCharacter::init(const std::string &datafilePath)
         return false;
     }
 
+    // Load hitbox shape if specified in JSON, default to SQUARE
+    if (charConfig.contains("hitbox_shape") && charConfig["hitbox_shape"].is_string()
+    && charConfig.contains("hitbox_size") && charConfig["hitbox_size"].is_number()
+    && charConfig.contains("hitbox_distance") && charConfig["hitbox_distance"].is_number())
+    {
+
+        hitboxSize = charConfig["hitbox_size"].get<float>();
+        hitboxDistance = charConfig["hitbox_distance"].get<float>();
+        std::string hitboxShapeString = charConfig["hitbox_shape"].get<std::string>();
+        if (hitboxShapeString == "T_SHAPE")
+        {
+            hitbox = HitBox::createHitBox(HitboxShape::T_SHAPE, hitboxSize, hitboxDistance);
+        }
+        else if (hitboxShapeString == "L_SHAPE")
+        {
+            hitbox = HitBox::createHitBox(HitboxShape::L_SHAPE, hitboxSize, hitboxDistance);
+        }
+        else
+        {
+            hitbox = HitBox::createHitBox(HitboxShape::SQUARE, hitboxSize, hitboxDistance);
+        }
+    }
+    else
+    {
+        // Default to SQUARE if not specified
+        hitbox = HitBox::createHitBox(HitboxShape::SQUARE, hitboxSize, hitboxDistance);
+    }
+
     std::string characterName = charConfig["name"];
     printf("AnimatedDataCharacter: Loading character '%s' from datafile\n", characterName.c_str());
 
@@ -114,15 +145,34 @@ bool AnimatedDataCharacter::init(const std::string &datafilePath)
         return false;
     }
 
+    // Collect all layer filenames
+    std::vector<std::string> layerFilenames;
+    for (size_t i = 0; i < charConfig["layers"].size(); i++)
+    {
+        auto &layer = charConfig["layers"][i];
+        if (layer.contains("filename"))
+        {
+            std::string filename = layer["filename"];
+            layerFilenames.push_back(filename);
+            printf("AnimatedDataCharacter: Added layer %zu: %s\n", i, filename.c_str());
+        }
+    }
+
+    if (layerFilenames.empty())
+    {
+        printf("AnimatedDataCharacter: ERROR: No valid layer filenames found\n");
+        return false;
+    }
+
     std::string layerFilename = firstLayer["filename"];
     int tileSize = firstLayer["tile_size"];
 
-    printf("AnimatedDataCharacter: Using layer filename: %s\n", layerFilename.c_str());
+    printf("AnimatedDataCharacter: Using %zu layers\n", layerFilenames.size());
     printf("AnimatedDataCharacter: Using tile size: %d\n", tileSize);
 
-    // Construct paths using the layer filename from the datafile
-    std::string idle_body_path = "assets/Art/AnimationsSheets/idle/" + layerFilename;
-    std::string walkcycle_body_path = "assets/Art/AnimationsSheets/walkcycle/" + layerFilename;
+    // Construct paths using the first layer filename from the datafile for dimension checking
+    std::string idle_body_path = "assets/Art/AnimationsSheets/idle/" + layerFilenames[0];
+    std::string walkcycle_body_path = "assets/Art/AnimationsSheets/walkcycle/" + layerFilenames[0];
 
     // Get dimensions for idle animation
     uint32_t idle_width = 0, idle_height = 0;
@@ -154,13 +204,13 @@ bool AnimatedDataCharacter::init(const std::string &datafilePath)
     printf("AnimatedDataCharacter: Walkcycle dimensions: %ux%u (frames: %d, directions: %d)\n",
            walkcycle_width, walkcycle_height, walkcycle_frames_per_direction, walkcycle_direction_count);
 
-    // Define the animation layouts using computed values
+    // Define the animation layouts using computed values and all layer filenames
     std::vector<AnimationLayout> layouts = {
         AnimationLayout(
-            "idle", tileSize, tileSize, idle_frames_per_direction, idle_direction_count,
+            "idle", layerFilenames, tileSize, tileSize, idle_frames_per_direction, idle_direction_count,
             {Direction::UP, Direction::LEFT, Direction::DOWN, Direction::RIGHT}),
         AnimationLayout(
-            "walkcycle", tileSize, tileSize, walkcycle_frames_per_direction, walkcycle_direction_count,
+            "walkcycle", layerFilenames, tileSize, tileSize, walkcycle_frames_per_direction, walkcycle_direction_count,
             {Direction::UP, Direction::LEFT, Direction::DOWN, Direction::RIGHT})};
 
     // Load the animation table using our new system
@@ -270,13 +320,10 @@ void AnimatedDataCharacter::handleInput()
         frameTimer = 0.0f;
     }
 
-    // Handle space bar - toggle between idle and walkcycle
+    // Handle space bar - toggle hitbox visibility
     if (spacePressed)
     {
-        std::string newAnimation = (currentAnimation == "idle") ? "walkcycle" : "idle";
-        currentAnimation = newAnimation;
-        currentFrame = 0;
-        frameTimer = 0.0f;
+        hitboxActive = !hitboxActive;
     }
 
     // Handle R key - reset position
@@ -364,6 +411,7 @@ void AnimatedDataCharacter::render()
         return;
 
     renderCurrentFrame();
+    renderHitbox();
     renderDebugInfo();
 }
 
@@ -374,6 +422,7 @@ void AnimatedDataCharacter::render(v2 renderPosition)
         return;
 
     renderCurrentFrameAt(renderPosition);
+    renderHitbox();
     renderDebugInfo();
 }
 
@@ -397,11 +446,23 @@ void AnimatedDataCharacter::renderCurrentFrame()
 
     if (!currentAnimFrame)
         return;
-    if (currentAnimFrame->sprite.w <= 0 || currentAnimFrame->sprite.h <= 0)
-        return;
 
-    // Render the sprite
-    cf_draw_sprite(&currentAnimFrame->sprite);
+    // Render all sprite layers (bottom to top)
+    if (!currentAnimFrame->spriteLayers.empty())
+    {
+        for (const auto &layerSprite : currentAnimFrame->spriteLayers)
+        {
+            if (layerSprite.w > 0 && layerSprite.h > 0)
+            {
+                cf_draw_sprite(&layerSprite);
+            }
+        }
+    }
+    else if (currentAnimFrame->sprite.w > 0 && currentAnimFrame->sprite.h > 0)
+    {
+        // Fallback to legacy single sprite
+        cf_draw_sprite(&currentAnimFrame->sprite);
+    }
 }
 
 // Render the current animation frame at a specific position
@@ -424,13 +485,27 @@ void AnimatedDataCharacter::renderCurrentFrameAt(v2 renderPosition)
 
     if (!currentAnimFrame)
         return;
-    if (currentAnimFrame->sprite.w <= 0 || currentAnimFrame->sprite.h <= 0)
-        return;
 
-    // Apply position transformation and render sprite
+    // Apply position transformation and render all sprite layers (bottom to top)
     cf_draw_push();
     cf_draw_translate_v2(renderPosition);
-    cf_draw_sprite(&currentAnimFrame->sprite);
+
+    if (!currentAnimFrame->spriteLayers.empty())
+    {
+        for (const auto &layerSprite : currentAnimFrame->spriteLayers)
+        {
+            if (layerSprite.w > 0 && layerSprite.h > 0)
+            {
+                cf_draw_sprite(&layerSprite);
+            }
+        }
+    }
+    else if (currentAnimFrame->sprite.w > 0 && currentAnimFrame->sprite.h > 0)
+    {
+        // Fallback to legacy single sprite
+        cf_draw_sprite(&currentAnimFrame->sprite);
+    }
+
     cf_draw_pop();
 }
 
@@ -480,6 +555,10 @@ void AnimatedDataCharacter::renderDebugInfo()
     snprintf(stateText, sizeof(stateText), "Position: (%.1f, %.1f)", position.x, position.y);
     draw_text(stateText, textPos);
 
+    textPos.y -= 20;
+    snprintf(stateText, sizeof(stateText), "Hitbox: %s", hitboxActive ? "ON" : "OFF");
+    draw_text(stateText, textPos);
+
     cf_draw_pop_color();
 }
 
@@ -498,4 +577,39 @@ v2 AnimatedDataCharacter::getPosition() const
 void AnimatedDataCharacter::setPosition(v2 newPosition)
 {
     position = newPosition;
+}
+
+void AnimatedDataCharacter::setLevel(LevelV1* levelPtr)
+{
+    level = levelPtr;
+}
+
+void AnimatedDataCharacter::renderHitbox()
+{
+    if (!hitboxActive)
+        return;
+
+    // Default color is yellow
+    CF_Color color = cf_make_color_rgb(255, 255, 0); // Yellow
+
+    // Check if any agents are in any of the hitbox areas, using the hitbox's bounding box for the areas bounds
+    if (level && level->checkAgentsInArea(hitbox->getBoxes(currentDirection, position),
+     hitbox->getBoundingBox(currentDirection, position), this))
+    {
+        // Change to orange if agents are detected
+        color = cf_make_color_rgb(255, 165, 0); // Orange
+    }
+
+    // Draw all hitboxes as thick outlined rectangles
+    cf_draw_push_color(color);
+    cf_draw_push_antialias(false);
+
+    for (const auto& hitbox : hitbox->getBoxes(currentDirection, position))
+    {
+        // Draw thick outline (thickness, chubbiness/rounding)
+        cf_draw_box(hitbox, 3.0f, 0.0f);
+    }
+
+    cf_draw_pop_antialias();
+    cf_draw_pop_color();
 }

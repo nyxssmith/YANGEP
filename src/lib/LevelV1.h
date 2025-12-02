@@ -10,6 +10,7 @@
 
 // Forward declarations
 class CFNativeCamera;
+class AnimatedDataCharacter;
 
 /**
  * LevelV1 - A level loader and manager class
@@ -140,6 +141,14 @@ public:
      * Remove all agents from the level
      */
     void clearAgents();
+
+    /**
+     * Check if any agents (excluding the specified agent) are within a given area
+     * @param area The AABB area to check
+     * @param excludeAgent Agent to exclude from the check (usually the one doing the checking)
+     * @return true if any other agents are found in the area, false otherwise
+     */
+    bool checkAgentsInArea(const std::vector<CF_Aabb>& areas, CF_Aabb areasBounds, const AnimatedDataCharacter* excludeAgent = nullptr) const;
 
     /**
      * Update all agents in the level

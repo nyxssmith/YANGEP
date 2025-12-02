@@ -212,15 +212,18 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	// Create skeleton player character
-	AnimatedDataCharacter skeleton;
+	// Create playerCharacter player character
+	AnimatedDataCharacter playerCharacter;
 	v2 playerPosition = cf_v2(0.0f, 0.0f); // Start at world origin
 
-	if (!skeleton.init("assets/DataFiles/EntityFiles/skeleton.json"))
+	if (!playerCharacter.init("assets/DataFiles/EntityFiles/player.json"))
 	{
 		destroy_app();
 		return -1;
 	}
+
+	// Connect player to level for hitbox collision detection
+	playerCharacter.setLevel(&level);
 
 	// Create CF-native camera with explicit viewport dimensions from config
 	CFNativeCamera cfCamera(cf_v2(0.0f, 0.0f), 1.0f, viewportWidth, viewportHeight);
@@ -250,14 +253,14 @@ int main(int argc, char *argv[])
 
 	// Main loop
 	printf("Skeleton Adventure Game:\n");
-	printf("  WASD - move skeleton\n");
+	printf("  WASD - move playerCharacter\n");
 	printf("  Q/E - camera zoom in/out\n");
 	printf("  R - reset camera\n");
 	printf("  T - test camera smooth movement\n");
 	printf("  Y - test camera smooth zoom\n");
 	printf("  U - test camera shake\n");
 	printf("  1/2 - switch animations (idle/walk)\n");
-	printf("  SPACE - reset skeleton position\n");
+	printf("  SPACE - reset playerCharacter position\n");
 	printf("  N - toggle navmesh visualization\n");
 	printf("  M - toggle navmesh points visualization\n");
 	printf("  P - place/update navmesh point at player position\n");
@@ -304,15 +307,8 @@ int main(int argc, char *argv[])
 			moveVector.x += playerSpeed;
 		}
 
-		// Handle skeleton animation input (1/2 for idle/walk)
-		// skeleton.handleInput();
-
-		// Reset skeleton position
-		if (cf_key_just_pressed(CF_KEY_SPACE))
-		{
-			skeleton.setPosition(cf_v2(0.0f, 0.0f));
-			playerPosition = cf_v2(0.0f, 0.0f);
-		}
+		// Handle playerCharacter animation input (1/2 for idle/walk)
+		// playerCharacter.handleInput();
 
 		// Camera feature demo keys
 		if (cf_key_just_pressed(CF_KEY_T))
@@ -408,11 +404,11 @@ int main(int argc, char *argv[])
 			fpsWindow->markSection("Agent Update");
 		}
 
-		// Update skeleton animation with move vector
-		skeleton.update(dt, moveVector);
+		// Update playerCharacter animation with move vector
+		playerCharacter.update(dt, moveVector);
 
-		// Get updated player position from skeleton (for camera following)
-		playerPosition = skeleton.getPosition();
+		// Get updated player position from playerCharacter (for camera following)
+		playerPosition = playerCharacter.getPosition();
 		if (fpsWindow)
 		{
 			fpsWindow->markSection("Player Update");
@@ -506,8 +502,8 @@ int main(int argc, char *argv[])
 			cf_draw_pop_color();
 		}
 
-		// Render skeleton at player position (world space)
-		skeleton.render(playerPosition);
+		// Render playerCharacter at player position (world space)
+		playerCharacter.render(playerPosition);
 
 		if (fpsWindow)
 		{

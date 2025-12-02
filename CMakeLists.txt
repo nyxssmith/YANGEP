@@ -6,6 +6,9 @@ project(
 	LANGUAGES CXX
 )
 
+# Export compile commands for IDE support
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # Must have at least C++20.
 set(CMAKE_CXX_STANDARD 20)
 
@@ -106,6 +109,7 @@ add_executable(
 	src/lib/NavMeshPoint.cpp
 	src/lib/NavMeshPath.cpp
 	src/lib/AnimatedDataCharacter.cpp
+	src/lib/HitBox.cpp
 	src/lib/AnimatedDataCharacterNavMeshAgent.cpp
 	src/lib/Behavior.cpp
 	src/lib/WanderBehavior.cpp
@@ -135,25 +139,6 @@ target_link_libraries(${PROJECT_NAME}
     pugixml
     spng_static
 )
-
-# Animation Demo executable - dedicated demo for sprite animation system
-add_executable(${PROJECT_NAME}_animation_demo
-    src/animation_demo_main.cpp
-    src/lib/SpriteAnimationLoader.cpp
-    src/lib/AnimatedDataCharacter.cpp
-    src/lib/Utils.cpp
-    src/lib/DataFile.cpp
-)
-
-# Animation demo needs the same dependencies as main project
-target_link_libraries(${PROJECT_NAME}_animation_demo
-    cute
-    nlohmann_json::nlohmann_json
-    spng_static
-)
-target_include_directories(${PROJECT_NAME}_animation_demo PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)
-
-
 
 # For convenience on Windows, set MSVC debugger's working directory in the build folder.
 # Also ask MSVC to make the game the startup project.
@@ -188,6 +173,7 @@ add_executable(${PROJECT_NAME}_tests
     src/lib/NavMeshPoint.cpp
     src/lib/NavMeshPath.cpp
     src/lib/AnimatedDataCharacter.cpp
+    src/lib/HitBox.cpp
     src/lib/AnimatedDataCharacterNavMeshAgent.cpp
     src/lib/Behavior.cpp
     src/lib/WanderBehavior.cpp
