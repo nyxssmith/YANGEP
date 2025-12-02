@@ -207,9 +207,7 @@ void AnimatedDataCharacterNavMeshAgent::OnScreenBackgroundUpdateJob(float dt)
             // get new path and exit
             const int wanderRadius = 500;
             // wander forever
-            // currentNavMeshPath = wanderBehavior.GetNewPath(*navmesh, currentPosition, wanderRadius);
-            // wander once
-            currentNavMeshPath = wanderOnceBehavior.GetNewPath(*navmesh, currentPosition, wanderRadius);
+            currentNavMeshPath = wanderBehavior.GetNewPath(*navmesh, currentPosition, wanderRadius);
 
             if (!currentNavMeshPath || !currentNavMeshPath->isValid())
             {
@@ -238,9 +236,7 @@ void AnimatedDataCharacterNavMeshAgent::OnScreenBackgroundUpdateJob(float dt)
         // get new path from wander behavior
         const int wanderRadius = 500;
         // wander forever
-        // currentNavMeshPath = wanderBehavior.GetNewPath(*navmesh, currentPosition, wanderRadius);
-        // wander once
-        currentNavMeshPath = wanderOnceBehavior.GetNewPath(*navmesh, currentPosition, wanderRadius);
+        currentNavMeshPath = wanderBehavior.GetNewPath(*navmesh, currentPosition, wanderRadius);
 
         backgroundMoveVector = cf_v2(0.0f, 0.0f);
     }

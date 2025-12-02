@@ -49,10 +49,11 @@ void DebugJobWindow::render()
     auto workerInfo = JobSystem::getWorkerInfo();
     for (const auto &worker : workerInfo)
     {
-        // Worker header with collapsing section
+        // Worker header with collapsing section - expanded by default
         char workerLabel[64];
-        snprintf(workerLabel, sizeof(workerLabel), "Worker %d", worker.workerId);
+        snprintf(workerLabel, sizeof(workerLabel), "Worker %d [%d queued]", worker.workerId, worker.queuedJobs);
 
+        ImGui_SetNextItemOpen(true, ImGuiCond_Once);
         if (ImGui_CollapsingHeader(workerLabel, 0))
         {
             // Status
@@ -65,6 +66,7 @@ void DebugJobWindow::render()
             {
                 ImGui_TextColored(ImVec4{0.5f, 0.5f, 0.5f, 1.0f}, "  Status: IDLE");
             }
+            ImGui_Text("  Queued Jobs: %d", worker.queuedJobs);
         }
     }
 
