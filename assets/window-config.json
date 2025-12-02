@@ -9,12 +9,12 @@
   "DebugWindows": [
     {
       "enabled": false,
-      "title": "DataFile Viewer",
+      "title": "Window Config",
       "dataFilePath": "/assets/window-config.json"
     },
     {
       "enabled": false,
-      "title": "Window Config Viewer",
+      "title": "Skeleton Datafile",
       "dataFilePath": "/assets/DataFiles/EntityFiles/skeleton.json"
     }
   ],
@@ -27,6 +27,7 @@
     "highlightLayerBorders": [],
     "highlightLayerOuterBorders": [],
     "ShowFPSMetrics": true,
-    "ShowJobMetrics": true
+    "ShowJobMetrics": true,
+    "ShowPrintControls": true
   }
 }

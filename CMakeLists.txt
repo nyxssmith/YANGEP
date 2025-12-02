@@ -97,6 +97,8 @@ add_executable(
 	src/lib/DebugWindowList.cpp
 	src/lib/DebugFPSWindow.cpp
 	src/lib/DebugJobWindow.cpp
+	src/lib/DebugPrint.cpp
+	src/lib/DebugPrintControlWindow.cpp
 	src/lib/Utils.cpp
 	src/lib/tsx.cpp
 	src/lib/tmx.cpp
@@ -144,6 +146,7 @@ add_executable(${PROJECT_NAME}_animation_demo
     src/lib/AnimatedDataCharacter.cpp
     src/lib/Utils.cpp
     src/lib/DataFile.cpp
+    src/lib/DebugPrint.cpp
 )
 
 # Animation demo needs the same dependencies as main project
@@ -195,6 +198,8 @@ add_executable(${PROJECT_NAME}_tests
     src/lib/WanderOnceBehavior.cpp
     src/lib/LevelV1.cpp
     src/lib/JobSystem.cpp
+	src/lib/DebugPrint.cpp
+
 )
 
 target_link_libraries(${PROJECT_NAME}_tests gtest gtest_main cute spng_static nlohmann_json::nlohmann_json pugixml-static)

@@ -4,6 +4,7 @@
 #include <cute_draw.h>
 #include <cute_math.h>
 #include <spng.h>
+#include "DebugPrint.h"
 
 using namespace Cute;
 
@@ -71,14 +72,14 @@ bool AnimatedDataCharacter::init(const std::string &datafilePath)
     // Load the datafile
     if (!datafile.load(datafilePath))
     {
-        printf("AnimatedDataCharacter: ERROR: Failed to load datafile from %s\n", datafilePath.c_str());
+        DebugPrint::Print("Character", "AnimatedDataCharacter: ERROR: Failed to load datafile from %s\n", datafilePath.c_str());
         return false;
     }
 
     // Validate datafile structure
     if (!datafile.contains("character_config"))
     {
-        printf("AnimatedDataCharacter: ERROR: Datafile missing 'character_config' section\n");
+        DebugPrint::Print("Character", "AnimatedDataCharacter: ERROR: Datafile missing 'character_config' section\n");
         return false;
     }
 
@@ -86,17 +87,17 @@ bool AnimatedDataCharacter::init(const std::string &datafilePath)
 
     if (!charConfig.contains("name") || !charConfig.contains("layers"))
     {
-        printf("AnimatedDataCharacter: ERROR: character_config missing required fields\n");
+        DebugPrint::Print("Character", "AnimatedDataCharacter: ERROR: character_config missing required fields\n");
         return false;
     }
 
     std::string characterName = charConfig["name"];
-    printf("AnimatedDataCharacter: Loading character '%s' from datafile\n", characterName.c_str());
+    DebugPrint::Print("Character", "AnimatedDataCharacter: Loading character '%s' from datafile\n", characterName.c_str());
 
     // Get the first layer from the layers array
     if (!charConfig["layers"].is_array() || charConfig["layers"].empty())
     {
-        printf("AnimatedDataCharacter: ERROR: character_config.layers is empty or not an array\n");
+        DebugPrint::Print("Character", "AnimatedDataCharacter: ERROR: character_config.layers is empty or not an array\n");
         return false;
     }
 
@@ -104,13 +105,13 @@ bool AnimatedDataCharacter::init(const std::string &datafilePath)
 
     if (!firstLayer.contains("filename"))
     {
-        printf("AnimatedDataCharacter: ERROR: First layer missing 'filename' field\n");
+        DebugPrint::Print("Character", "AnimatedDataCharacter: ERROR: First layer missing 'filename' field\n");
         return false;
     }
 
     if (!firstLayer.contains("tile_size"))
     {
-        printf("AnimatedDataCharacter: ERROR: First layer missing 'tile_size' field\n");
+        DebugPrint::Print("Character", "AnimatedDataCharacter: ERROR: First layer missing 'tile_size' field\n");
         return false;
     }
 
@@ -123,21 +124,21 @@ bool AnimatedDataCharacter::init(const std::string &datafilePath)
         {
             std::string filename = layer["filename"];
             layerFilenames.push_back(filename);
-            printf("AnimatedDataCharacter: Added layer %zu: %s\n", i, filename.c_str());
+            DebugPrint::Print("Character", "AnimatedDataCharacter: Added layer %zu: %s\n", i, filename.c_str());
         }
     }
 
     if (layerFilenames.empty())
     {
-        printf("AnimatedDataCharacter: ERROR: No valid layer filenames found\n");
+        DebugPrint::Print("Character", "AnimatedDataCharacter: ERROR: No valid layer filenames found\n");
         return false;
     }
 
     std::string layerFilename = firstLayer["filename"];
     int tileSize = firstLayer["tile_size"];
 
-    printf("AnimatedDataCharacter: Using %zu layers\n", layerFilenames.size());
-    printf("AnimatedDataCharacter: Using tile size: %d\n", tileSize);
+    DebugPrint::Print("Character", "AnimatedDataCharacter: Using %zu layers\n", layerFilenames.size());
+    DebugPrint::Print("Character", "AnimatedDataCharacter: Using tile size: %d\n", tileSize);
 
     // Construct paths using the first layer filename from the datafile for dimension checking
     std::string idle_body_path = "assets/Art/AnimationsSheets/idle/" + layerFilenames[0];
@@ -147,7 +148,7 @@ bool AnimatedDataCharacter::init(const std::string &datafilePath)
     uint32_t idle_width = 0, idle_height = 0;
     if (!getPNGDimensions(idle_body_path, idle_width, idle_height))
     {
-        printf("AnimatedDataCharacter: ERROR: Cannot read dimensions from %s\n", idle_body_path.c_str());
+        DebugPrint::Print("Character", "AnimatedDataCharacter: ERROR: Cannot read dimensions from %s\n", idle_body_path.c_str());
         return false;
     }
 
@@ -155,7 +156,7 @@ bool AnimatedDataCharacter::init(const std::string &datafilePath)
     uint32_t walkcycle_width = 0, walkcycle_height = 0;
     if (!getPNGDimensions(walkcycle_body_path, walkcycle_width, walkcycle_height))
     {
-        printf("AnimatedDataCharacter: ERROR: Cannot read dimensions from %s\n", walkcycle_body_path.c_str());
+        DebugPrint::Print("Character", "AnimatedDataCharacter: ERROR: Cannot read dimensions from %s\n", walkcycle_body_path.c_str());
         return false;
     }
 
@@ -168,10 +169,10 @@ bool AnimatedDataCharacter::init(const std::string &datafilePath)
     int walkcycle_frames_per_direction = walkcycle_width / tileSize;
     int walkcycle_direction_count = walkcycle_height / tileSize;
 
-    printf("AnimatedDataCharacter: Idle dimensions: %ux%u (frames: %d, directions: %d)\n",
-           idle_width, idle_height, idle_frames_per_direction, idle_direction_count);
-    printf("AnimatedDataCharacter: Walkcycle dimensions: %ux%u (frames: %d, directions: %d)\n",
-           walkcycle_width, walkcycle_height, walkcycle_frames_per_direction, walkcycle_direction_count);
+    DebugPrint::Print("Character", "AnimatedDataCharacter: Idle dimensions: %ux%u (frames: %d, directions: %d)\n",
+                      idle_width, idle_height, idle_frames_per_direction, idle_direction_count);
+    DebugPrint::Print("Character", "AnimatedDataCharacter: Walkcycle dimensions: %ux%u (frames: %d, directions: %d)\n",
+                      walkcycle_width, walkcycle_height, walkcycle_frames_per_direction, walkcycle_direction_count);
 
     // Define the animation layouts using computed values and all layer filenames
     std::vector<AnimationLayout> layouts = {
@@ -187,7 +188,7 @@ bool AnimatedDataCharacter::init(const std::string &datafilePath)
 
     if (animationTable.getAnimationNames().empty())
     {
-        printf("AnimatedDataCharacter: Failed to load animations from skeleton assets\n");
+        DebugPrint::Print("Character", "AnimatedDataCharacter: Failed to load animations from skeleton assets\n");
         return false;
     }
 

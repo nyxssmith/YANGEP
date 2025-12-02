@@ -1,2 +1,4 @@
 camera zoom and viewport desyncassets/Levels/test_one
 change render order based on height in world, not agents always on top
+needs a dispatch worker to both move jobs from central queue to all other workers, and to clean the navmesh paths
+some crashes on close/shutdown

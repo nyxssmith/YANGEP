@@ -1,4 +1,5 @@
 #include "DebugWindowList.h"
+#include "DebugPrint.h"
 #include <stdio.h>
 
 DebugWindowList::DebugWindowList()
@@ -11,7 +12,7 @@ int DebugWindowList::add(const std::string &filepath)
     // Check if this filepath already exists
     if (findIndexByPath(filepath) != -1)
     {
-        printf("Debug window for '%s' already exists\n", filepath.c_str());
+        DebugPrint::Print("DebugWindows", "Debug window for '%s' already exists\n", filepath.c_str());
         return -1;
     }
 
@@ -39,12 +40,12 @@ int DebugWindowList::add(const std::string &filepath)
         m_windows.push_back(std::move(entry));
         m_nextID++;
 
-        printf("Added debug window (ID: %d) for '%s'\n", assignedID, filepath.c_str());
+        DebugPrint::Print("DebugWindows", "Added debug window (ID: %d) for '%s'\n", assignedID, filepath.c_str());
         return assignedID;
     }
     catch (const std::exception &e)
     {
-        printf("Failed to add debug window for '%s': %s\n", filepath.c_str(), e.what());
+        DebugPrint::Print("DebugWindows", "Failed to add debug window for '%s': %s\n", filepath.c_str(), e.what());
         return -1;
     }
 }
@@ -54,11 +55,11 @@ bool DebugWindowList::removeByID(int id)
     int index = findIndexByID(id);
     if (index == -1)
     {
-        printf("Debug window with ID %d not found\n", id);
+        DebugPrint::Print("DebugWindows", "Debug window with ID %d not found\n", id);
         return false;
     }
 
-    printf("Removed debug window (ID: %d) for '%s'\n", id, m_windows[index].filepath.c_str());
+    DebugPrint::Print("DebugWindows", "Removed debug window (ID: %d) for '%s'\n", id, m_windows[index].filepath.c_str());
     m_windows.erase(m_windows.begin() + index);
     return true;
 }
@@ -68,12 +69,12 @@ bool DebugWindowList::removeByPath(const std::string &filepath)
     int index = findIndexByPath(filepath);
     if (index == -1)
     {
-        printf("Debug window for '%s' not found\n", filepath.c_str());
+        DebugPrint::Print("DebugWindows", "Debug window for '%s' not found\n", filepath.c_str());
         return false;
     }
 
     int id = m_windows[index].id;
-    printf("Removed debug window (ID: %d) for '%s'\n", id, filepath.c_str());
+    DebugPrint::Print("DebugWindows", "Removed debug window (ID: %d) for '%s'\n", id, filepath.c_str());
     m_windows.erase(m_windows.begin() + index);
     return true;
 }
@@ -96,7 +97,7 @@ size_t DebugWindowList::count() const
 
 void DebugWindowList::clear()
 {
-    printf("Clearing all debug windows (%zu total)\n", m_windows.size());
+    DebugPrint::Print("DebugWindows", "Clearing all debug windows (%zu total)\n", m_windows.size());
     m_windows.clear();
 }
 
