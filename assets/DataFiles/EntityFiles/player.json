@@ -2,6 +2,7 @@
   "name": "player",
   "character_config": {
     "name": "player",
+    "hitbox_shape": "T_SHAPE",
     "layers": [
       {
         "filename": "BODY_male.png",

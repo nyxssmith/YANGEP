@@ -7,6 +7,16 @@
 
 using namespace Cute;
 
+// Forward declaration
+class LevelV1;
+
+enum class HitboxShape
+{
+    SQUARE,
+    T_SHAPE,
+    L_SHAPE
+};
+
 // Demo class to showcase the new SpriteAnimationLoader system
 class AnimatedDataCharacter
 {
@@ -37,6 +47,15 @@ public:
 
     // Set current position
     void setPosition(v2 newPosition);
+
+    // Set the level for agent queries
+    void setLevel(LevelV1* level);
+
+    // Get hitbox in world coordinates
+    CF_Aabb getHitbox() const;
+
+    // Hitbox shape methods
+    void setShape(HitboxShape shape);
 
 private:
     // The animation loader
@@ -72,6 +91,13 @@ private:
     // Movement tracking for animation switching
     bool wasMoving;
 
+    // Hitbox state
+    bool hitboxActive;
+    float hitboxSize;
+    float hitboxDistance;
+    HitboxShape hitboxShape;
+    LevelV1* level; // Pointer to level for agent queries
+
     // Helper methods
     void cycleDirection();
     void cycleAnimation();
@@ -79,6 +105,11 @@ private:
     void renderCurrentFrame();
     void renderCurrentFrameAt(v2 renderPosition);
     void renderDebugInfo();
+    void renderHitbox();
+
+
+    std::vector<CF_Aabb> getHitboxTShape() const;
+    std::vector<CF_Aabb> getHitboxLShape() const;
 };
 
 #endif // ANIMATED_DATA_CHARACTER_H

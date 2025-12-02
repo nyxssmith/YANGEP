@@ -222,6 +222,9 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
+	// Connect player to level for hitbox collision detection
+	playerCharacter.setLevel(&level);
+
 	// Create CF-native camera with explicit viewport dimensions from config
 	CFNativeCamera cfCamera(cf_v2(0.0f, 0.0f), 1.0f, viewportWidth, viewportHeight);
 
@@ -306,13 +309,6 @@ int main(int argc, char *argv[])
 
 		// Handle playerCharacter animation input (1/2 for idle/walk)
 		// playerCharacter.handleInput();
-
-		// Reset playerCharacter position
-		if (cf_key_just_pressed(CF_KEY_SPACE))
-		{
-			playerCharacter.setPosition(cf_v2(0.0f, 0.0f));
-			playerPosition = cf_v2(0.0f, 0.0f);
-		}
 
 		// Camera feature demo keys
 		if (cf_key_just_pressed(CF_KEY_T))

@@ -1,9 +1,10 @@
-#include "AnimatedDataCharacter.h"
-#include "DataFile.h"
 #include <cute.h>
 #include <cute_draw.h>
 #include <cute_math.h>
 #include <spng.h>
+#include "AnimatedDataCharacter.h"
+#include "DataFile.h"
+#include "LevelV1.h"
 
 using namespace Cute;
 
@@ -46,7 +47,8 @@ static bool getPNGDimensions(const std::string &path, uint32_t &width, uint32_t 
 AnimatedDataCharacter::AnimatedDataCharacter()
     : initialized(false), demoTime(0.0f), directionChangeTime(0.0f), animationChangeTime(0.0f),
       currentAnimation("idle"), currentDirection(Direction::DOWN), currentFrame(0), frameTimer(0.0f),
-      position(v2(0, 0)), wasMoving(false)
+      position(v2(0, 0)), wasMoving(false), hitboxActive(false), hitboxSize(32.0f), hitboxDistance(48.0f),
+      hitboxShape(HitboxShape::SQUARE), level(nullptr)
 {
     // Initialize input state
     for (int i = 0; i < 4; i++)
@@ -88,6 +90,29 @@ bool AnimatedDataCharacter::init(const std::string &datafilePath)
     {
         printf("AnimatedDataCharacter: ERROR: character_config missing required fields\n");
         return false;
+    }
+
+    // Load hitbox shape if specified in JSON, default to SQUARE
+    if (charConfig.contains("hitbox_shape") && charConfig["hitbox_shape"].is_string())
+    {
+        std::string hitboxShapeString = charConfig["hitbox_shape"];
+        if (hitboxShapeString == "T_SHAPE")
+        {
+            hitboxShape = HitboxShape::T_SHAPE;
+        }
+        else if (hitboxShapeString == "L_SHAPE")
+        {
+            hitboxShape = HitboxShape::L_SHAPE;
+        }
+        else
+        {
+            hitboxShape = HitboxShape::SQUARE;
+        }
+    }
+    else
+    {
+        // Default to SQUARE if not specified
+        hitboxShape = HitboxShape::SQUARE;
     }
 
     std::string characterName = charConfig["name"];
@@ -289,13 +314,10 @@ void AnimatedDataCharacter::handleInput()
         frameTimer = 0.0f;
     }
 
-    // Handle space bar - toggle between idle and walkcycle
+    // Handle space bar - toggle hitbox visibility
     if (spacePressed)
     {
-        std::string newAnimation = (currentAnimation == "idle") ? "walkcycle" : "idle";
-        currentAnimation = newAnimation;
-        currentFrame = 0;
-        frameTimer = 0.0f;
+        hitboxActive = !hitboxActive;
     }
 
     // Handle R key - reset position
@@ -383,6 +405,7 @@ void AnimatedDataCharacter::render()
         return;
 
     renderCurrentFrame();
+    renderHitbox();
     renderDebugInfo();
 }
 
@@ -393,6 +416,7 @@ void AnimatedDataCharacter::render(v2 renderPosition)
         return;
 
     renderCurrentFrameAt(renderPosition);
+    renderHitbox();
     renderDebugInfo();
 }
 
@@ -525,6 +549,10 @@ void AnimatedDataCharacter::renderDebugInfo()
     snprintf(stateText, sizeof(stateText), "Position: (%.1f, %.1f)", position.x, position.y);
     draw_text(stateText, textPos);
 
+    textPos.y -= 20;
+    snprintf(stateText, sizeof(stateText), "Hitbox: %s", hitboxActive ? "ON" : "OFF");
+    draw_text(stateText, textPos);
+
     cf_draw_pop_color();
 }
 
@@ -543,4 +571,226 @@ v2 AnimatedDataCharacter::getPosition() const
 void AnimatedDataCharacter::setPosition(v2 newPosition)
 {
     position = newPosition;
+}
+
+void AnimatedDataCharacter::setLevel(LevelV1* levelPtr)
+{
+    level = levelPtr;
+}
+
+CF_Aabb AnimatedDataCharacter::getHitbox() const
+{
+    // Calculate hitbox position based on facing direction
+    v2 hitboxCenter = position;
+
+    switch (currentDirection)
+    {
+        case Direction::UP:
+            hitboxCenter.y += hitboxDistance;
+            break;
+        case Direction::DOWN:
+            hitboxCenter.y -= hitboxDistance;
+            break;
+        case Direction::LEFT:
+            hitboxCenter.x -= hitboxDistance;
+            break;
+        case Direction::RIGHT:
+            hitboxCenter.x += hitboxDistance;
+            break;
+    }
+
+    // Create AABB centered on hitboxCenter
+    float halfSize = hitboxSize / 2.0f;
+    return cf_make_aabb(
+        cf_v2(hitboxCenter.x - halfSize, hitboxCenter.y - halfSize),
+        cf_v2(hitboxCenter.x + halfSize, hitboxCenter.y + halfSize)
+    );
+}
+
+std::vector<CF_Aabb> AnimatedDataCharacter::getHitboxTShape() const
+{
+    std::vector<CF_Aabb> hitboxes;
+    float halfSize = hitboxSize / 2.0f;
+
+    // Center box in the facing direction (stem of the T)
+    v2 centerBox = position;
+
+    // Three boxes perpendicular to facing direction (top of the T)
+    v2 leftBox, middleBox, rightBox;
+
+    switch (currentDirection)
+    {
+        case Direction::UP:
+        case Direction::DOWN:
+        {
+            // Stem extends vertically
+            centerBox.y += (currentDirection == Direction::UP ? hitboxDistance : -hitboxDistance);
+
+            // Top extends horizontally, positioned adjacent to the stem
+            // The top row should be at the far edge of the center box, then one box further out
+            float topY = centerBox.y + (currentDirection == Direction::UP ? hitboxSize : -hitboxSize);
+            leftBox = cf_v2(centerBox.x - hitboxSize, topY);
+            middleBox = cf_v2(centerBox.x, topY);
+            rightBox = cf_v2(centerBox.x + hitboxSize, topY);
+            break;
+        }
+
+        case Direction::LEFT:
+        case Direction::RIGHT:
+        {
+            // Stem extends horizontally
+            centerBox.x += (currentDirection == Direction::RIGHT ? hitboxDistance : -hitboxDistance);
+
+            // Top extends vertically, positioned adjacent to the stem
+            float topX = centerBox.x + (currentDirection == Direction::RIGHT ? hitboxSize : -hitboxSize);
+            leftBox = cf_v2(topX, centerBox.y + hitboxSize);
+            middleBox = cf_v2(topX, centerBox.y);
+            rightBox = cf_v2(topX, centerBox.y - hitboxSize);
+            break;
+        }
+    }
+
+    // Create AABBs for all four boxes
+    hitboxes.push_back(cf_make_aabb(
+        cf_v2(centerBox.x - halfSize, centerBox.y - halfSize),
+        cf_v2(centerBox.x + halfSize, centerBox.y + halfSize)
+    ));
+
+    hitboxes.push_back(cf_make_aabb(
+        cf_v2(leftBox.x - halfSize, leftBox.y - halfSize),
+        cf_v2(leftBox.x + halfSize, leftBox.y + halfSize)
+    ));
+
+    hitboxes.push_back(cf_make_aabb(
+        cf_v2(middleBox.x - halfSize, middleBox.y - halfSize),
+        cf_v2(middleBox.x + halfSize, middleBox.y + halfSize)
+    ));
+
+    hitboxes.push_back(cf_make_aabb(
+        cf_v2(rightBox.x - halfSize, rightBox.y - halfSize),
+        cf_v2(rightBox.x + halfSize, rightBox.y + halfSize)
+    ));
+
+    return hitboxes;
+}
+
+std::vector<CF_Aabb> AnimatedDataCharacter::getHitboxLShape() const
+{
+    std::vector<CF_Aabb> hitboxes;
+    float halfSize = hitboxSize / 2.0f;
+
+    // Two boxes extending in facing direction (long part of L)
+    v2 box1 = position;
+    v2 box2, box3, box4;
+
+    switch (currentDirection)
+    {
+        case Direction::UP:
+            // Extend upward
+            box1.y += hitboxDistance;
+            box2 = cf_v2(box1.x, box1.y + hitboxSize);
+            // Turn right at the end
+            box3 = cf_v2(box1.x + hitboxSize, box2.y);
+            box4 = cf_v2(box1.x + hitboxSize * 2, box2.y);
+            break;
+
+        case Direction::DOWN:
+            // Extend downward
+            box1.y -= hitboxDistance;
+            box2 = cf_v2(box1.x, box1.y - hitboxSize);
+            // Turn right at the end
+            box3 = cf_v2(box1.x + hitboxSize, box2.y);
+            box4 = cf_v2(box1.x + hitboxSize * 2, box2.y);
+            break;
+
+        case Direction::LEFT:
+            // Extend left
+            box1.x -= hitboxDistance;
+            box2 = cf_v2(box1.x - hitboxSize, box1.y);
+            // Turn up at the end
+            box3 = cf_v2(box2.x, box1.y + hitboxSize);
+            box4 = cf_v2(box2.x, box1.y + hitboxSize * 2);
+            break;
+
+        case Direction::RIGHT:
+            // Extend right
+            box1.x += hitboxDistance;
+            box2 = cf_v2(box1.x + hitboxSize, box1.y);
+            // Turn up at the end
+            box3 = cf_v2(box2.x, box1.y + hitboxSize);
+            box4 = cf_v2(box2.x, box1.y + hitboxSize * 2);
+            break;
+    }
+
+    // Create AABBs for all four boxes
+    hitboxes.push_back(cf_make_aabb(
+        cf_v2(box1.x - halfSize, box1.y - halfSize),
+        cf_v2(box1.x + halfSize, box1.y + halfSize)
+    ));
+
+    hitboxes.push_back(cf_make_aabb(
+        cf_v2(box2.x - halfSize, box2.y - halfSize),
+        cf_v2(box2.x + halfSize, box2.y + halfSize)
+    ));
+
+    hitboxes.push_back(cf_make_aabb(
+        cf_v2(box3.x - halfSize, box3.y - halfSize),
+        cf_v2(box3.x + halfSize, box3.y + halfSize)
+    ));
+
+    hitboxes.push_back(cf_make_aabb(
+        cf_v2(box4.x - halfSize, box4.y - halfSize),
+        cf_v2(box4.x + halfSize, box4.y + halfSize)
+    ));
+
+    return hitboxes;
+}
+
+void AnimatedDataCharacter::renderHitbox()
+{
+    if (!hitboxActive)
+        return;
+
+    // Get hitboxes based on configured shape
+    std::vector<CF_Aabb> hitboxes;
+    switch (hitboxShape)
+    {
+        case HitboxShape::SQUARE:
+            hitboxes.push_back(getHitbox());
+            break;
+        case HitboxShape::T_SHAPE:
+            hitboxes = getHitboxTShape();
+            break;
+        case HitboxShape::L_SHAPE:
+            hitboxes = getHitboxLShape();
+            break;
+    }
+
+    // Default color is yellow
+    CF_Color color = cf_make_color_rgb(255, 255, 0); // Yellow
+
+    // Check if any agents are in any of the hitbox areas
+    if (level && level->checkAgentsInArea(hitboxes, this))
+    {
+        // Change to orange if agents are detected
+        color = cf_make_color_rgb(255, 165, 0); // Orange
+    }
+
+    // Draw all hitboxes as thick outlined rectangles
+    cf_draw_push_color(color);
+    cf_draw_push_antialias(false);
+
+    for (const auto& hitbox : hitboxes)
+    {
+        // Draw thick outline (thickness, chubbiness/rounding)
+        cf_draw_box(hitbox, 3.0f, 0.0f);
+    }
+
+    cf_draw_pop_antialias();
+    cf_draw_pop_color();
+}
+
+void AnimatedDataCharacter::setShape(HitboxShape shape)
+{
+    hitboxShape = shape;
 }
