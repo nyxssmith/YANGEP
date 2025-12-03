@@ -183,8 +183,8 @@ void AnimatedDataCharacterNavMeshAgent::OnScreenBackgroundUpdateJob(float dt)
     v2 agentPosition = getPosition();
     CF_V2 currentPosition = cf_v2(agentPosition.x, agentPosition.y);
 
-    // if has a path that is valid and not complete
-    if (currentNavMeshPath && currentNavMeshPath->isValid() && !currentNavMeshPath->isComplete())
+    // if has a path
+    if (currentNavMeshPath && currentNavMeshPath->isValid())
     {
         // if current position is at current waypoint of the path
         if (currentNavMeshPath->isAtCurrentWaypoint(currentPosition))
@@ -199,10 +199,10 @@ void AnimatedDataCharacterNavMeshAgent::OnScreenBackgroundUpdateJob(float dt)
         // if nextwaypoint is null
         if (nextWaypoint == nullptr)
         {
-            // if current path is not null, mark it as complete
+            // if current path is not null, clear it
             if (currentNavMeshPath)
             {
-                currentNavMeshPath->markComplete();
+                navmesh->removePathById(currentNavMeshPath->id);
             }
             // get new path and exit
             const int wanderRadius = 500;

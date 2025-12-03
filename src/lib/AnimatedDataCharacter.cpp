@@ -410,6 +410,7 @@ void AnimatedDataCharacter::render()
 
     renderCurrentFrame();
     renderHitbox();
+    renderDebugInfo();
 }
 
 // Render the demo at a specific position

@@ -227,14 +227,17 @@ void LevelV1::updateAgents(float dt)
 
     // TODO this!!!!!!
     // all of this is assuming agents are on screen, todo cull based on camera and do different for offscreen agents
-    // Update agents with move vectors (using results from background jobs)
+    // Update agents with move vectors (using results from completed background jobs)
     for (auto &agent : agents)
     {
         if (agent)
         {
-            // Always use the last computed background move vector
-            // This allows agents to keep moving while their next job is being processed
-            v2 moveVector = agent->getBackgroundMoveVector();
+            // Get the background move vector if the job is complete
+            v2 moveVector = cf_v2(0.0f, 0.0f);
+            if (agent->isBackgroundUpdateComplete())
+            {
+                moveVector = agent->getBackgroundMoveVector();
+            }
 
             agent->update(dt, moveVector);
         }
@@ -256,6 +259,12 @@ void LevelV1::updateAgents(float dt)
 
 void LevelV1::renderAgents(const CFNativeCamera &camera)
 {
+    // Get camera view bounds for culling
+    CF_Aabb viewBounds = camera.getViewBounds();
+
+    // Reasonable default size for agent bounds (can be adjusted or made configurable)
+    const float agentHalfSize = 32.0f; // Assumes agent is roughly 64x64 pixels
+
     int renderedCount = 0;
     int culledCount = 0;
 
@@ -263,10 +272,16 @@ void LevelV1::renderAgents(const CFNativeCamera &camera)
     {
         if (agent)
         {
-            // Check if agent is marked as on-screen by OnScreenChecks worker
-            if (agent->getIsOnScreen())
+            v2 agentPos = agent->getPosition();
+
+            // Create a bounding box around the agent
+            CF_Aabb agentBounds = make_aabb(
+                cf_v2(agentPos.x - agentHalfSize, agentPos.y - agentHalfSize),
+                cf_v2(agentPos.x + agentHalfSize, agentPos.y + agentHalfSize));
+
+            // Check if agent is visible in viewport
+            if (camera.isVisible(agentBounds))
             {
-                v2 agentPos = agent->getPosition();
                 agent->render(agentPos);
                 renderedCount++;
             }
@@ -292,16 +307,8 @@ void LevelV1::render(const CFNativeCamera &camera, const DataFile &config, float
     }
 
     // TODO change render order based on height in world, not agents always on top
-    double layersStart = cf_get_ticks() / 1000.0;
     levelMap->renderAllLayers(camera, config, worldX, worldY);
-    double layersEnd = cf_get_ticks() / 1000.0;
-
-    double agentsStart = cf_get_ticks() / 1000.0;
     renderAgents(camera);
-    double agentsEnd = cf_get_ticks() / 1000.0;
-
-    printf("LevelV1::render - layers: %.3f ms, agents: %.3f ms\n",
-           layersEnd - layersStart, agentsEnd - agentsStart);
 }
 
 void LevelV1::debugPrint() const
@@ -349,17 +356,17 @@ void LevelV1::debugPrint() const
     printf("========================\n");
 }
 
-bool LevelV1::checkAgentsInArea(const std::vector<CF_Aabb> &areas, CF_Aabb areasBounds,
-                                const AnimatedDataCharacter *excludeAgent) const
+bool LevelV1::checkAgentsInArea(const std::vector<CF_Aabb>& areas, CF_Aabb areasBounds,
+    const AnimatedDataCharacter* excludeAgent) const
 {
-    for (const auto &agent : agents)
+    for (const auto& agent : agents)
     {
         if (!agent)
             continue;
 
         // Skip the excluded agent
         // AnimatedDataCharacterNavMeshAgent inherits from AnimatedDataCharacter, so we can compare directly
-        if (excludeAgent && static_cast<const AnimatedDataCharacter *>(agent.get()) == excludeAgent)
+        if (excludeAgent && static_cast<const AnimatedDataCharacter*>(agent.get()) == excludeAgent)
             continue;
 
         // Get agent position and create a simple AABB for the agent
@@ -367,14 +374,15 @@ bool LevelV1::checkAgentsInArea(const std::vector<CF_Aabb> &areas, CF_Aabb areas
         float agentRadius = 32.0f; // Approximate agent size
         CF_Aabb agentBox = cf_make_aabb(
             cf_v2(agentPos.x - agentRadius, agentPos.y - agentRadius),
-            cf_v2(agentPos.x + agentRadius, agentPos.y + agentRadius));
+            cf_v2(agentPos.x + agentRadius, agentPos.y + agentRadius)
+        );
 
         // check if agent is in the areas bounds
         if (!cf_overlaps(areasBounds, agentBox))
             continue;
 
         // Check if agent overlaps with any of the areas
-        for (const auto &area : areas)
+        for (const auto& area : areas)
         {
             if (cf_overlaps(area, agentBox))
             {
