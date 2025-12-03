@@ -329,28 +329,84 @@ int main(int argc, char *argv[])
 			break;
 		}
 
-		// Player movement (WASD)
+		// Player movement (WASD) - only one direction at a time, most recent key takes priority
 		float dt = CF_DELTA_TIME;
 		float playerSpeed = 200.0f; // pixels per second
 
-		// Calculate move vector from input
-		v2 moveVector = cf_v2(0.0f, 0.0f);
+		// Track which direction key was most recently pressed
+		// 0 = none, 1 = up, 2 = down, 3 = left, 4 = right
+		static int lastPressedDirection = 0;
 
-		if (cf_key_down(CF_KEY_W) || cf_key_down(CF_KEY_UP))
+		// Check for newly pressed keys (just_pressed) to update priority
+		if (cf_key_just_pressed(CF_KEY_W) || cf_key_just_pressed(CF_KEY_UP))
 		{
-			moveVector.y += playerSpeed;
+			lastPressedDirection = 1; // up
 		}
-		if (cf_key_down(CF_KEY_S) || cf_key_down(CF_KEY_DOWN))
+		if (cf_key_just_pressed(CF_KEY_S) || cf_key_just_pressed(CF_KEY_DOWN))
 		{
-			moveVector.y -= playerSpeed;
+			lastPressedDirection = 2; // down
 		}
-		if (cf_key_down(CF_KEY_A) || cf_key_down(CF_KEY_LEFT))
+		if (cf_key_just_pressed(CF_KEY_A) || cf_key_just_pressed(CF_KEY_LEFT))
 		{
-			moveVector.x -= playerSpeed;
+			lastPressedDirection = 3; // left
 		}
-		if (cf_key_down(CF_KEY_D) || cf_key_down(CF_KEY_RIGHT))
+		if (cf_key_just_pressed(CF_KEY_D) || cf_key_just_pressed(CF_KEY_RIGHT))
 		{
-			moveVector.x += playerSpeed;
+			lastPressedDirection = 4; // right
+		}
+
+		// If the last pressed key is no longer held, find another held key
+		bool lastKeyStillHeld = false;
+		switch (lastPressedDirection)
+		{
+		case 1:
+			lastKeyStillHeld = cf_key_down(CF_KEY_W) || cf_key_down(CF_KEY_UP);
+			break;
+		case 2:
+			lastKeyStillHeld = cf_key_down(CF_KEY_S) || cf_key_down(CF_KEY_DOWN);
+			break;
+		case 3:
+			lastKeyStillHeld = cf_key_down(CF_KEY_A) || cf_key_down(CF_KEY_LEFT);
+			break;
+		case 4:
+			lastKeyStillHeld = cf_key_down(CF_KEY_D) || cf_key_down(CF_KEY_RIGHT);
+			break;
+		default:
+			lastKeyStillHeld = false;
+			break;
+		}
+
+		if (!lastKeyStillHeld)
+		{
+			// Find another key that's still held (priority: W, S, A, D)
+			if (cf_key_down(CF_KEY_W) || cf_key_down(CF_KEY_UP))
+				lastPressedDirection = 1;
+			else if (cf_key_down(CF_KEY_S) || cf_key_down(CF_KEY_DOWN))
+				lastPressedDirection = 2;
+			else if (cf_key_down(CF_KEY_A) || cf_key_down(CF_KEY_LEFT))
+				lastPressedDirection = 3;
+			else if (cf_key_down(CF_KEY_D) || cf_key_down(CF_KEY_RIGHT))
+				lastPressedDirection = 4;
+			else
+				lastPressedDirection = 0; // No keys held
+		}
+
+		// Calculate move vector based on the single active direction
+		v2 moveVector = cf_v2(0.0f, 0.0f);
+		switch (lastPressedDirection)
+		{
+		case 1:
+			moveVector.y = playerSpeed;
+			break; // up
+		case 2:
+			moveVector.y = -playerSpeed;
+			break; // down
+		case 3:
+			moveVector.x = -playerSpeed;
+			break; // left
+		case 4:
+			moveVector.x = playerSpeed;
+			break; // right
 		}
 
 		// Handle playerCharacter animation input (1/2 for idle/walk)
