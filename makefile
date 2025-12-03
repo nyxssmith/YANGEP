@@ -51,3 +51,6 @@ major_version: build
 update_assests_from_debug_build:
 	@echo "Updating assets from debug build..."
 	./scripts/update_assets_from_debug_build.sh
+
+latest_core_dump:
+	./scripts/get_latest_core_dump.sh

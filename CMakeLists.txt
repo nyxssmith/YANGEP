@@ -115,6 +115,8 @@ add_executable(
 	src/lib/WanderBehavior.cpp
 	src/lib/LevelV1.cpp
 	src/lib/JobSystem.cpp
+	src/lib/OnScreenChecks.cpp
+	src/lib/SpatialGrid.cpp
 )
 
 # Our source code will be in the `src` folder.
@@ -179,6 +181,7 @@ add_executable(${PROJECT_NAME}_tests
     src/lib/WanderBehavior.cpp
     src/lib/LevelV1.cpp
     src/lib/JobSystem.cpp
+    src/lib/SpatialGrid.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}_tests gtest gtest_main cute spng_static nlohmann_json::nlohmann_json pugixml-static)

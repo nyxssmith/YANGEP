@@ -23,7 +23,8 @@ public:
 
     // Submit a job using a C++ lambda or function with a name for tracking
     // The job will be executed when the pool is kicked
-    static void submitJob(std::function<void()> work, const std::string &jobName = "Unnamed Job");
+    // label: Used to categorize jobs (default: "general")
+    static void submitJob(std::function<void()> work, const std::string &jobName = "Unnamed Job", const std::string &label = "general");
 
     // Kick all pending jobs and wait for them to complete (blocking)
     static void kickAndWait();
@@ -43,6 +44,9 @@ public:
         int workerId;
         bool isRunning;
         std::string currentJobName;
+        std::string label;   // Worker label (e.g., "general")
+        int pendingJobCount; // Number of jobs queued for this worker
+        int runningJobCount; // Number of jobs currently running
     };
     static std::vector<WorkerInfo> getWorkerInfo();
 
@@ -50,6 +54,15 @@ public:
     static int getPendingJobCount();
 
 private:
+    // Structure to hold job data
+    struct JobData
+    {
+        std::function<void()> work;
+        std::string name;
+        std::string label; // Job label (e.g., "general")
+        int workerIndex;   // Which worker this job is assigned to (-1 if not assigned)
+    };
+
     static CF_Threadpool *s_threadpool;
     static bool s_initialized;
     static int s_workerCount;
@@ -57,16 +70,15 @@ private:
     // Job tracking
     static std::vector<std::string> s_workerCurrentJobs;
     static std::vector<bool> s_workerBusy;
+    static std::vector<std::string> s_workerLabels;            // Label for each worker
+    static std::vector<std::vector<JobData *>> s_workerQueues; // Per-worker job queues
+    static std::vector<int> s_workerRunningJobs;               // Running jobs per worker
+    static std::vector<JobData *> s_pendingJobs;               // Jobs waiting to be distributed
     static std::mutex s_trackingMutex;
-    static int s_pendingJobs;
 
     // Internal callback wrapper for CF_Threadpool
     static void jobCallback(void *userData);
 
-    // Structure to hold job data
-    struct JobData
-    {
-        std::function<void()> work;
-        std::string name;
-    };
+    // Distribute pending jobs to worker queues by label
+    static void distributeJobs();
 };

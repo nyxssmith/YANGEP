@@ -67,6 +67,10 @@ public:
     void OnScreenBackgroundUpdateJob(float dt);
     void OffScreenBackgroundUpdateJob(float dt);
 
+    // On-screen visibility (set by OnScreenChecks worker)
+    bool getIsOnScreen() const { return isOnScreen; }
+    void setIsOnScreen(bool onScreen) { isOnScreen = onScreen; }
+
 private:
     // The navmesh this agent is on (non-owning pointer)
     NavMesh *navmesh;
@@ -87,6 +91,9 @@ private:
 
     // Background AI calculation (runs in worker thread)
     void calculateMoveVector(float dt);
+
+    // On-screen visibility flag (updated by OnScreenChecks worker)
+    bool isOnScreen = true;
 };
 
 #endif // ANIMATED_DATA_CHARACTER_NAVMESH_AGENT_H

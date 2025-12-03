@@ -8,6 +8,7 @@
 #include "lib/DebugWindowList.h"
 #include "lib/DebugFPSWindow.h"
 #include "lib/DebugJobWindow.h"
+#include "lib/OnScreenChecks.h"
 #include "lib/Utils.h"
 #include "lib/DataFile.h"
 #include "lib/RealConfigFile.h"
@@ -81,9 +82,11 @@ int main(int argc, char *argv[])
 	}
 
 	// Read debug options from config
-	bool debugHighlightNavmesh = false;		  // Default: don't highlight navmesh
-	bool debugHighlightNavMeshPoints = false; // Default: don't highlight navmesh points
-	bool debugHighlightAgents = false;		  // Default: don't highlight agents
+	bool debugHighlightNavmesh = false;		 // Default: don't highlight navmesh
+	bool debughighlightNavMeshPaths = false; // Default: don't highlight navmesh points
+	bool debugHighlightAgents = false;		 // Default: don't highlight agents
+	bool debugHighlightHitboxes = false;	 // Default: don't show hitboxes
+	bool debugHighlightSpatialGrid = false;	 // Default: don't show spatial grid
 	if (windowConfig.contains("Debug"))
 	{
 		auto &debug = windowConfig["Debug"];
@@ -97,15 +100,25 @@ int main(int argc, char *argv[])
 			debugHighlightNavmesh = debug["highlightNavmesh"];
 			printf("Debug highlightNavmesh: %s\n", debugHighlightNavmesh ? "enabled" : "disabled");
 		}
-		if (debug.contains("highlightNavMeshPoints"))
+		if (debug.contains("highlightNavMeshPaths"))
 		{
-			debugHighlightNavMeshPoints = debug["highlightNavMeshPoints"];
-			printf("Debug highlightNavMeshPoints: %s\n", debugHighlightNavMeshPoints ? "enabled" : "disabled");
+			debughighlightNavMeshPaths = debug["highlightNavMeshPaths"];
+			printf("Debug highlightNavMeshPaths: %s\n", debughighlightNavMeshPaths ? "enabled" : "disabled");
 		}
 		if (debug.contains("highlightAgents"))
 		{
 			debugHighlightAgents = debug["highlightAgents"];
 			printf("Debug highlightAgents: %s\n", debugHighlightAgents ? "enabled" : "disabled");
+		}
+		if (debug.contains("highlightHitboxes"))
+		{
+			debugHighlightHitboxes = debug["highlightHitboxes"];
+			printf("Debug highlightHitboxes: %s\n", debugHighlightHitboxes ? "enabled" : "disabled");
+		}
+		if (debug.contains("highlightSpatialGrid"))
+		{
+			debugHighlightSpatialGrid = debug["highlightSpatialGrid"];
+			printf("Debug highlightSpatialGrid: %s\n", debugHighlightSpatialGrid ? "enabled" : "disabled");
 		}
 	}
 
@@ -225,6 +238,9 @@ int main(int argc, char *argv[])
 	// Connect player to level for hitbox collision detection
 	playerCharacter.setLevel(&level);
 
+	// Set initial hitbox visibility from config
+	playerCharacter.setHitboxActive(debugHighlightHitboxes);
+
 	// Create CF-native camera with explicit viewport dimensions from config
 	CFNativeCamera cfCamera(cf_v2(0.0f, 0.0f), 1.0f, viewportWidth, viewportHeight);
 
@@ -245,11 +261,15 @@ int main(int argc, char *argv[])
 
 	// NavMesh debug rendering toggle (initialized from config)
 	bool showNavMesh = debugHighlightNavmesh;
-	bool showNavMeshPoints = debugHighlightNavMeshPoints;
+	bool showNavMeshPoints = debughighlightNavMeshPaths;
 	bool showAgents = debugHighlightAgents;
 
 	// NavMesh path for pathfinding (stored as shared_ptr)
 	std::shared_ptr<NavMeshPath> navmeshPath = nullptr;
+
+	// Initialize and start on-screen checks worker
+	OnScreenChecks::initialize(&playerPosition, &cfCamera, &level);
+	OnScreenChecks::start();
 
 	// Main loop
 	printf("Skeleton Adventure Game:\n");
@@ -453,6 +473,12 @@ int main(int argc, char *argv[])
 			level.getNavMesh().debugRender(cfCamera);
 		}
 
+		// Render spatial grid debug visualization (if enabled)
+		if (debugHighlightSpatialGrid && level.getSpatialGrid().getOccupiedCellCount() > 0)
+		{
+			level.getSpatialGrid().debugRender(cfCamera);
+		}
+
 		// Render NavMesh points debug visualization (if enabled)
 		if (showNavMeshPoints && level.getNavMesh().getPointCount() > 0)
 		{
@@ -574,8 +600,14 @@ int main(int argc, char *argv[])
 		app_draw_onto_screen();
 	}
 
+	// Shutdown on-screen checks worker
+	OnScreenChecks::requestShutdown();
+
 	// Shutdown job system
 	JobSystem::shutdown();
+
+	// Cleanup on-screen checks
+	OnScreenChecks::shutdown();
 
 	destroy_app();
 	return 0;

@@ -6,6 +6,7 @@
 #include "tmx.h"
 #include "NavMesh.h"
 #include "DataFile.h"
+#include "SpatialGrid.h"
 #include "AnimatedDataCharacterNavMeshAgent.h"
 
 // Forward declarations
@@ -37,6 +38,9 @@ private:
 
     // NavMesh agents in this level
     std::vector<std::unique_ptr<AnimatedDataCharacterNavMeshAgent>> agents;
+
+    // Spatial partitioning grid for efficient queries
+    SpatialGrid spatialGrid;
 
     // TMX tile dimensions (cached for convenience)
     int tileWidth;
@@ -130,6 +134,25 @@ public:
     size_t getAgentCount() const { return agents.size(); }
 
     /**
+     * Get the spatial grid for efficient spatial queries
+     * @return Reference to the SpatialGrid
+     */
+    SpatialGrid &getSpatialGrid() { return spatialGrid; }
+    const SpatialGrid &getSpatialGrid() const { return spatialGrid; }
+
+    /**
+     * Update the spatial grid with current agent positions
+     * Call this after agents have moved
+     */
+    void updateSpatialGrid();
+
+    /**
+     * Rebuild the entire spatial grid from scratch
+     * Use when agents have been added/removed or after significant changes
+     */
+    void rebuildSpatialGrid();
+
+    /**
      * Get an agent by index
      * @param index Index of the agent
      * @return Pointer to the agent, or nullptr if index is out of bounds
@@ -148,7 +171,7 @@ public:
      * @param excludeAgent Agent to exclude from the check (usually the one doing the checking)
      * @return true if any other agents are found in the area, false otherwise
      */
-    bool checkAgentsInArea(const std::vector<CF_Aabb>& areas, CF_Aabb areasBounds, const AnimatedDataCharacter* excludeAgent = nullptr) const;
+    bool checkAgentsInArea(const std::vector<CF_Aabb> &areas, CF_Aabb areasBounds, const AnimatedDataCharacter *excludeAgent = nullptr) const;
 
     /**
      * Update all agents in the level

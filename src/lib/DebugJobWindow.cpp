@@ -53,13 +53,21 @@ void DebugJobWindow::render()
         char workerLabel[64];
         snprintf(workerLabel, sizeof(workerLabel), "Worker %d", worker.workerId);
 
-        if (ImGui_CollapsingHeader(workerLabel, 0))
+        if (ImGui_CollapsingHeader(workerLabel, ImGuiTreeNodeFlags_DefaultOpen))
         {
+            // Label
+            ImGui_Text("  Label: %s", worker.label.c_str());
+
+            // Pending jobs in queue
+            ImGui_Text("  Queued Jobs: %d", worker.pendingJobCount);
+
+            // Running jobs
+            ImGui_Text("  Running Jobs: %d", worker.runningJobCount);
+
             // Status
-            if (worker.isRunning)
+            if (worker.runningJobCount > 0)
             {
                 ImGui_TextColored(ImVec4{0.0f, 1.0f, 0.0f, 1.0f}, "  Status: BUSY");
-                ImGui_Text("  Job: %s", worker.currentJobName.c_str());
             }
             else
             {
