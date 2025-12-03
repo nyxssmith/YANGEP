@@ -53,8 +53,14 @@ void DebugJobWindow::render()
         char workerLabel[64];
         snprintf(workerLabel, sizeof(workerLabel), "Worker %d", worker.workerId);
 
-        if (ImGui_CollapsingHeader(workerLabel, 0))
+        if (ImGui_CollapsingHeader(workerLabel, ImGuiTreeNodeFlags_DefaultOpen))
         {
+            // Label
+            ImGui_Text("  Label: %s", worker.label.c_str());
+
+            // Pending jobs in queue
+            ImGui_Text("  Queued Jobs: %d", worker.pendingJobCount);
+
             // Status
             if (worker.isRunning)
             {

@@ -45,10 +45,13 @@ public:
     void setPosition(v2 newPosition);
 
     // Set the level for agent queries
-    void setLevel(LevelV1* level);
+    void setLevel(LevelV1 *level);
 
     // Get hitbox in world coordinates
-    HitBox* getHitbox() const;
+    HitBox *getHitbox() const;
+
+    // Set hitbox visibility
+    void setHitboxActive(bool active);
 
 private:
     // The animation loader
@@ -88,9 +91,9 @@ private:
     bool hitboxActive;
     float hitboxSize;
     float hitboxDistance;
-    HitBox* hitbox;
+    HitBox *hitbox;
     HitboxShape hitboxShape; // for constructor
-    LevelV1* level; // Pointer to level for agent queries
+    LevelV1 *level;          // Pointer to level for agent queries
 
     // Helper methods
     void cycleDirection();

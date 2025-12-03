@@ -94,9 +94,7 @@ bool AnimatedDataCharacter::init(const std::string &datafilePath)
     }
 
     // Load hitbox shape if specified in JSON, default to SQUARE
-    if (charConfig.contains("hitbox_shape") && charConfig["hitbox_shape"].is_string()
-    && charConfig.contains("hitbox_size") && charConfig["hitbox_size"].is_number()
-    && charConfig.contains("hitbox_distance") && charConfig["hitbox_distance"].is_number())
+    if (charConfig.contains("hitbox_shape") && charConfig["hitbox_shape"].is_string() && charConfig.contains("hitbox_size") && charConfig["hitbox_size"].is_number() && charConfig.contains("hitbox_distance") && charConfig["hitbox_distance"].is_number())
     {
 
         hitboxSize = charConfig["hitbox_size"].get<float>();
@@ -579,9 +577,14 @@ void AnimatedDataCharacter::setPosition(v2 newPosition)
     position = newPosition;
 }
 
-void AnimatedDataCharacter::setLevel(LevelV1* levelPtr)
+void AnimatedDataCharacter::setLevel(LevelV1 *levelPtr)
 {
     level = levelPtr;
+}
+
+void AnimatedDataCharacter::setHitboxActive(bool active)
+{
+    hitboxActive = active;
 }
 
 void AnimatedDataCharacter::renderHitbox()
@@ -594,7 +597,7 @@ void AnimatedDataCharacter::renderHitbox()
 
     // Check if any agents are in any of the hitbox areas, using the hitbox's bounding box for the areas bounds
     if (level && level->checkAgentsInArea(hitbox->getBoxes(currentDirection, position),
-     hitbox->getBoundingBox(currentDirection, position), this))
+                                          hitbox->getBoundingBox(currentDirection, position), this))
     {
         // Change to orange if agents are detected
         color = cf_make_color_rgb(255, 165, 0); // Orange
@@ -604,7 +607,7 @@ void AnimatedDataCharacter::renderHitbox()
     cf_draw_push_color(color);
     cf_draw_push_antialias(false);
 
-    for (const auto& hitbox : hitbox->getBoxes(currentDirection, position))
+    for (const auto &hitbox : hitbox->getBoxes(currentDirection, position))
     {
         // Draw thick outline (thickness, chubbiness/rounding)
         cf_draw_box(hitbox, 3.0f, 0.0f);

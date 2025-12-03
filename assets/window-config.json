@@ -21,12 +21,13 @@
   "Debug": {
     "highlightViewport": true,
     "highlightNavmesh": false,
-    "highlightNavMeshPoints": true,
-    "highlightAgents": true,
+    "highlightNavMeshPaths": false,
+    "highlightAgents": false,
     "highlightLayers": [],
     "highlightLayerBorders": [],
     "highlightLayerOuterBorders": [],
     "ShowFPSMetrics": true,
-    "ShowJobMetrics": true
+    "ShowJobMetrics": true,
+    "highlightHitboxes": false
   }
 }
