@@ -40,12 +40,31 @@ public:
     // Update to track navmesh position
     void update(float dt, v2 moveVector);
 
+    // Set the sprite dimensions (used to calculate collision box position)
+    void setSpriteDimensions(float width, float height);
+
+    // Get the navmesh collision box (thin horizontal box at player's feet)
+    CF_Aabb getNavMeshCollisionBox() const;
+
+    // Debug render the navmesh collision box
+    void debugRenderNavMeshCollisionBox() const;
+
 private:
     // The navmesh this player is on (non-owning pointer)
     NavMesh *navmesh;
 
     // Current polygon the player is in (-1 if not on mesh)
     int currentPolygon;
+
+    // Sprite dimensions for collision box positioning (set after init)
+    float spriteWidth;
+    float spriteHeight;
+
+    // Collision box height (thin horizontal line at feet)
+    static constexpr float COLLISION_BOX_HEIGHT = 4.0f;
+
+    // Check if a future position would be on walkable area
+    bool wouldBeOnWalkableArea(v2 futurePosition) const;
 };
 
 #endif // ANIMATED_DATA_CHARACTER_NAVMESH_PLAYER_H

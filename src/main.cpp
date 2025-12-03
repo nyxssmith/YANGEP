@@ -82,11 +82,12 @@ int main(int argc, char *argv[])
 	}
 
 	// Read debug options from config
-	bool debugHighlightNavmesh = false;		 // Default: don't highlight navmesh
-	bool debughighlightNavMeshPaths = false; // Default: don't highlight navmesh points
-	bool debugHighlightAgents = false;		 // Default: don't highlight agents
-	bool debugHighlightHitboxes = false;	 // Default: don't show hitboxes
-	bool debugHighlightSpatialGrid = false;	 // Default: don't show spatial grid
+	bool debugHighlightNavmesh = false;					  // Default: don't highlight navmesh
+	bool debughighlightNavMeshPaths = false;			  // Default: don't highlight navmesh points
+	bool debugHighlightAgents = false;					  // Default: don't highlight agents
+	bool debugHighlightHitboxes = false;				  // Default: don't show hitboxes
+	bool debugHighlightSpatialGrid = false;				  // Default: don't show spatial grid
+	bool debugHighlightPlayerNavmeshCollisionBox = false; // Default: don't show player navmesh collision box
 	if (windowConfig.contains("Debug"))
 	{
 		auto &debug = windowConfig["Debug"];
@@ -119,6 +120,11 @@ int main(int argc, char *argv[])
 		{
 			debugHighlightSpatialGrid = debug["highlightSpatialGrid"];
 			printf("Debug highlightSpatialGrid: %s\n", debugHighlightSpatialGrid ? "enabled" : "disabled");
+		}
+		if (debug.contains("highlightPlayerNavmeshCollisionBox"))
+		{
+			debugHighlightPlayerNavmeshCollisionBox = debug["highlightPlayerNavmeshCollisionBox"];
+			printf("Debug highlightPlayerNavmeshCollisionBox: %s\n", debugHighlightPlayerNavmeshCollisionBox ? "enabled" : "disabled");
 		}
 	}
 
@@ -254,6 +260,9 @@ int main(int argc, char *argv[])
 
 	// Connect player to navmesh for walkable area detection
 	playerCharacter.setNavMesh(&level.getNavMesh());
+
+	// Set sprite dimensions for navmesh collision box calculation (tile size is the sprite size)
+	playerCharacter.setSpriteDimensions(static_cast<float>(tile_width), static_cast<float>(tile_height));
 
 	// Set initial hitbox visibility from config
 	playerCharacter.setHitboxActive(debugHighlightHitboxes);
@@ -519,6 +528,12 @@ int main(int argc, char *argv[])
 
 		// Render playerCharacter at player position (world space)
 		playerCharacter.render(playerPosition);
+
+		// Render player's navmesh collision box (if enabled)
+		if (debugHighlightPlayerNavmeshCollisionBox)
+		{
+			playerCharacter.debugRenderNavMeshCollisionBox();
+		}
 
 		if (fpsWindow)
 		{
