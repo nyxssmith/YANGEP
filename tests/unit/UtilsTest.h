@@ -1,10 +1,11 @@
 #pragma once
 
 #include "fixtures/TestFixture.hpp"
-#include "../../src/lib/Utils.h"
+#include "Utils.h"
 #include <nlohmann/json.hpp>
 
-class UtilsTest : public TestFixture {
+class UtilsTest : public TestFixture
+{
 protected:
     void SetUp() override;
     void TearDown() override;

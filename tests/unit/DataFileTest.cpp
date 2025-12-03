@@ -1,5 +1,5 @@
 #include "../fixtures/TestFixture.hpp"
-#include "../../src/lib/DataFile.h"
+#include "DataFile.h"
 #include <fstream>
 #include <nlohmann/json.hpp>
 

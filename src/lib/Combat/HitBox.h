@@ -1,7 +1,7 @@
 #ifndef HITBOX_H
 #define HITBOX_H
 
-#include "lib/SpriteAnimationLoader.h"
+#include "SpriteAnimationLoader.h"
 
 enum class HitboxShape
 {
@@ -16,7 +16,7 @@ public:
     HitBox();
     ~HitBox();
 
-    static HitBox* createHitBox(HitboxShape shape, float hitboxSize, float hitboxDistance);
+    static HitBox *createHitBox(HitboxShape shape, float hitboxSize, float hitboxDistance);
     std::vector<CF_Aabb> getBoxes(Direction direction, v2 translation);
     CF_Aabb getBoundingBox(Direction direction, v2 translation);
 

@@ -93,35 +93,48 @@ enable_testing()
 add_executable(
 	${PROJECT_NAME}
 	src/main.cpp
-	src/lib/DataFile.cpp
-	src/lib/RealConfigFile.cpp
-	src/lib/DebugWindow.cpp
-	src/lib/DataFileDebugWindow.cpp
-	src/lib/DebugWindowList.cpp
-	src/lib/DebugFPSWindow.cpp
-	src/lib/DebugJobWindow.cpp
-	src/lib/Utils.cpp
-	src/lib/tsx.cpp
-	src/lib/tmx.cpp
-	src/lib/CFNativeCamera.cpp
-	src/lib/SpriteAnimationLoader.cpp
-	src/lib/NavMesh.cpp
-	src/lib/NavMeshPoint.cpp
-	src/lib/NavMeshPath.cpp
-	src/lib/AnimatedDataCharacter.cpp
-	src/lib/HitBox.cpp
-	src/lib/AnimatedDataCharacterNavMeshAgent.cpp
-	src/lib/AnimatedDataCharacterNavMeshPlayer.cpp
-	src/lib/Behavior.cpp
-	src/lib/WanderBehavior.cpp
-	src/lib/LevelV1.cpp
-	src/lib/JobSystem.cpp
-	src/lib/OnScreenChecks.cpp
-	src/lib/SpatialGrid.cpp
+	src/lib/FileHandling/DataFile.cpp
+	src/lib/FileHandling/RealConfigFile.cpp
+	src/lib/FileHandling/Utils.cpp
+	src/lib/Debug/DebugWindow.cpp
+	src/lib/Debug/DataFileDebugWindow.cpp
+	src/lib/Debug/DebugWindowList.cpp
+	src/lib/Debug/DebugFPSWindow.cpp
+	src/lib/Debug/DebugJobWindow.cpp
+	src/lib/Level/FileHandling/tsx.cpp
+	src/lib/Level/FileHandling/tmx.cpp
+	src/lib/Level/GameLogic/LevelV1.cpp
+	src/lib/Level/GameLogic/NavMesh.cpp
+	src/lib/Level/GameLogic/NavMeshPoint.cpp
+	src/lib/Level/GameLogic/NavMeshPath.cpp
+	src/lib/Level/GameLogic/SpatialGrid.cpp
+	src/lib/Camera/CFNativeCamera.cpp
+	src/lib/Camera/Camera.cpp
+	src/lib/Character/FileHandling/SpriteAnimationLoader.cpp
+	src/lib/Character/AnimatedDataCharacter.cpp
+	src/lib/Character/AnimatedDataCharacterNavMeshAgent.cpp
+	src/lib/Character/AnimatedDataCharacterNavMeshPlayer.cpp
+	src/lib/Character/Behavior/Behavior.cpp
+	src/lib/Character/Behavior/WanderBehavior.cpp
+	src/lib/Combat/HitBox.cpp
+	src/lib/JobSystem/JobSystem.cpp
+	src/lib/JobSystem/OnScreenChecks.cpp
 )
 
 # Our source code will be in the `src` folder.
-target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)
+target_include_directories(${PROJECT_NAME} PUBLIC 
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Camera>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Character>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Character/Behavior>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Character/FileHandling>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Combat>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Debug>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/FileHandling>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/JobSystem>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Level/FileHandling>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Level/GameLogic>
+)
 
 # Some basic information needed for CMake to generate your Info.plist file.
 # This is necessary for e.g. iOS builds.
@@ -166,25 +179,37 @@ add_executable(${PROJECT_NAME}_tests
     tests/unit/CFNativeCameraTest.cpp
     tests/integration/SpriteSystemIntegrationTest.cpp
     tests/integration/TMXRenderingTest.cpp
-    src/lib/SpriteAnimationLoader.cpp
-    src/lib/CFNativeCamera.cpp
-    src/lib/DataFile.cpp
-    src/lib/Utils.cpp
-    src/lib/tsx.cpp
-    src/lib/tmx.cpp
-    src/lib/NavMesh.cpp
-    src/lib/NavMeshPoint.cpp
-    src/lib/NavMeshPath.cpp
-    src/lib/AnimatedDataCharacter.cpp
-    src/lib/HitBox.cpp
-    src/lib/AnimatedDataCharacterNavMeshAgent.cpp
-    src/lib/AnimatedDataCharacterNavMeshPlayer.cpp
-    src/lib/Behavior.cpp
-    src/lib/WanderBehavior.cpp
-    src/lib/LevelV1.cpp
-    src/lib/JobSystem.cpp
-    src/lib/SpatialGrid.cpp
+    src/lib/Character/FileHandling/SpriteAnimationLoader.cpp
+    src/lib/Camera/CFNativeCamera.cpp
+    src/lib/FileHandling/DataFile.cpp
+    src/lib/FileHandling/Utils.cpp
+    src/lib/Level/FileHandling/tsx.cpp
+    src/lib/Level/FileHandling/tmx.cpp
+    src/lib/Level/GameLogic/NavMesh.cpp
+    src/lib/Level/GameLogic/NavMeshPoint.cpp
+    src/lib/Level/GameLogic/NavMeshPath.cpp
+    src/lib/Level/GameLogic/SpatialGrid.cpp
+    src/lib/Level/GameLogic/LevelV1.cpp
+    src/lib/Character/AnimatedDataCharacter.cpp
+    src/lib/Combat/HitBox.cpp
+    src/lib/Character/AnimatedDataCharacterNavMeshAgent.cpp
+    src/lib/Character/AnimatedDataCharacterNavMeshPlayer.cpp
+    src/lib/Character/Behavior/Behavior.cpp
+    src/lib/Character/Behavior/WanderBehavior.cpp
+    src/lib/JobSystem/JobSystem.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}_tests gtest gtest_main cute spng_static nlohmann_json::nlohmann_json pugixml-static)
-target_include_directories(${PROJECT_NAME}_tests PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)
+target_include_directories(${PROJECT_NAME}_tests PUBLIC 
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Camera>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Character>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Character/Behavior>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Character/FileHandling>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Combat>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Debug>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/FileHandling>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/JobSystem>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Level/FileHandling>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Level/GameLogic>
+)

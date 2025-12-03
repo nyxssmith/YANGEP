@@ -3,22 +3,22 @@
 #include <cstdlib>
 #include <memory>
 #include <dcimgui.h>
-#include "lib/DebugWindow.h"
-#include "lib/DataFileDebugWindow.h"
-#include "lib/DebugWindowList.h"
-#include "lib/DebugFPSWindow.h"
-#include "lib/DebugJobWindow.h"
-#include "lib/OnScreenChecks.h"
-#include "lib/Utils.h"
-#include "lib/DataFile.h"
-#include "lib/RealConfigFile.h"
-#include "lib/LevelV1.h"
-#include "lib/JobSystem.h"
+#include "DebugWindow.h"
+#include "DataFileDebugWindow.h"
+#include "DebugWindowList.h"
+#include "DebugFPSWindow.h"
+#include "DebugJobWindow.h"
+#include "OnScreenChecks.h"
+#include "Utils.h"
+#include "DataFile.h"
+#include "RealConfigFile.h"
+#include "LevelV1.h"
+#include "JobSystem.h"
 
-#include "lib/CFNativeCamera.h"
-#include "lib/NavMesh.h"
-#include "lib/NavMeshPath.h"
-#include "lib/AnimatedDataCharacterNavMeshPlayer.h"
+#include "CFNativeCamera.h"
+#include "NavMesh.h"
+#include "NavMeshPath.h"
+#include "AnimatedDataCharacterNavMeshPlayer.h"
 using namespace Cute;
 
 int main(int argc, char *argv[])

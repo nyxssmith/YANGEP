@@ -1,26 +1,30 @@
 #include <gtest/gtest.h>
 #include <cute.h>
-#include "lib/tmx.h"
-#include "lib/tsx.h"
-#include "lib/Utils.h"
+#include "tmx.h"
+#include "tsx.h"
+#include "Utils.h"
 #include "../fixtures/TestFixture.hpp"
 
 using namespace Cute;
 
-class TMXTest : public TestFixture {
+class TMXTest : public TestFixture
+{
 protected:
-    void SetUp() override {
+    void SetUp() override
+    {
         TestFixture::SetUp();
         // Mount assets for TMX tests
         mount_content_directory_as("/assets");
     }
 };
 
-class TMXSystemTest : public TMXTest {
+class TMXSystemTest : public TMXTest
+{
 protected:
     std::unique_ptr<tmx> testMap;
 
-    void SetUp() override {
+    void SetUp() override
+    {
         TMXTest::SetUp();
         // Load the test TMX map
         testMap = std::make_unique<tmx>("assets/Levels/test_one/test_one.tmx");
@@ -28,7 +32,8 @@ protected:
 };
 
 // Basic TMX loading tests
-TEST_F(TMXTest, CanLoadTMXFile) {
+TEST_F(TMXTest, CanLoadTMXFile)
+{
     tmx map("assets/Levels/test_one/test_one.tmx");
 
     EXPECT_FALSE(map.empty()) << "TMX file should load successfully";
@@ -38,7 +43,8 @@ TEST_F(TMXTest, CanLoadTMXFile) {
     EXPECT_GT(map.getMapHeight(), 0) << "Map height should be positive";
 }
 
-TEST_F(TMXTest, TMXHasExpectedDimensions) {
+TEST_F(TMXTest, TMXHasExpectedDimensions)
+{
     tmx map("assets/Levels/test_one/test_one.tmx");
 
     // Based on what we saw in the main game output
@@ -48,21 +54,24 @@ TEST_F(TMXTest, TMXHasExpectedDimensions) {
     EXPECT_EQ(map.getTileHeight(), 32) << "Tiles should be 32 pixels tall";
 }
 
-TEST_F(TMXSystemTest, TMXHasExpectedTilesets) {
+TEST_F(TMXSystemTest, TMXHasExpectedTilesets)
+{
     EXPECT_GT(testMap->getTilesetCount(), 0) << "Map should have at least one tileset";
 
     // Based on debug output, we expect 3 tilesets
     EXPECT_EQ(testMap->getTilesetCount(), 3) << "Map should have exactly 3 tilesets";
 }
 
-TEST_F(TMXSystemTest, TMXHasExpectedLayers) {
+TEST_F(TMXSystemTest, TMXHasExpectedLayers)
+{
     EXPECT_GT(testMap->getLayerCount(), 0) << "Map should have at least one layer";
 
     // Based on debug output, we expect 2 layers
     EXPECT_EQ(testMap->getLayerCount(), 2) << "Map should have exactly 2 layers";
 }
 
-TEST_F(TMXSystemTest, CanAccessLayers) {
+TEST_F(TMXSystemTest, CanAccessLayers)
+{
     ASSERT_GT(testMap->getLayerCount(), 0);
 
     auto firstLayer = testMap->getLayer(0);
@@ -75,7 +84,8 @@ TEST_F(TMXSystemTest, CanAccessLayers) {
 }
 
 // TSX loading tests
-TEST_F(TMXTest, CanLoadTSXFiles) {
+TEST_F(TMXTest, CanLoadTSXFiles)
+{
     // Test loading individual TSX files that TMX references
     tsx magecityTsx("assets/Levels/test_one/magecity.tsx");
     EXPECT_FALSE(magecityTsx.empty()) << "Magecity TSX should load";
@@ -84,7 +94,8 @@ TEST_F(TMXTest, CanLoadTSXFiles) {
     EXPECT_FALSE(dungeonTsx.empty()) << "Dungeon tiles TSX should load";
 }
 
-TEST_F(TMXTest, TSXHasValidDimensions) {
+TEST_F(TMXTest, TSXHasValidDimensions)
+{
     tsx magecityTsx("assets/Levels/test_one/magecity.tsx");
     ASSERT_FALSE(magecityTsx.empty());
 
@@ -95,7 +106,8 @@ TEST_F(TMXTest, TSXHasValidDimensions) {
 }
 
 // Sprite creation tests - these test the WORKING sprite system
-TEST_F(TMXTest, CanCreateSpritesFromTSX) {
+TEST_F(TMXTest, CanCreateSpritesFromTSX)
+{
     tsx magecityTsx("assets/Levels/test_one/magecity.tsx");
     ASSERT_FALSE(magecityTsx.empty());
 
@@ -108,15 +120,18 @@ TEST_F(TMXTest, CanCreateSpritesFromTSX) {
     EXPECT_EQ(sprite.h, magecityTsx.getTileHeight()) << "Sprite height should match tile height";
 }
 
-TEST_F(TMXTest, CanCreateMultipleSpritesFromTSX) {
+TEST_F(TMXTest, CanCreateMultipleSpritesFromTSX)
+{
     tsx magecityTsx("assets/Levels/test_one/magecity.tsx");
     ASSERT_FALSE(magecityTsx.empty());
 
     // Create multiple sprites to test the working system
     std::vector<CF_Sprite> sprites;
 
-    for (int y = 0; y < 3; y++) {
-        for (int x = 0; x < 3; x++) {
+    for (int y = 0; y < 3; y++)
+    {
+        for (int x = 0; x < 3; x++)
+        {
             CF_Sprite sprite = magecityTsx.getTile(x, y);
             sprites.push_back(sprite);
 
@@ -129,7 +144,8 @@ TEST_F(TMXTest, CanCreateMultipleSpritesFromTSX) {
 }
 
 // TMX-TSX integration tests
-TEST_F(TMXSystemTest, CanGetValidGIDsFromLayers) {
+TEST_F(TMXSystemTest, CanGetValidGIDsFromLayers)
+{
     ASSERT_GT(testMap->getLayerCount(), 0);
 
     auto firstLayer = testMap->getLayer(0);
@@ -146,7 +162,8 @@ TEST_F(TMXSystemTest, CanGetValidGIDsFromLayers) {
     EXPECT_GE(gid_10_10, 0) << "GID at (10,10) should be valid";
 }
 
-TEST_F(TMXSystemTest, CanGetSpritesAtTilePositions) {
+TEST_F(TMXSystemTest, CanGetSpritesAtTilePositions)
+{
     ASSERT_GT(testMap->getLayerCount(), 0);
 
     auto firstLayer = testMap->getLayer(0);
@@ -154,10 +171,13 @@ TEST_F(TMXSystemTest, CanGetSpritesAtTilePositions) {
 
     // Find a non-empty tile position
     int test_x = -1, test_y = -1;
-    for (int y = 0; y < firstLayer->height && test_x < 0; y++) {
-        for (int x = 0; x < firstLayer->width && test_x < 0; x++) {
+    for (int y = 0; y < firstLayer->height && test_x < 0; y++)
+    {
+        for (int x = 0; x < firstLayer->width && test_x < 0; x++)
+        {
             int gid = firstLayer->getTileGID(x, y);
-            if (gid > 0) {
+            if (gid > 0)
+            {
                 test_x = x;
                 test_y = y;
             }
@@ -175,14 +195,15 @@ TEST_F(TMXSystemTest, CanGetSpritesAtTilePositions) {
 }
 
 // PNG loading pattern tests - understanding what works
-TEST_F(TMXTest, TSXPNGLoadingPattern) {
+TEST_F(TMXTest, TSXPNGLoadingPattern)
+{
     tsx magecityTsx("assets/Levels/test_one/magecity.tsx");
     ASSERT_FALSE(magecityTsx.empty());
 
     // This tests the exact PNG loading pattern that WORKS
-    CF_Sprite sprite1 = magecityTsx.getTile(0, 0);  // 32x32 tile
-    CF_Sprite sprite2 = magecityTsx.getTile(1, 1);  // 32x32 tile
-    CF_Sprite sprite3 = magecityTsx.getTile(2, 2);  // 32x32 tile
+    CF_Sprite sprite1 = magecityTsx.getTile(0, 0); // 32x32 tile
+    CF_Sprite sprite2 = magecityTsx.getTile(1, 1); // 32x32 tile
+    CF_Sprite sprite3 = magecityTsx.getTile(2, 2); // 32x32 tile
 
     // All should be valid
     EXPECT_GT(sprite1.w, 0);
@@ -200,7 +221,8 @@ TEST_F(TMXTest, TSXPNGLoadingPattern) {
 }
 
 // Stress test the working system
-TEST_F(TMXTest, TSXStressTest) {
+TEST_F(TMXTest, TSXStressTest)
+{
     tsx magecityTsx("assets/Levels/test_one/magecity.tsx");
     ASSERT_FALSE(magecityTsx.empty());
 
@@ -209,9 +231,10 @@ TEST_F(TMXTest, TSXStressTest) {
     std::vector<CF_Sprite> sprites;
     sprites.reserve(stress_count);
 
-    for (int i = 0; i < stress_count; i++) {
+    for (int i = 0; i < stress_count; i++)
+    {
         // Create sprites from different tile positions
-        int tile_x = i % 8;  // Assume at least 8 tiles wide
+        int tile_x = i % 8; // Assume at least 8 tiles wide
         int tile_y = i / 8;
 
         CF_Sprite sprite = magecityTsx.getTile(tile_x, tile_y);

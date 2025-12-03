@@ -1,19 +1,21 @@
 #include <gtest/gtest.h>
 #include <cute.h>
-#include "lib/tmx.h"
-#include "lib/tsx.h"
-#include "lib/CFNativeCamera.h"
-#include "lib/Utils.h"
+#include "tmx.h"
+#include "tsx.h"
+#include "CFNativeCamera.h"
+#include "Utils.h"
 #include "../fixtures/TestFixture.hpp"
 
 using namespace Cute;
 
-class TMXRenderingTest : public TestFixture {
+class TMXRenderingTest : public TestFixture
+{
 protected:
     std::unique_ptr<tmx> testMap;
     std::unique_ptr<CFNativeCamera> testCamera;
 
-    void SetUp() override {
+    void SetUp() override
+    {
         TestFixture::SetUp();
         mount_content_directory_as("/assets");
 
@@ -24,9 +26,11 @@ protected:
         ASSERT_FALSE(testMap->empty()) << "TMX file should load for rendering tests";
     }
 
-    void TearDown() override {
+    void TearDown() override
+    {
         // Make sure camera state is clean
-        if (testCamera) {
+        if (testCamera)
+        {
             testCamera.reset();
         }
         testMap.reset();
@@ -35,7 +39,8 @@ protected:
 };
 
 // Test that TMX sprites can be created without errors
-TEST_F(TMXRenderingTest, CanCreateTMXSpritesForRendering) {
+TEST_F(TMXRenderingTest, CanCreateTMXSpritesForRendering)
+{
     ASSERT_GT(testMap->getLayerCount(), 0);
 
     auto firstLayer = testMap->getLayer(0);
@@ -45,12 +50,16 @@ TEST_F(TMXRenderingTest, CanCreateTMXSpritesForRendering) {
     std::vector<CF_Sprite> createdSprites;
     int sprites_created = 0;
 
-    for (int y = 0; y < std::min(firstLayer->height, 5) && sprites_created < 10; y++) {
-        for (int x = 0; x < std::min(firstLayer->width, 5) && sprites_created < 10; x++) {
-                        int gid = firstLayer->getTileGID(x, y);
-            if (gid > 0) {
+    for (int y = 0; y < std::min(firstLayer->height, 5) && sprites_created < 10; y++)
+    {
+        for (int x = 0; x < std::min(firstLayer->width, 5) && sprites_created < 10; x++)
+        {
+            int gid = firstLayer->getTileGID(x, y);
+            if (gid > 0)
+            {
                 CF_Sprite sprite = testMap->getTileAt(0, x, y);
-                if (sprite.w > 0 && sprite.h > 0) {
+                if (sprite.w > 0 && sprite.h > 0)
+                {
                     createdSprites.push_back(sprite);
                     sprites_created++;
 
@@ -67,7 +76,8 @@ TEST_F(TMXRenderingTest, CanCreateTMXSpritesForRendering) {
 }
 
 // Test camera setup for TMX rendering
-TEST_F(TMXRenderingTest, CameraSetupForTMXRendering) {
+TEST_F(TMXRenderingTest, CameraSetupForTMXRendering)
+{
     // Test camera initialization
     EXPECT_EQ(testCamera->getPosition().x, 0.0f);
     EXPECT_EQ(testCamera->getPosition().y, 0.0f);
@@ -85,7 +95,8 @@ TEST_F(TMXRenderingTest, CameraSetupForTMXRendering) {
 }
 
 // Test TMX rendering pipeline setup (without actual rendering to avoid crash)
-TEST_F(TMXRenderingTest, TMXRenderingPipelineSetup) {
+TEST_F(TMXRenderingTest, TMXRenderingPipelineSetup)
+{
     ASSERT_GT(testMap->getLayerCount(), 0);
 
     auto firstLayer = testMap->getLayer(0);
@@ -102,10 +113,13 @@ TEST_F(TMXRenderingTest, TMXRenderingPipelineSetup) {
     float world_x = 0.0f;
     float world_y = 0.0f;
 
-    for (int y = 0; y < std::min(3, firstLayer->height); y++) {
-        for (int x = 0; x < std::min(3, firstLayer->width); x++) {
+    for (int y = 0; y < std::min(3, firstLayer->height); y++)
+    {
+        for (int x = 0; x < std::min(3, firstLayer->width); x++)
+        {
             int gid = firstLayer->getTileGID(x, y);
-            if (gid > 0) {
+            if (gid > 0)
+            {
                 // Calculate tile world position (like TMX does)
                 float tile_world_x = world_x + (x * tile_width);
                 float tile_world_y = world_y + ((firstLayer->height - 1 - y) * tile_height);
@@ -122,20 +136,24 @@ TEST_F(TMXRenderingTest, TMXRenderingPipelineSetup) {
 }
 
 // Test TMX tileset access patterns
-TEST_F(TMXRenderingTest, TMXTilesetAccessPatterns) {
+TEST_F(TMXRenderingTest, TMXTilesetAccessPatterns)
+{
     // Test finding tilesets for different GIDs
     ASSERT_GT(testMap->getLayerCount(), 0);
 
     auto firstLayer = testMap->getLayer(0);
     ASSERT_NE(firstLayer, nullptr);
 
-        std::vector<std::pair<int, int>> tile_positions;
+    std::vector<std::pair<int, int>> tile_positions;
 
     // Collect some tile positions with non-empty GIDs
-    for (int y = 0; y < std::min(firstLayer->height, 10); y++) {
-        for (int x = 0; x < std::min(firstLayer->width, 10); x++) {
+    for (int y = 0; y < std::min(firstLayer->height, 10); y++)
+    {
+        for (int x = 0; x < std::min(firstLayer->width, 10); x++)
+        {
             int gid = firstLayer->getTileGID(x, y);
-            if (gid > 0) {
+            if (gid > 0)
+            {
                 tile_positions.push_back({x, y});
             }
         }
@@ -144,18 +162,21 @@ TEST_F(TMXRenderingTest, TMXTilesetAccessPatterns) {
     EXPECT_GT(tile_positions.size(), 0) << "Should find some tiles in the map";
 
     // Test that each tile position can be resolved to a sprite
-    for (auto [x, y] : tile_positions) {
+    for (auto [x, y] : tile_positions)
+    {
         CF_Sprite sprite = testMap->getTileAt(0, x, y);
         EXPECT_GT(sprite.w, 0) << "Tile at (" << x << "," << y << ") should resolve to valid sprite";
         EXPECT_GT(sprite.h, 0) << "Tile at (" << x << "," << y << ") should resolve to valid sprite";
 
         // Limit to avoid too many tests
-        if (tile_positions.size() > 20) break;
+        if (tile_positions.size() > 20)
+            break;
     }
 }
 
 // Test TSX individual rendering capability
-TEST_F(TMXRenderingTest, TSXIndividualSpriteCapability) {
+TEST_F(TMXRenderingTest, TSXIndividualSpriteCapability)
+{
     // Test loading and accessing TSX files directly
     tsx magecityTsx("assets/Levels/test_one/magecity.tsx");
     ASSERT_FALSE(magecityTsx.empty());
@@ -175,7 +196,8 @@ TEST_F(TMXRenderingTest, TSXIndividualSpriteCapability) {
 }
 
 // Test PNG characteristics of working sprites
-TEST_F(TMXRenderingTest, WorkingPNGCharacteristics) {
+TEST_F(TMXRenderingTest, WorkingPNGCharacteristics)
+{
     tsx magecityTsx("assets/Levels/test_one/magecity.tsx");
     ASSERT_FALSE(magecityTsx.empty());
 
@@ -208,7 +230,8 @@ TEST_F(TMXRenderingTest, WorkingPNGCharacteristics) {
 }
 
 // Test the actual TMX rendering methods that WORK in the main game
-TEST_F(TMXRenderingTest, TMXActualRenderingMethods) {
+TEST_F(TMXRenderingTest, TMXActualRenderingMethods)
+{
     // Test the renderAllLayers method that successfully works in main game
     printf("\n=== TESTING TMX RENDERING METHODS (THAT WORK) ===\n");
 
@@ -225,7 +248,8 @@ TEST_F(TMXRenderingTest, TMXActualRenderingMethods) {
         ASSERT_GT(testMap->getLayerCount(), 0) << "Should have layers to render";
 
         // Test individual layer rendering preparation
-        for (int i = 0; i < testMap->getLayerCount(); i++) {
+        for (int i = 0; i < testMap->getLayerCount(); i++)
+        {
             printf("Preparing to render layer %d...\n", i);
             auto layer = testMap->getLayer(i);
             ASSERT_NE(layer, nullptr) << "Layer " << i << " should exist";
@@ -234,7 +258,8 @@ TEST_F(TMXRenderingTest, TMXActualRenderingMethods) {
     });
 }
 
-TEST_F(TMXRenderingTest, TMXRenderLayerByIndex) {
+TEST_F(TMXRenderingTest, TMXRenderLayerByIndex)
+{
     ASSERT_GT(testMap->getLayerCount(), 0);
 
     // Test rendering first layer by index (method used by renderAllLayers)
@@ -251,10 +276,13 @@ TEST_F(TMXRenderingTest, TMXRenderLayerByIndex) {
 
         // Test tile iteration (what renderLayer does internally)
         int renderable_tiles = 0;
-        for (int y = 0; y < layer->height && renderable_tiles < 10; y++) {
-            for (int x = 0; x < layer->width && renderable_tiles < 10; x++) {
+        for (int y = 0; y < layer->height && renderable_tiles < 10; y++)
+        {
+            for (int x = 0; x < layer->width && renderable_tiles < 10; x++)
+            {
                 int gid = layer->getTileGID(x, y);
-                if (gid > 0) {
+                if (gid > 0)
+                {
                     // This is exactly what TMX rendering does for each tile
                     CF_Sprite sprite = testMap->getTileAt(0, x, y);
                     EXPECT_GT(sprite.w, 0) << "Renderable tile should have valid sprite";
@@ -267,7 +295,8 @@ TEST_F(TMXRenderingTest, TMXRenderLayerByIndex) {
     });
 }
 
-TEST_F(TMXRenderingTest, TMXRenderLayerByName) {
+TEST_F(TMXRenderingTest, TMXRenderLayerByName)
+{
     ASSERT_GT(testMap->getLayerCount(), 0);
 
     // Test rendering by layer name (alternative rendering method)
@@ -286,18 +315,20 @@ TEST_F(TMXRenderingTest, TMXRenderLayerByName) {
     });
 }
 
-TEST_F(TMXRenderingTest, TMXCameraIntegratedRendering) {
+TEST_F(TMXRenderingTest, TMXCameraIntegratedRendering)
+{
     // Test the camera-integrated rendering that works in main game
     printf("Testing TMX rendering with camera integration...\n");
 
     // Test different camera positions/zooms like main game
     std::vector<std::pair<v2, float>> camera_configs;
-    camera_configs.push_back({cf_v2(0.0f, 0.0f), 1.0f});      // Default position
-    camera_configs.push_back({cf_v2(100.0f, 100.0f), 1.0f});  // Moved position
-    camera_configs.push_back({cf_v2(0.0f, 0.0f), 2.0f});      // Zoomed in
-    camera_configs.push_back({cf_v2(50.0f, 50.0f), 0.5f});    // Zoomed out + moved
+    camera_configs.push_back({cf_v2(0.0f, 0.0f), 1.0f});     // Default position
+    camera_configs.push_back({cf_v2(100.0f, 100.0f), 1.0f}); // Moved position
+    camera_configs.push_back({cf_v2(0.0f, 0.0f), 2.0f});     // Zoomed in
+    camera_configs.push_back({cf_v2(50.0f, 50.0f), 0.5f});   // Zoomed out + moved
 
-    for (auto [pos, zoom] : camera_configs) {
+    for (auto [pos, zoom] : camera_configs)
+    {
         testCamera->setPosition(pos);
         testCamera->setZoom(zoom);
 
@@ -313,13 +344,16 @@ TEST_F(TMXRenderingTest, TMXCameraIntegratedRendering) {
 
         // This mimics the renderAllLayers call with camera
         auto layer = testMap->getLayer(0);
-        if (layer) {
+        if (layer)
+        {
             int tile_width = testMap->getTileWidth();
             int tile_height = testMap->getTileHeight();
 
             // Test tile world positioning calculation
-            for (int test_x = 0; test_x < std::min(3, layer->width); test_x++) {
-                for (int test_y = 0; test_y < std::min(3, layer->height); test_y++) {
+            for (int test_x = 0; test_x < std::min(3, layer->width); test_x++)
+            {
+                for (int test_y = 0; test_y < std::min(3, layer->height); test_y++)
+                {
                     float tile_world_x = world_x + (test_x * tile_width);
                     float tile_world_y = world_y + ((layer->height - 1 - test_y) * tile_height);
 
@@ -331,7 +365,8 @@ TEST_F(TMXRenderingTest, TMXCameraIntegratedRendering) {
     }
 }
 
-TEST_F(TMXRenderingTest, TMXSpriteRenderingPipeline) {
+TEST_F(TMXRenderingTest, TMXSpriteRenderingPipeline)
+{
     // Test the exact sprite rendering pipeline TMX uses (that works!)
     printf("Testing TMX sprite rendering pipeline...\n");
 
@@ -343,10 +378,13 @@ TEST_F(TMXRenderingTest, TMXSpriteRenderingPipeline) {
     int test_gid = -1;
     int test_x = -1, test_y = -1;
 
-    for (int y = 0; y < layer->height && test_gid <= 0; y++) {
-        for (int x = 0; x < layer->width && test_gid <= 0; x++) {
+    for (int y = 0; y < layer->height && test_gid <= 0; y++)
+    {
+        for (int x = 0; x < layer->width && test_gid <= 0; x++)
+        {
             int gid = layer->getTileGID(x, y);
-            if (gid > 0) {
+            if (gid > 0)
+            {
                 test_gid = gid;
                 test_x = x;
                 test_y = y;
@@ -393,7 +431,8 @@ TEST_F(TMXRenderingTest, TMXSpriteRenderingPipeline) {
 }
 
 // Performance test for working TMX system
-TEST_F(TMXRenderingTest, TMXPerformanceCharacteristics) {
+TEST_F(TMXRenderingTest, TMXPerformanceCharacteristics)
+{
     // Test creating many sprites quickly (like a real game would)
     auto start = std::chrono::high_resolution_clock::now();
 
@@ -406,14 +445,17 @@ TEST_F(TMXRenderingTest, TMXPerformanceCharacteristics) {
     ASSERT_NE(firstLayer, nullptr);
 
     // Create sprites from different positions
-    for (int i = 0; i < target_sprites && created_count < target_sprites; i++) {
+    for (int i = 0; i < target_sprites && created_count < target_sprites; i++)
+    {
         int x = i % firstLayer->width;
         int y = (i / firstLayer->width) % firstLayer->height;
 
         int gid = firstLayer->getTileGID(x, y);
-        if (gid > 0) {
+        if (gid > 0)
+        {
             CF_Sprite sprite = testMap->getTileAt(0, x, y);
-            if (sprite.w > 0) {
+            if (sprite.w > 0)
+            {
                 sprites.push_back(sprite);
                 created_count++;
             }
