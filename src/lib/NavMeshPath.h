@@ -16,6 +16,7 @@ class NavMeshPath
 private:
     std::vector<CF_V2> waypoints; // Path waypoints (world positions)
     bool is_valid;                // Whether the path is valid and reachable
+    bool is_complete;             // Whether the path has been completed/finished
     float total_length;           // Total length of the path
     int currentWaypointIndex;     // Index of the current waypoint
     mutable CF_Color debug_color; // Color used for debug rendering (assigned on first render)
@@ -44,6 +45,8 @@ public:
     // Query functions
     int getId() const { return id; }
     bool isValid() const { return is_valid; }
+    bool isComplete() const { return is_complete; }
+    void markComplete() { is_complete = true; }
     int getWaypointCount() const { return static_cast<int>(waypoints.size()); }
     float getLength() const { return total_length; }
     const std::vector<CF_V2> &getWaypoints() const { return waypoints; }

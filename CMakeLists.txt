@@ -115,6 +115,7 @@ add_executable(
 	src/lib/WanderBehavior.cpp
 	src/lib/LevelV1.cpp
 	src/lib/JobSystem.cpp
+	src/lib/OnScreenChecks.cpp
 )
 
 # Our source code will be in the `src` folder.

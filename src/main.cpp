@@ -8,6 +8,7 @@
 #include "lib/DebugWindowList.h"
 #include "lib/DebugFPSWindow.h"
 #include "lib/DebugJobWindow.h"
+#include "lib/OnScreenChecks.h"
 #include "lib/Utils.h"
 #include "lib/DataFile.h"
 #include "lib/RealConfigFile.h"
@@ -259,6 +260,10 @@ int main(int argc, char *argv[])
 
 	// NavMesh path for pathfinding (stored as shared_ptr)
 	std::shared_ptr<NavMeshPath> navmeshPath = nullptr;
+
+	// Initialize and start on-screen checks worker
+	OnScreenChecks::initialize(&playerPosition, &cfCamera, &level);
+	OnScreenChecks::start();
 
 	// Main loop
 	printf("Skeleton Adventure Game:\n");
@@ -583,8 +588,14 @@ int main(int argc, char *argv[])
 		app_draw_onto_screen();
 	}
 
+	// Shutdown on-screen checks worker
+	OnScreenChecks::requestShutdown();
+
 	// Shutdown job system
 	JobSystem::shutdown();
+
+	// Cleanup on-screen checks
+	OnScreenChecks::shutdown();
 
 	destroy_app();
 	return 0;
