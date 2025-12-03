@@ -382,8 +382,15 @@ void LevelV1::debugPrint() const
 bool LevelV1::checkAgentsInArea(const std::vector<CF_Aabb> &areas, CF_Aabb areasBounds,
                                 const AnimatedDataCharacter *excludeAgent) const
 {
-    for (const auto &agent : agents)
+    // Use spatial grid to narrow down which agents to check
+    std::vector<size_t> nearbyAgents = spatialGrid.queryAABB(areasBounds);
+
+    for (size_t agentIndex : nearbyAgents)
     {
+        if (agentIndex >= agents.size())
+            continue;
+
+        const auto &agent = agents[agentIndex];
         if (!agent)
             continue;
 
@@ -398,10 +405,6 @@ bool LevelV1::checkAgentsInArea(const std::vector<CF_Aabb> &areas, CF_Aabb areas
         CF_Aabb agentBox = cf_make_aabb(
             cf_v2(agentPos.x - agentRadius, agentPos.y - agentRadius),
             cf_v2(agentPos.x + agentRadius, agentPos.y + agentRadius));
-
-        // check if agent is in the areas bounds
-        if (!cf_overlaps(areasBounds, agentBox))
-            continue;
 
         // Check if agent overlaps with any of the areas
         for (const auto &area : areas)
