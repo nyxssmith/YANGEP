@@ -5,7 +5,6 @@
 #include "SpriteAnimationLoader.h"
 #include "DataFile.h"
 #include "HitBox.h"
-#include "lib/HitBox.h"
 
 using namespace Cute;
 

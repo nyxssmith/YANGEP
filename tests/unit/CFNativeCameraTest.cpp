@@ -1,43 +1,50 @@
 #include <gtest/gtest.h>
 #include <cute.h>
-#include "lib/CFNativeCamera.h"
+#include "CFNativeCamera.h"
 #include "../fixtures/TestFixture.hpp"
 
 using namespace Cute;
 
-class CFNativeCameraTest : public TestFixture {
+class CFNativeCameraTest : public TestFixture
+{
 protected:
     std::unique_ptr<CFNativeCamera> camera;
     const float FLOAT_TOLERANCE = 0.001f;
 
-    void SetUp() override {
+    void SetUp() override
+    {
         TestFixture::SetUp();
         camera = std::make_unique<CFNativeCamera>();
     }
 
-    void TearDown() override {
+    void TearDown() override
+    {
         camera.reset();
         TestFixture::TearDown();
     }
 
-    bool floatEquals(float a, float b) {
+    bool floatEquals(float a, float b)
+    {
         return std::abs(a - b) < FLOAT_TOLERANCE;
     }
 
-    bool v2Equals(v2 a, v2 b) {
+    bool v2Equals(v2 a, v2 b)
+    {
         return floatEquals(a.x, b.x) && floatEquals(a.y, b.y);
     }
 };
 
 // Basic construction and properties
-TEST_F(CFNativeCameraTest, DefaultConstruction) {
+TEST_F(CFNativeCameraTest, DefaultConstruction)
+{
     ASSERT_NE(camera, nullptr);
     EXPECT_TRUE(v2Equals(camera->getPosition(), cf_v2(0.0f, 0.0f)));
     EXPECT_TRUE(floatEquals(camera->getZoom(), 1.0f));
     EXPECT_FALSE(camera->isMoving());
 }
 
-TEST_F(CFNativeCameraTest, ParameterizedConstruction) {
+TEST_F(CFNativeCameraTest, ParameterizedConstruction)
+{
     v2 testPos = cf_v2(100.0f, 200.0f);
     float testZoom = 2.5f;
 
@@ -49,21 +56,24 @@ TEST_F(CFNativeCameraTest, ParameterizedConstruction) {
 }
 
 // Position control tests
-TEST_F(CFNativeCameraTest, SetPosition) {
+TEST_F(CFNativeCameraTest, SetPosition)
+{
     v2 newPos = cf_v2(50.0f, -30.0f);
     camera->setPosition(newPos);
 
     EXPECT_TRUE(v2Equals(camera->getPosition(), newPos));
 }
 
-TEST_F(CFNativeCameraTest, SetPositionComponents) {
+TEST_F(CFNativeCameraTest, SetPositionComponents)
+{
     float x = 75.0f, y = -125.0f;
     camera->setPosition(x, y);
 
     EXPECT_TRUE(v2Equals(camera->getPosition(), cf_v2(x, y)));
 }
 
-TEST_F(CFNativeCameraTest, TranslateVector) {
+TEST_F(CFNativeCameraTest, TranslateVector)
+{
     v2 startPos = cf_v2(10.0f, 20.0f);
     v2 offset = cf_v2(5.0f, -15.0f);
     v2 expectedPos = cf_v2(15.0f, 5.0f);
@@ -74,7 +84,8 @@ TEST_F(CFNativeCameraTest, TranslateVector) {
     EXPECT_TRUE(v2Equals(camera->getPosition(), expectedPos));
 }
 
-TEST_F(CFNativeCameraTest, TranslateComponents) {
+TEST_F(CFNativeCameraTest, TranslateComponents)
+{
     v2 startPos = cf_v2(10.0f, 20.0f);
     float dx = 5.0f, dy = -15.0f;
     v2 expectedPos = cf_v2(15.0f, 5.0f);
@@ -86,14 +97,16 @@ TEST_F(CFNativeCameraTest, TranslateComponents) {
 }
 
 // Zoom control tests
-TEST_F(CFNativeCameraTest, SetZoom) {
+TEST_F(CFNativeCameraTest, SetZoom)
+{
     float testZoom = 3.0f;
     camera->setZoom(testZoom);
 
     EXPECT_TRUE(floatEquals(camera->getZoom(), testZoom));
 }
 
-TEST_F(CFNativeCameraTest, ZoomConstraints) {
+TEST_F(CFNativeCameraTest, ZoomConstraints)
+{
     camera->setZoomRange(0.5f, 4.0f);
 
     // Test minimum constraint
@@ -109,7 +122,8 @@ TEST_F(CFNativeCameraTest, ZoomConstraints) {
     EXPECT_TRUE(floatEquals(camera->getZoom(), 2.0f));
 }
 
-TEST_F(CFNativeCameraTest, ZoomInOut) {
+TEST_F(CFNativeCameraTest, ZoomInOut)
+{
     camera->setZoom(2.0f);
 
     // Test zoom in
@@ -122,7 +136,8 @@ TEST_F(CFNativeCameraTest, ZoomInOut) {
 }
 
 // Reset functionality
-TEST_F(CFNativeCameraTest, Reset) {
+TEST_F(CFNativeCameraTest, Reset)
+{
     // Set some non-default values
     camera->setPosition(cf_v2(100.0f, -50.0f));
     camera->setZoom(3.5f);
@@ -135,7 +150,8 @@ TEST_F(CFNativeCameraTest, Reset) {
 }
 
 // Target following tests
-TEST_F(CFNativeCameraTest, StaticTargetFollowing) {
+TEST_F(CFNativeCameraTest, StaticTargetFollowing)
+{
     v2 targetPos = cf_v2(100.0f, 50.0f);
     camera->setTarget(targetPos);
     camera->setFollowSpeed(10.0f); // Very fast for immediate following
@@ -149,7 +165,8 @@ TEST_F(CFNativeCameraTest, StaticTargetFollowing) {
     EXPECT_GT(currentPos.y, 0.0f);
 }
 
-TEST_F(CFNativeCameraTest, PointerTargetFollowing) {
+TEST_F(CFNativeCameraTest, PointerTargetFollowing)
+{
     v2 targetPos = cf_v2(100.0f, 50.0f);
     camera->setTarget(&targetPos);
     camera->setFollowSpeed(10.0f);
@@ -170,7 +187,8 @@ TEST_F(CFNativeCameraTest, PointerTargetFollowing) {
     EXPECT_GT(newPos.y, currentPos.y);
 }
 
-TEST_F(CFNativeCameraTest, FollowDeadzone) {
+TEST_F(CFNativeCameraTest, FollowDeadzone)
+{
     v2 targetPos = cf_v2(25.0f, 25.0f);
     camera->setTarget(targetPos);
     camera->setFollowDeadzone(cf_v2(30.0f, 30.0f)); // Larger deadzone than target distance
@@ -182,7 +200,8 @@ TEST_F(CFNativeCameraTest, FollowDeadzone) {
     EXPECT_TRUE(v2Equals(camera->getPosition(), cf_v2(0.0f, 0.0f)));
 }
 
-TEST_F(CFNativeCameraTest, ClearTarget) {
+TEST_F(CFNativeCameraTest, ClearTarget)
+{
     v2 targetPos = cf_v2(100.0f, 50.0f);
     camera->setTarget(targetPos);
     camera->clearTarget();
@@ -195,7 +214,8 @@ TEST_F(CFNativeCameraTest, ClearTarget) {
 }
 
 // Smooth movement tests
-TEST_F(CFNativeCameraTest, SmoothMovement) {
+TEST_F(CFNativeCameraTest, SmoothMovement)
+{
     v2 targetPos = cf_v2(100.0f, 50.0f);
     float duration = 1.0f; // 1 second
 
@@ -219,7 +239,8 @@ TEST_F(CFNativeCameraTest, SmoothMovement) {
     EXPECT_FALSE(camera->isMoving());
 }
 
-TEST_F(CFNativeCameraTest, SmoothZoom) {
+TEST_F(CFNativeCameraTest, SmoothZoom)
+{
     float targetZoom = 3.0f;
     float duration = 1.0f;
 
@@ -243,7 +264,8 @@ TEST_F(CFNativeCameraTest, SmoothZoom) {
     EXPECT_FALSE(camera->isMoving());
 }
 
-TEST_F(CFNativeCameraTest, InstantMovement) {
+TEST_F(CFNativeCameraTest, InstantMovement)
+{
     v2 targetPos = cf_v2(100.0f, 50.0f);
 
     // Zero duration should move instantly
@@ -253,7 +275,8 @@ TEST_F(CFNativeCameraTest, InstantMovement) {
     EXPECT_FALSE(camera->isMoving());
 }
 
-TEST_F(CFNativeCameraTest, StopMovement) {
+TEST_F(CFNativeCameraTest, StopMovement)
+{
     v2 targetPos = cf_v2(100.0f, 50.0f);
     camera->moveTo(targetPos, 1.0f);
 
@@ -265,7 +288,8 @@ TEST_F(CFNativeCameraTest, StopMovement) {
 }
 
 // Camera shake tests
-TEST_F(CFNativeCameraTest, CameraShake) {
+TEST_F(CFNativeCameraTest, CameraShake)
+{
     float intensity = 10.0f;
     float duration = 0.5f;
 
@@ -285,7 +309,8 @@ TEST_F(CFNativeCameraTest, CameraShake) {
     // that the shake duration decreases over time
 }
 
-TEST_F(CFNativeCameraTest, StopShake) {
+TEST_F(CFNativeCameraTest, StopShake)
+{
     camera->shake(10.0f, 1.0f);
     camera->stopShake();
 
@@ -296,7 +321,8 @@ TEST_F(CFNativeCameraTest, StopShake) {
     EXPECT_TRUE(v2Equals(camera->getPosition(), originalPos));
 }
 
-TEST_F(CFNativeCameraTest, ShakeDecay) {
+TEST_F(CFNativeCameraTest, ShakeDecay)
+{
     camera->setShakeDecay(3.0f); // Custom decay rate
     camera->shake(10.0f, 1.0f);
 
@@ -306,7 +332,8 @@ TEST_F(CFNativeCameraTest, ShakeDecay) {
 }
 
 // Apply/restore state tests
-TEST_F(CFNativeCameraTest, ApplyRestore) {
+TEST_F(CFNativeCameraTest, ApplyRestore)
+{
     // This test verifies that apply/restore don't crash
     // The actual transformation testing requires a full CF graphics context
 
@@ -323,7 +350,8 @@ TEST_F(CFNativeCameraTest, ApplyRestore) {
 }
 
 // Combined functionality tests
-TEST_F(CFNativeCameraTest, CombinedMovementAndFollowing) {
+TEST_F(CFNativeCameraTest, CombinedMovementAndFollowing)
+{
     // Test smooth movement combined with target following
     v2 targetPos = cf_v2(100.0f, 50.0f);
     camera->moveTo(targetPos, 0.5f);

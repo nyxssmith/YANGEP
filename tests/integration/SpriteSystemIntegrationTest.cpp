@@ -1,24 +1,28 @@
 #include <gtest/gtest.h>
 #include <cute.h>
-#include "../../src/lib/SpriteAnimationLoader.h"
+#include "SpriteAnimationLoader.h"
 
 using namespace Cute;
 
-class SpriteSystemIntegrationTest : public ::testing::Test {
+class SpriteSystemIntegrationTest : public ::testing::Test
+{
 protected:
     SpriteAnimationLoader loader;
 
-    void SetUp() override {
+    void SetUp() override
+    {
         // Set up test environment
     }
 
-    void TearDown() override {
+    void TearDown() override
+    {
         // Clean up test environment
     }
 };
 
 // Test that the entire sprite system can be initialized without crashing
-TEST_F(SpriteSystemIntegrationTest, SystemInitializationDoesNotCrash) {
+TEST_F(SpriteSystemIntegrationTest, SystemInitializationDoesNotCrash)
+{
     // This test should pass if our sprite animation loader can be created
     // without triggering CF_ASSERT failures or crashes
 
@@ -28,7 +32,8 @@ TEST_F(SpriteSystemIntegrationTest, SystemInitializationDoesNotCrash) {
 }
 
 // Test that sprite loading fails gracefully with invalid paths
-TEST_F(SpriteSystemIntegrationTest, InvalidAssetPathsFailGracefully) {
+TEST_F(SpriteSystemIntegrationTest, InvalidAssetPathsFailGracefully)
+{
     // Test with a non-existent PNG file
     CF_Sprite frame = loader.extractSpriteFrame("nonexistent/path/file.png", 0, 0, 64, 64);
 
@@ -38,7 +43,8 @@ TEST_F(SpriteSystemIntegrationTest, InvalidAssetPathsFailGracefully) {
 }
 
 // Test that sprite loading works with real test assets
-TEST_F(SpriteSystemIntegrationTest, RealAssetLoadingWorks) {
+TEST_F(SpriteSystemIntegrationTest, RealAssetLoadingWorks)
+{
     // Test with the actual walkcycle PNG that exists
     const std::string png_path = "assets/Art/AnimationsSheets/walkcycle/BODY_skeleton.png";
 
@@ -51,11 +57,11 @@ TEST_F(SpriteSystemIntegrationTest, RealAssetLoadingWorks) {
 }
 
 // Test that animation table loading works
-TEST_F(SpriteSystemIntegrationTest, AnimationTableLoadingWorks) {
+TEST_F(SpriteSystemIntegrationTest, AnimationTableLoadingWorks)
+{
     // Create animation layouts for testing
     std::vector<AnimationLayout> layouts = {
-        AnimationLayouts::WALKCYCLE_4_DIRECTIONS_9_FRAMES
-    };
+        AnimationLayouts::WALKCYCLE_4_DIRECTIONS_9_FRAMES};
 
     // Load animation table - should not crash even if files don't exist at expected locations
     AnimationTable table = loader.loadAnimationTable("assets/Art/AnimationsSheets", layouts);
@@ -67,7 +73,8 @@ TEST_F(SpriteSystemIntegrationTest, AnimationTableLoadingWorks) {
 }
 
 // Test that frame extraction works with known good dimensions
-TEST_F(SpriteSystemIntegrationTest, FrameExtractionWithCorrectDimensions) {
+TEST_F(SpriteSystemIntegrationTest, FrameExtractionWithCorrectDimensions)
+{
     const std::string png_path = "assets/Art/AnimationsSheets/walkcycle/BODY_skeleton.png";
 
     // The PNG is 576x256, so we can extract multiple 64x64 frames
@@ -89,7 +96,8 @@ TEST_F(SpriteSystemIntegrationTest, FrameExtractionWithCorrectDimensions) {
 }
 
 // Test that PNG caching works correctly
-TEST_F(SpriteSystemIntegrationTest, PNGCachingWorks) {
+TEST_F(SpriteSystemIntegrationTest, PNGCachingWorks)
+{
     const std::string png_path = "assets/Art/AnimationsSheets/walkcycle/BODY_skeleton.png";
 
     // Initially no PNGs cached
@@ -99,17 +107,20 @@ TEST_F(SpriteSystemIntegrationTest, PNGCachingWorks) {
     CF_Sprite frame = loader.extractSpriteFrame(png_path, 0, 0, 64, 64);
 
     // Now should have 1 cached PNG (if the file exists)
-    if (frame.w > 0 && frame.h > 0) {
+    if (frame.w > 0 && frame.h > 0)
+    {
         EXPECT_EQ(loader.getCachedPNGCount(), 1);
         EXPECT_GT(loader.getCacheSize(), 0);
     }
 }
 
 // Test that sprite cleanup doesn't cause memory corruption
-TEST_F(SpriteSystemIntegrationTest, SpriteCleanupDoesNotCorruptMemory) {
+TEST_F(SpriteSystemIntegrationTest, SpriteCleanupDoesNotCorruptMemory)
+{
     // Create and destroy multiple loaders to test memory management
-    for (int i = 0; i < 5; i++) {
-        SpriteAnimationLoader* testLoader = new SpriteAnimationLoader();
+    for (int i = 0; i < 5; i++)
+    {
+        SpriteAnimationLoader *testLoader = new SpriteAnimationLoader();
 
         // Do some work that might allocate memory
         testLoader->extractSpriteFrame("../assets/Art/AnimationsSheets/walkcycle/BODY_skeleton.png", 0, 0, 64, 64);

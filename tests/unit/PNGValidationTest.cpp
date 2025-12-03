@@ -1,20 +1,23 @@
 #include <gtest/gtest.h>
 #include <cute.h>
 #include <spng.h>
-#include "lib/Utils.h"
+#include "Utils.h"
 #include "../fixtures/TestFixture.hpp"
 #include <vector>
 #include <string>
 
-class PNGValidationTest : public TestFixture {
+class PNGValidationTest : public TestFixture
+{
 protected:
-    void SetUp() override {
+    void SetUp() override
+    {
         TestFixture::SetUp();
         mount_content_directory_as("/assets");
     }
 
     // Helper to validate PNG file properties
-    struct PNGProperties {
+    struct PNGProperties
+    {
         uint32_t width;
         uint32_t height;
         uint8_t bit_depth;
@@ -25,7 +28,8 @@ protected:
         PNGProperties() : width(0), height(0), bit_depth(0), color_type(0), valid(false), file_size(0) {}
     };
 
-    PNGProperties loadAndValidatePNG(const std::string& path) {
+    PNGProperties loadAndValidatePNG(const std::string &path)
+    {
         PNGProperties props;
 
         printf("=== VALIDATING PNG: %s ===\n", path.c_str());
@@ -33,7 +37,8 @@ protected:
         // Load file
         size_t file_size = 0;
         void *file_data = cf_fs_read_entire_file_to_memory(path.c_str(), &file_size);
-        if (!file_data) {
+        if (!file_data)
+        {
             printf("❌ FAILED: Could not read PNG file\n");
             return props;
         }
@@ -43,7 +48,8 @@ protected:
 
         // Initialize spng
         spng_ctx *ctx = spng_ctx_new(0);
-        if (!ctx) {
+        if (!ctx)
+        {
             printf("❌ FAILED: Could not create spng context\n");
             cf_free(file_data);
             return props;
@@ -51,7 +57,8 @@ protected:
 
         // Set PNG buffer
         int ret = spng_set_png_buffer(ctx, file_data, file_size);
-        if (ret != 0) {
+        if (ret != 0)
+        {
             printf("❌ FAILED: spng_set_png_buffer error: %d\n", ret);
             spng_ctx_free(ctx);
             cf_free(file_data);
@@ -61,7 +68,8 @@ protected:
         // Get header
         struct spng_ihdr ihdr;
         ret = spng_get_ihdr(ctx, &ihdr);
-        if (ret != 0) {
+        if (ret != 0)
+        {
             printf("❌ FAILED: spng_get_ihdr error: %d\n", ret);
             spng_ctx_free(ctx);
             cf_free(file_data);
@@ -81,16 +89,22 @@ protected:
         // Test image decoding
         size_t image_size;
         ret = spng_decoded_image_size(ctx, SPNG_FMT_RGBA8, &image_size);
-        if (ret != 0) {
+        if (ret != 0)
+        {
             printf("❌ WARNING: Could not get decoded image size: %d\n", ret);
-        } else {
+        }
+        else
+        {
             printf("✅ Expected decoded size: %zu bytes\n", image_size);
 
             // Validate expected size matches dimensions
             size_t expected_size = props.width * props.height * 4; // RGBA8
-            if (image_size == expected_size) {
+            if (image_size == expected_size)
+            {
                 printf("✅ Size calculation matches: %zu bytes\n", expected_size);
-            } else {
+            }
+            else
+            {
                 printf("⚠️  Size mismatch: expected %zu, got %zu\n", expected_size, image_size);
             }
         }
@@ -102,27 +116,31 @@ protected:
     }
 
     // Test extracting a specific tile region
-    bool testTileExtraction(const std::string& path, int tile_x, int tile_y, int tile_width, int tile_height) {
+    bool testTileExtraction(const std::string &path, int tile_x, int tile_y, int tile_width, int tile_height)
+    {
         printf("=== TESTING TILE EXTRACTION: (%d,%d) %dx%d from %s ===\n",
                tile_x, tile_y, tile_width, tile_height, path.c_str());
 
         // Load and decode full PNG
         size_t file_size = 0;
         void *file_data = cf_fs_read_entire_file_to_memory(path.c_str(), &file_size);
-        if (!file_data) {
+        if (!file_data)
+        {
             printf("❌ FAILED: Could not read PNG file for tile extraction\n");
             return false;
         }
 
         spng_ctx *ctx = spng_ctx_new(0);
-        if (!ctx) {
+        if (!ctx)
+        {
             printf("❌ FAILED: Could not create spng context for tile extraction\n");
             cf_free(file_data);
             return false;
         }
 
         int ret = spng_set_png_buffer(ctx, file_data, file_size);
-        if (ret != 0) {
+        if (ret != 0)
+        {
             printf("❌ FAILED: spng_set_png_buffer error in tile extraction: %d\n", ret);
             spng_ctx_free(ctx);
             cf_free(file_data);
@@ -131,7 +149,8 @@ protected:
 
         struct spng_ihdr ihdr;
         ret = spng_get_ihdr(ctx, &ihdr);
-        if (ret != 0) {
+        if (ret != 0)
+        {
             printf("❌ FAILED: spng_get_ihdr error in tile extraction: %d\n", ret);
             spng_ctx_free(ctx);
             cf_free(file_data);
@@ -142,7 +161,8 @@ protected:
         int pixel_x = tile_x * tile_width;
         int pixel_y = tile_y * tile_height;
 
-        if (pixel_x + tile_width > ihdr.width || pixel_y + tile_height > ihdr.height) {
+        if (pixel_x + tile_width > ihdr.width || pixel_y + tile_height > ihdr.height)
+        {
             printf("❌ FAILED: Tile bounds exceed image dimensions\n");
             printf("   Tile region: (%d,%d) to (%d,%d)\n", pixel_x, pixel_y, pixel_x + tile_width, pixel_y + tile_height);
             printf("   Image size: %dx%d\n", ihdr.width, ihdr.height);
@@ -154,7 +174,8 @@ protected:
         // Decode full image
         size_t image_size;
         ret = spng_decoded_image_size(ctx, SPNG_FMT_RGBA8, &image_size);
-        if (ret != 0) {
+        if (ret != 0)
+        {
             printf("❌ FAILED: Could not get image size for tile extraction: %d\n", ret);
             spng_ctx_free(ctx);
             cf_free(file_data);
@@ -163,7 +184,8 @@ protected:
 
         std::vector<uint8_t> full_image(image_size);
         ret = spng_decode_image(ctx, full_image.data(), image_size, SPNG_FMT_RGBA8, 0);
-        if (ret != 0) {
+        if (ret != 0)
+        {
             printf("❌ FAILED: Could not decode image for tile extraction: %d\n", ret);
             spng_ctx_free(ctx);
             cf_free(file_data);
@@ -172,12 +194,15 @@ protected:
 
         // Extract tile pixels
         std::vector<CF_Pixel> tile_pixels(tile_width * tile_height);
-        for (int y = 0; y < tile_height; y++) {
-            for (int x = 0; x < tile_width; x++) {
+        for (int y = 0; y < tile_height; y++)
+        {
+            for (int x = 0; x < tile_width; x++)
+            {
                 int src_index = ((pixel_y + y) * ihdr.width + (pixel_x + x)) * 4;
                 int dst_index = y * tile_width + x;
 
-                if (src_index + 3 >= full_image.size()) {
+                if (src_index + 3 >= full_image.size())
+                {
                     printf("❌ FAILED: Source index out of bounds: %d >= %zu\n", src_index + 3, full_image.size());
                     spng_ctx_free(ctx);
                     cf_free(file_data);
@@ -196,17 +221,21 @@ protected:
 
         bool success = (test_sprite.w == tile_width && test_sprite.h == tile_height);
 
-        if (success) {
+        if (success)
+        {
             printf("✅ Tile extraction successful: Created %dx%d sprite\n", test_sprite.w, test_sprite.h);
 
             // Sample some pixel values to verify extraction
             printf("✅ Sample pixels extracted:\n");
-            for (int i = 0; i < std::min(3, tile_width * tile_height); i++) {
+            for (int i = 0; i < std::min(3, tile_width * tile_height); i++)
+            {
                 printf("   [%d] RGBA(%d,%d,%d,%d)\n", i,
                        tile_pixels[i].colors.r, tile_pixels[i].colors.g,
                        tile_pixels[i].colors.b, tile_pixels[i].colors.a);
             }
-        } else {
+        }
+        else
+        {
             printf("❌ FAILED: Tile extraction created invalid sprite: %dx%d\n", test_sprite.w, test_sprite.h);
         }
 
@@ -218,14 +247,16 @@ protected:
 };
 
 // Test that animation PNG files have valid basic properties
-TEST_F(PNGValidationTest, AnimationPNGsHaveValidProperties) {
+TEST_F(PNGValidationTest, AnimationPNGsHaveValidProperties)
+{
     // Test the main animation PNG files
     std::vector<std::string> animation_pngs = {
         "assets/Art/AnimationsSheets/walkcycle/BODY_skeleton.png",
         // Add more animation PNGs as they exist
     };
 
-    for (const std::string& png_path : animation_pngs) {
+    for (const std::string &png_path : animation_pngs)
+    {
         PNGProperties props = loadAndValidatePNG(png_path);
 
         ASSERT_TRUE(props.valid) << "PNG should be valid: " << png_path;
@@ -240,7 +271,8 @@ TEST_F(PNGValidationTest, AnimationPNGsHaveValidProperties) {
 }
 
 // Test that animation PNGs have expected dimensions for 64x64 tiles
-TEST_F(PNGValidationTest, AnimationPNGsHaveExpectedTileDimensions) {
+TEST_F(PNGValidationTest, AnimationPNGsHaveExpectedTileDimensions)
+{
     PNGProperties props = loadAndValidatePNG("assets/Art/AnimationsSheets/walkcycle/BODY_skeleton.png");
 
     ASSERT_TRUE(props.valid) << "Animation PNG should be valid";
@@ -263,7 +295,8 @@ TEST_F(PNGValidationTest, AnimationPNGsHaveExpectedTileDimensions) {
 }
 
 // Compare animation PNG properties against working TMX PNG properties
-TEST_F(PNGValidationTest, AnimationPNGsMatchWorkingTMXSpecs) {
+TEST_F(PNGValidationTest, AnimationPNGsMatchWorkingTMXSpecs)
+{
     // Load working TMX PNG
     PNGProperties tmx_props = loadAndValidatePNG("assets/Levels/test_one/tiles/magecity.png");
     ASSERT_TRUE(tmx_props.valid) << "TMX PNG should be valid for comparison";
@@ -290,11 +323,13 @@ TEST_F(PNGValidationTest, AnimationPNGsMatchWorkingTMXSpecs) {
 }
 
 // Test that individual tiles can be extracted from animation PNGs successfully
-TEST_F(PNGValidationTest, CanExtractValidTilesFromAnimationPNG) {
+TEST_F(PNGValidationTest, CanExtractValidTilesFromAnimationPNG)
+{
     std::string anim_png = "assets/Art/AnimationsSheets/walkcycle/BODY_skeleton.png";
 
     // Test extracting tiles from different positions
-    struct TileTest {
+    struct TileTest
+    {
         int tile_x, tile_y;
         std::string description;
     };
@@ -306,10 +341,10 @@ TEST_F(PNGValidationTest, CanExtractValidTilesFromAnimationPNG) {
         {0, 1, "First tile in second row (LEFT direction, frame 0)"},
         {0, 2, "First tile in third row (DOWN direction, frame 0)"},
         {0, 3, "First tile in bottom row (RIGHT direction, frame 0)"},
-        {8, 3, "Bottom-right tile (RIGHT direction, frame 8)"}
-    };
+        {8, 3, "Bottom-right tile (RIGHT direction, frame 8)"}};
 
-    for (const auto& test : tile_tests) {
+    for (const auto &test : tile_tests)
+    {
         printf("\n--- Testing: %s ---\n", test.description.c_str());
         EXPECT_TRUE(testTileExtraction(anim_png, test.tile_x, test.tile_y, 64, 64))
             << "Should be able to extract tile at (" << test.tile_x << "," << test.tile_y << "): " << test.description;
@@ -317,7 +352,8 @@ TEST_F(PNGValidationTest, CanExtractValidTilesFromAnimationPNG) {
 }
 
 // Test that animation PNG pixel data is not corrupted
-TEST_F(PNGValidationTest, AnimationPNGPixelDataIntegrity) {
+TEST_F(PNGValidationTest, AnimationPNGPixelDataIntegrity)
+{
     std::string anim_png = "assets/Art/AnimationsSheets/walkcycle/BODY_skeleton.png";
 
     printf("=== TESTING PIXEL DATA INTEGRITY ===\n");
@@ -353,7 +389,8 @@ TEST_F(PNGValidationTest, AnimationPNGPixelDataIntegrity) {
     int transparent_pixels = 0;
     int opaque_pixels = 0;
 
-    for (size_t i = 0; i < image_size; i += 4) {
+    for (size_t i = 0; i < image_size; i += 4)
+    {
         uint8_t r = full_image[i];
         uint8_t g = full_image[i + 1];
         uint8_t b = full_image[i + 2];
@@ -362,8 +399,10 @@ TEST_F(PNGValidationTest, AnimationPNGPixelDataIntegrity) {
         alpha_distribution[a]++;
         red_distribution[r]++;
 
-        if (a == 0) transparent_pixels++;
-        else if (a == 255) opaque_pixels++;
+        if (a == 0)
+            transparent_pixels++;
+        else if (a == 255)
+            opaque_pixels++;
     }
 
     int total_pixels = image_size / 4;
@@ -385,7 +424,8 @@ TEST_F(PNGValidationTest, AnimationPNGPixelDataIntegrity) {
 }
 
 // Stress test: Extract many tiles to ensure consistency
-TEST_F(PNGValidationTest, AnimationPNGTileExtractionStressTest) {
+TEST_F(PNGValidationTest, AnimationPNGTileExtractionStressTest)
+{
     std::string anim_png = "assets/Art/AnimationsSheets/walkcycle/BODY_skeleton.png";
 
     printf("=== ANIMATION PNG TILE EXTRACTION STRESS TEST ===\n");
@@ -394,11 +434,16 @@ TEST_F(PNGValidationTest, AnimationPNGTileExtractionStressTest) {
     int failed_extractions = 0;
 
     // Extract all 36 tiles (9 cols × 4 rows)
-    for (int row = 0; row < 4; row++) {
-        for (int col = 0; col < 9; col++) {
-            if (testTileExtraction(anim_png, col, row, 64, 64)) {
+    for (int row = 0; row < 4; row++)
+    {
+        for (int col = 0; col < 9; col++)
+        {
+            if (testTileExtraction(anim_png, col, row, 64, 64))
+            {
                 successful_extractions++;
-            } else {
+            }
+            else
+            {
                 failed_extractions++;
             }
         }

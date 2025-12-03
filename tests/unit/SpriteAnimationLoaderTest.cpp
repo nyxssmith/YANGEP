@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "lib/SpriteAnimationLoader.h"
+#include "SpriteAnimationLoader.h"
 #include <cute.h>
 #include <cute_draw.h>
 #include <cute_math.h>
@@ -7,23 +7,27 @@
 using namespace Cute;
 
 // Test fixture for SpriteAnimationLoader tests
-class SpriteAnimationLoaderTest : public ::testing::Test {
+class SpriteAnimationLoaderTest : public ::testing::Test
+{
 protected:
     SpriteAnimationLoader loader;
 
-    void SetUp() override {
+    void SetUp() override
+    {
         // Setup code if needed
     }
 
-    void TearDown() override {
+    void TearDown() override
+    {
         // Cleanup code if needed
     }
 };
 
 // Test animation layouts
-TEST_F(SpriteAnimationLoaderTest, AnimationLayouts) {
+TEST_F(SpriteAnimationLoaderTest, AnimationLayouts)
+{
     // Test idle layout (corrected: 1 frame per row, 4 directions)
-    const auto& idle = AnimationLayouts::IDLE_4_DIRECTIONS;
+    const auto &idle = AnimationLayouts::IDLE_4_DIRECTIONS;
     EXPECT_EQ(idle.name, "idle");
     EXPECT_EQ(idle.frame_width, 64);
     EXPECT_EQ(idle.frame_height, 64);
@@ -32,7 +36,7 @@ TEST_F(SpriteAnimationLoaderTest, AnimationLayouts) {
     EXPECT_EQ(idle.directions.size(), 4);
 
     // Test walkcycle layout
-    const auto& walkcycle = AnimationLayouts::WALKCYCLE_4_DIRECTIONS_9_FRAMES;
+    const auto &walkcycle = AnimationLayouts::WALKCYCLE_4_DIRECTIONS_9_FRAMES;
     EXPECT_EQ(walkcycle.name, "walkcycle");
     EXPECT_EQ(walkcycle.frame_width, 64);
     EXPECT_EQ(walkcycle.frame_height, 64);
@@ -42,7 +46,8 @@ TEST_F(SpriteAnimationLoaderTest, AnimationLayouts) {
 }
 
 // Test PNG caching
-TEST_F(SpriteAnimationLoaderTest, PNGCaching) {
+TEST_F(SpriteAnimationLoaderTest, PNGCaching)
+{
     // Test initial cache state
     EXPECT_EQ(loader.getCachedPNGCount(), 0);
     EXPECT_EQ(loader.getCacheSize(), 0);
@@ -59,7 +64,8 @@ TEST_F(SpriteAnimationLoaderTest, PNGCaching) {
 }
 
 // Test frame extraction
-TEST_F(SpriteAnimationLoaderTest, FrameExtraction) {
+TEST_F(SpriteAnimationLoaderTest, FrameExtraction)
+{
     // Test frame extraction (this will fail if the file doesn't exist, which is expected)
     std::string test_png = "assets/Art/AnimationsSheets/idle/BODY_skeleton.png";
 
@@ -72,7 +78,8 @@ TEST_F(SpriteAnimationLoaderTest, FrameExtraction) {
 }
 
 // Test animation creation
-TEST_F(SpriteAnimationLoaderTest, AnimationCreation) {
+TEST_F(SpriteAnimationLoaderTest, AnimationCreation)
+{
     // Test animation creation (this will fail if the file doesn't exist, which is expected)
     std::string test_png = "assets/Art/AnimationsSheets/idle/BODY_skeleton.png";
 
@@ -85,7 +92,8 @@ TEST_F(SpriteAnimationLoaderTest, AnimationCreation) {
 }
 
 // Test animation table
-TEST_F(SpriteAnimationLoaderTest, AnimationTable) {
+TEST_F(SpriteAnimationLoaderTest, AnimationTable)
+{
     // Test empty animation table
     AnimationTable table;
     EXPECT_TRUE(table.getAnimationNames().empty());
@@ -109,7 +117,8 @@ TEST_F(SpriteAnimationLoaderTest, AnimationTable) {
 }
 
 // Test animation frame methods
-TEST_F(SpriteAnimationLoaderTest, AnimationFrameMethods) {
+TEST_F(SpriteAnimationLoaderTest, AnimationFrameMethods)
+{
     Animation anim;
     anim.name = "test";
 
@@ -127,7 +136,7 @@ TEST_F(SpriteAnimationLoaderTest, AnimationFrameMethods) {
     anim.frames.push_back(frame2);
 
     // Test frame retrieval
-    const AnimationFrame* found_frame = anim.getFrame(0, Direction::DOWN);
+    const AnimationFrame *found_frame = anim.getFrame(0, Direction::DOWN);
     EXPECT_NE(found_frame, nullptr);
     EXPECT_EQ(found_frame->frameIndex, 0);
 
