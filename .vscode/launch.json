@@ -39,6 +39,24 @@
             "args": [],
             "cwd": "${workspaceFolder}",
             "preLaunchTask": "Build Project"
+        },
+        {
+            "name": "Debug Core Dump (Linux)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/yangep",
+            "cwd": "${workspaceFolder}/build",
+            "coreDumpPath": "${workspaceFolder}/core.dump",
+            "MIMode": "gdb",
+            "preLaunchTask": "Get Latest Core Dump",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "miDebuggerPath": "/usr/bin/gdb" // Adjust path to gdb if necessary
         }
     ]
 }
