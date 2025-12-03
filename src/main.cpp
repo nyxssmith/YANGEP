@@ -18,7 +18,7 @@
 #include "lib/CFNativeCamera.h"
 #include "lib/NavMesh.h"
 #include "lib/NavMeshPath.h"
-#include "lib/AnimatedDataCharacter.h"
+#include "lib/AnimatedDataCharacterNavMeshPlayer.h"
 using namespace Cute;
 
 int main(int argc, char *argv[])
@@ -226,8 +226,19 @@ int main(int argc, char *argv[])
 	}
 
 	// Create playerCharacter player character
-	AnimatedDataCharacter playerCharacter;
-	v2 playerPosition = cf_v2(0.0f, 0.0f); // Start at world origin
+	AnimatedDataCharacterNavMeshPlayer playerCharacter;
+
+	// Starting position in tile coordinates (will be converted to world coordinates)
+	float startTileX = 5.0f;
+	float startTileY = 10.0f;
+
+	// Convert tile coordinates to world pixel coordinates
+	float startWorldX = startTileX * tile_width;
+	float startWorldY = startTileY * tile_height;
+	v2 playerPosition = cf_v2(startWorldX, startWorldY);
+
+	printf("Player starting at tile (%.1f, %.1f) = world (%.1f, %.1f)\n",
+		   startTileX, startTileY, startWorldX, startWorldY);
 
 	if (!playerCharacter.init("assets/DataFiles/EntityFiles/player.json"))
 	{
@@ -235,8 +246,14 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
+	// Set player's initial position
+	playerCharacter.setPosition(playerPosition);
+
 	// Connect player to level for hitbox collision detection
 	playerCharacter.setLevel(&level);
+
+	// Connect player to navmesh for walkable area detection
+	playerCharacter.setNavMesh(&level.getNavMesh());
 
 	// Set initial hitbox visibility from config
 	playerCharacter.setHitboxActive(debugHighlightHitboxes);
@@ -369,34 +386,6 @@ int main(int argc, char *argv[])
 			// Add new point at player position
 			level.getNavMesh().addPoint("player_marker", playerPosition);
 			printf("NavMesh point placed at player position (%.1f, %.1f)\n", playerPosition.x, playerPosition.y);
-		}
-
-		// Pathfind to NavMesh point from player position
-		if (cf_key_just_pressed(CF_KEY_L))
-		{
-			// Check if there's a player_marker point to pathfind to
-			const NavMeshPoint *targetPoint = level.getNavMesh().getPoint("player_marker");
-			if (targetPoint != nullptr)
-			{
-				printf("Attempting to pathfind from player (%.1f, %.1f) to marker (%.1f, %.1f)\n",
-					   playerPosition.x, playerPosition.y, targetPoint->position.x, targetPoint->position.y);
-
-				// Generate path using NavMesh (which tracks all paths)
-				navmeshPath = level.getNavMesh().generatePathToPoint(playerPosition, "player_marker");
-
-				if (navmeshPath && navmeshPath->isValid())
-				{
-					printf("Path generated successfully with %d waypoints\n", navmeshPath->getWaypointCount());
-				}
-				else
-				{
-					printf("Failed to generate path\n");
-				}
-			}
-			else
-			{
-				printf("No 'player_marker' point found. Press P to place a marker first.\n");
-			}
 		}
 
 		// Camera zoom controls (Q/E) and reset (R)
