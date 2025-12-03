@@ -230,6 +230,55 @@ bool AnimatedDataCharacter::init(const std::string &datafilePath)
     return true;
 }
 
+// Static method to get all PNG paths that would be loaded for a datafile
+std::vector<std::string> AnimatedDataCharacter::getPNGPathsFromDatafile(const std::string &datafilePath)
+{
+    std::vector<std::string> paths;
+
+    // Load the datafile
+    DataFile datafile;
+    if (!datafile.load(datafilePath))
+    {
+        printf("AnimatedDataCharacter::getPNGPathsFromDatafile: Failed to load datafile from %s\n", datafilePath.c_str());
+        return paths;
+    }
+
+    // Validate datafile structure
+    if (!datafile.contains("character_config"))
+    {
+        return paths;
+    }
+
+    auto &charConfig = datafile["character_config"];
+
+    if (!charConfig.contains("layers") || !charConfig["layers"].is_array())
+    {
+        return paths;
+    }
+
+    // Collect all layer filenames
+    std::vector<std::string> layerFilenames;
+    for (size_t i = 0; i < charConfig["layers"].size(); i++)
+    {
+        auto &layer = charConfig["layers"][i];
+        if (layer.contains("filename"))
+        {
+            std::string filename = layer["filename"].get<std::string>();
+            layerFilenames.push_back(filename);
+        }
+    }
+
+    // Generate all PNG paths (idle and walkcycle for each layer)
+    for (const auto &filename : layerFilenames)
+    {
+        // PhysFS uses paths with leading slash
+        paths.push_back("/assets/Art/AnimationsSheets/idle/" + filename);
+        paths.push_back("/assets/Art/AnimationsSheets/walkcycle/" + filename);
+    }
+
+    return paths;
+}
+
 // Update demo state
 void AnimatedDataCharacter::update(float dt, v2 moveVector)
 {

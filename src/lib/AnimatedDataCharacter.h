@@ -53,6 +53,13 @@ public:
     // Set hitbox visibility
     void setHitboxActive(bool active);
 
+    // Get the SpriteAnimationLoader (for preloading)
+    SpriteAnimationLoader &getLoader() { return loader; }
+
+    // Static method to get all PNG paths that would be loaded for a datafile
+    // Useful for parallel preloading before init()
+    static std::vector<std::string> getPNGPathsFromDatafile(const std::string &datafilePath);
+
 private:
     // The animation loader
     SpriteAnimationLoader loader;

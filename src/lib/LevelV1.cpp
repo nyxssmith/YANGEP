@@ -1,7 +1,9 @@
 #include "LevelV1.h"
 #include "CFNativeCamera.h"
 #include "JobSystem.h"
+#include "SpriteAnimationLoader.h"
 #include <cstdio>
+#include <set>
 
 LevelV1::LevelV1(const std::string &directoryPath)
     : levelDirectory(directoryPath), levelName(""), levelMap(nullptr), navmesh(nullptr), entities(), details(), tileWidth(0), tileHeight(0), initialized(false)
@@ -95,8 +97,41 @@ LevelV1::LevelV1(const std::string &directoryPath)
     // Create agents from entities.json
     if (entities.contains("entities") && entities["entities"].is_array())
     {
-        printf("LevelV1: Creating agents from entities.json...\n");
+        printf("LevelV1: Creating agents from entities.json...\\n");
 
+        // Phase 1: Collect all PNG paths that need to be loaded
+        std::vector<std::string> allPNGPaths;
+        std::set<std::string> uniquePaths; // Use set to avoid duplicates
+
+        for (const auto &entityEntry : entities["entities"])
+        {
+            if (!entityEntry.contains("datafilePath"))
+            {
+                continue;
+            }
+
+            std::string datafilePath = entityEntry["datafilePath"].get<std::string>();
+
+            // Get all PNG paths for this entity's datafile
+            std::vector<std::string> entityPaths = AnimatedDataCharacter::getPNGPathsFromDatafile(datafilePath);
+            for (const auto &path : entityPaths)
+            {
+                if (uniquePaths.find(path) == uniquePaths.end())
+                {
+                    uniquePaths.insert(path);
+                    allPNGPaths.push_back(path);
+                }
+            }
+        }
+
+        // Phase 2: Preload all PNG files in parallel using the static shared cache
+        if (!allPNGPaths.empty())
+        {
+            printf("LevelV1: Preloading %zu unique PNG files in parallel...\n", allPNGPaths.size());
+            SpriteAnimationLoader::preloadPNGsIntoCache(allPNGPaths);
+        }
+
+        // Phase 3: Create agents (PNG data is already in cache, sprite creation is fast)
         for (const auto &entityEntry : entities["entities"])
         {
             // Check if entity has required fields

@@ -1,12 +1,18 @@
 #include "SpriteAnimationLoader.h"
+#include "JobSystem.h"
 #include <cute.h>
 #include <spng.h>
 #include <cstdlib>
 #include <cstring>
 #include <algorithm>
 #include <unistd.h>
+#include <atomic>
 
 using namespace Cute;
+
+// Static member definitions
+std::map<std::string, std::vector<uint8_t>> SpriteAnimationLoader::s_pngCache;
+std::mutex SpriteAnimationLoader::s_cacheMutex;
 
 // Predefined animation layouts
 namespace AnimationLayouts
@@ -35,21 +41,25 @@ SpriteAnimationLoader::~SpriteAnimationLoader()
     clearCache();
 }
 
-// Clear PNG cache
+// Clear PNG cache (static)
 void SpriteAnimationLoader::clearCache()
 {
-    printf("SpriteAnimationLoader: Clearing PNG cache (%zu PNGs)\n", pngCache.size());
+    std::lock_guard<std::mutex> lock(s_cacheMutex);
+    printf("SpriteAnimationLoader: Clearing PNG cache (%zu PNGs)\n", s_pngCache.size());
     // std::vector manages its own memory, just clear the map
-    pngCache.clear();
+    s_pngCache.clear();
 }
 
-// Load PNG file and cache it
+// Load PNG file and cache it (thread-safe)
 bool SpriteAnimationLoader::loadAndCachePNG(const std::string &png_path)
 {
-    if (isPNGCached(png_path))
+    // Check if already cached (with lock)
     {
-        printf("SpriteAnimationLoader: PNG already cached: %s\n", png_path.c_str());
-        return true;
+        std::lock_guard<std::mutex> lock(s_cacheMutex);
+        if (s_pngCache.find(png_path) != s_pngCache.end())
+        {
+            return true;
+        }
     }
 
     printf("SpriteAnimationLoader: Loading and caching PNG: %s\n", png_path.c_str());
@@ -86,45 +96,97 @@ bool SpriteAnimationLoader::loadAndCachePNG(const std::string &png_path)
     // Free the original file data
     cf_free(file_data);
 
-    // Store in cache
-    pngCache[png_path] = std::move(png_data);
+    // Store in cache (with lock)
+    {
+        std::lock_guard<std::mutex> lock(s_cacheMutex);
+        s_pngCache[png_path] = std::move(png_data);
+    }
 
     printf("SpriteAnimationLoader: Successfully cached PNG: %s (%zu bytes)\n",
            png_path.c_str(), file_size);
     return true;
 }
 
-// Get cached PNG data
+// Get cached PNG data (thread-safe)
 const std::vector<uint8_t> *SpriteAnimationLoader::getCachedPNG(const std::string &png_path) const
 {
-    auto it = pngCache.find(png_path);
-    if (it != pngCache.end())
+    std::lock_guard<std::mutex> lock(s_cacheMutex);
+    auto it = s_pngCache.find(png_path);
+    if (it != s_pngCache.end())
     {
         return &it->second;
     }
     return nullptr;
 }
 
-// Check if PNG is cached
-bool SpriteAnimationLoader::isPNGCached(const std::string &png_path) const
+// Check if PNG is cached (thread-safe, static)
+bool SpriteAnimationLoader::isPNGCached(const std::string &png_path)
 {
-    return pngCache.find(png_path) != pngCache.end();
+    std::lock_guard<std::mutex> lock(s_cacheMutex);
+    return s_pngCache.find(png_path) != s_pngCache.end();
 }
 
-// Get cache statistics
-size_t SpriteAnimationLoader::getCacheSize() const
+// Preload PNG files into cache in parallel using the job system (static)
+void SpriteAnimationLoader::preloadPNGsIntoCache(const std::vector<std::string> &png_paths)
 {
+    if (png_paths.empty())
+    {
+        return;
+    }
+
+    printf("SpriteAnimationLoader: Starting parallel preload of %zu PNG files\n", png_paths.size());
+    double startTime = cf_get_ticks() / 1000.0;
+
+    std::atomic<int> completedCount{0};
+    int totalCount = static_cast<int>(png_paths.size());
+
+    // Create a temporary loader instance for loading (uses static cache internally)
+    SpriteAnimationLoader tempLoader;
+
+    // Submit a job for each PNG file
+    for (const auto &path : png_paths)
+    {
+        // Capture 'path' by value to ensure it's valid in the job
+        std::string pathCopy = path;
+        JobSystem::submitJob(
+            [&tempLoader, pathCopy, &completedCount]()
+            {
+                tempLoader.loadAndCachePNG(pathCopy);
+                completedCount.fetch_add(1);
+            },
+            "Preload PNG: " + pathCopy);
+    }
+
+    // Kick jobs and wait for all to complete
+    JobSystem::kickAndWait();
+
+    double endTime = cf_get_ticks() / 1000.0;
+    printf("SpriteAnimationLoader: Parallel preload completed: %d/%d files in %.2f ms\n",
+           completedCount.load(), totalCount, (endTime - startTime) * 1000.0);
+}
+
+// Instance method that delegates to static (for backwards compatibility)
+void SpriteAnimationLoader::preloadPNGsParallel(const std::vector<std::string> &png_paths)
+{
+    preloadPNGsIntoCache(png_paths);
+}
+
+// Get cache statistics (static)
+size_t SpriteAnimationLoader::getCacheSize()
+{
+    std::lock_guard<std::mutex> lock(s_cacheMutex);
     size_t total_size = 0;
-    for (const auto &entry : pngCache)
+    for (const auto &entry : s_pngCache)
     {
         total_size += entry.second.size();
     }
     return total_size;
 }
 
-size_t SpriteAnimationLoader::getCachedPNGCount() const
+size_t SpriteAnimationLoader::getCachedPNGCount()
 {
-    return pngCache.size();
+    std::lock_guard<std::mutex> lock(s_cacheMutex);
+    return s_pngCache.size();
 }
 
 // Extract sprite frame from PNG using the proven system from tsx.cpp

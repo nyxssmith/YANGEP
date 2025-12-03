@@ -6,6 +6,7 @@
 #include <vector>
 #include <map>
 #include <memory>
+#include <mutex>
 
 using namespace Cute;
 
@@ -141,18 +142,25 @@ struct AnimationTable
 class SpriteAnimationLoader
 {
 private:
-    // Cache loaded PNG data to avoid reloading
-    std::map<std::string, std::vector<uint8_t>> pngCache;
+    // Static cache shared across all instances for PNG data
+    static std::map<std::string, std::vector<uint8_t>> s_pngCache;
 
-    // Load PNG file and cache it
+    // Static mutex for thread-safe cache access
+    static std::mutex s_cacheMutex;
+
+    // Load PNG file and cache it (thread-safe)
     bool loadAndCachePNG(const std::string &png_path);
 
-    // Get cached PNG data
+    // Get cached PNG data (thread-safe)
     const std::vector<uint8_t> *getCachedPNG(const std::string &png_path) const;
 
 public:
     SpriteAnimationLoader();
     ~SpriteAnimationLoader();
+
+    // Preload multiple PNG files in parallel using the job system
+    // This loads files into cache but doesn't create sprites (which must be done on main thread)
+    void preloadPNGsParallel(const std::vector<std::string> &png_paths);
 
     // Extract a single sprite frame from PNG (useful for testing and advanced usage)
     CF_Sprite extractSpriteFrame(const std::string &png_path,
@@ -179,15 +187,18 @@ public:
     AnimationTable loadAnimationTable(const std::string &base_path,
                                       const std::vector<AnimationLayout> &layouts);
 
-    // Clear PNG cache
-    void clearCache();
+    // Clear PNG cache (static - affects all instances)
+    static void clearCache();
 
-    // Get cache statistics
-    size_t getCacheSize() const;
-    size_t getCachedPNGCount() const;
+    // Get cache statistics (static - global cache info)
+    static size_t getCacheSize();
+    static size_t getCachedPNGCount();
 
-    // Check if PNG is cached
-    bool isPNGCached(const std::string &png_path) const;
+    // Check if PNG is cached (static)
+    static bool isPNGCached(const std::string &png_path);
+
+    // Preload PNG files into cache in parallel (static - can be called without instance)
+    static void preloadPNGsIntoCache(const std::vector<std::string> &png_paths);
 };
 
 // Predefined animation layouts for common sprite sheet formats
