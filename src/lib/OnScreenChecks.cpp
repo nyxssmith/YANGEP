@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <atomic>
 #include <cmath>
+#include <unordered_set>
 
 namespace OnScreenChecks
 {
@@ -42,58 +43,45 @@ namespace OnScreenChecks
                         continue;
                     }
 
-                    // Get player position (read atomically as a copy)
-                    v2 playerPos = *s_playerPosition;
+                    // Get view bounds from camera (expanded slightly for edge cases)
+                    CF_Aabb viewBounds = s_camera->getViewBounds();
+                    viewBounds.min.x -= 64.0f;
+                    viewBounds.min.y -= 64.0f;
+                    viewBounds.max.x += 64.0f;
+                    viewBounds.max.y += 64.0f;
 
-                    // Get viewport width and calculate distance threshold
-                    // 1.2 * (viewport_width / 2) = 0.6 * viewport_width
-                    v2 viewportSize = s_camera->getViewportSize();
-                    float distanceThreshold = 1.2f * (viewportSize.x / 2.0f);
+                    const float agentHalfSize = 32.0f;
 
-                    // Check all agents
+                    // Query spatial grid for agents in/near the view area
+                    std::vector<size_t> nearbyAgents = s_level->getSpatialGrid().queryAABB(viewBounds);
+                    std::unordered_set<size_t> nearbySet(nearbyAgents.begin(), nearbyAgents.end());
+
+                    // Update all agents' visibility status
                     size_t agentCount = s_level->getAgentCount();
-                    const float agentHalfSize = 32.0f; // Match LevelV1 agent bounds size
-
                     for (size_t i = 0; i < agentCount; ++i)
                     {
-                        // Check shutdown between agents to allow quick exit
                         if (s_shutdownRequested.load())
-                        {
                             break;
-                        }
 
                         auto *agent = s_level->getAgent(i);
                         if (!agent)
+                            continue;
+
+                        // If agent is not in the nearby set, mark as off-screen
+                        if (nearbySet.find(i) == nearbySet.end())
                         {
+                            agent->setIsOnScreen(false);
                             continue;
                         }
 
-                        // Get agent position
+                        // Agent is nearby - do precise visibility check
                         v2 agentPos = agent->getPosition();
+                        CF_Aabb agentBounds = cf_make_aabb(
+                            cf_v2(agentPos.x - agentHalfSize, agentPos.y - agentHalfSize),
+                            cf_v2(agentPos.x + agentHalfSize, agentPos.y + agentHalfSize));
 
-                        // Calculate distance from player to agent
-                        float dx = agentPos.x - playerPos.x;
-                        float dy = agentPos.y - playerPos.y;
-                        float distance = std::sqrt(dx * dx + dy * dy);
-
-                        // Check if within threshold (near player)
-                        bool isNearPlayer = distance <= distanceThreshold;
-
-                        if (isNearPlayer)
-                        {
-                            // Agent is near player - do full viewport visibility check
-                            CF_Aabb agentBounds = cf_make_aabb(
-                                cf_v2(agentPos.x - agentHalfSize, agentPos.y - agentHalfSize),
-                                cf_v2(agentPos.x + agentHalfSize, agentPos.y + agentHalfSize));
-
-                            bool visible = s_camera->isVisible(agentBounds);
-                            agent->setIsOnScreen(visible);
-                        }
-                        else
-                        {
-                            // Agent is far from player - not on screen
-                            agent->setIsOnScreen(false);
-                        }
+                        bool visible = s_camera->isVisible(agentBounds);
+                        agent->setIsOnScreen(visible);
                     }
                 }
 

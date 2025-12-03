@@ -86,6 +86,7 @@ int main(int argc, char *argv[])
 	bool debughighlightNavMeshPaths = false; // Default: don't highlight navmesh points
 	bool debugHighlightAgents = false;		 // Default: don't highlight agents
 	bool debugHighlightHitboxes = false;	 // Default: don't show hitboxes
+	bool debugHighlightSpatialGrid = false;	 // Default: don't show spatial grid
 	if (windowConfig.contains("Debug"))
 	{
 		auto &debug = windowConfig["Debug"];
@@ -113,6 +114,11 @@ int main(int argc, char *argv[])
 		{
 			debugHighlightHitboxes = debug["highlightHitboxes"];
 			printf("Debug highlightHitboxes: %s\n", debugHighlightHitboxes ? "enabled" : "disabled");
+		}
+		if (debug.contains("highlightSpatialGrid"))
+		{
+			debugHighlightSpatialGrid = debug["highlightSpatialGrid"];
+			printf("Debug highlightSpatialGrid: %s\n", debugHighlightSpatialGrid ? "enabled" : "disabled");
 		}
 	}
 
@@ -465,6 +471,12 @@ int main(int argc, char *argv[])
 		if (showNavMesh && level.getNavMesh().getPolygonCount() > 0)
 		{
 			level.getNavMesh().debugRender(cfCamera);
+		}
+
+		// Render spatial grid debug visualization (if enabled)
+		if (debugHighlightSpatialGrid && level.getSpatialGrid().getOccupiedCellCount() > 0)
+		{
+			level.getSpatialGrid().debugRender(cfCamera);
 		}
 
 		// Render NavMesh points debug visualization (if enabled)

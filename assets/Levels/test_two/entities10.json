@@ -1,0 +1,59 @@
+{
+  "entities": [
+    {
+      "name": "skeleton",
+      "position": { "x": 10, "y": 10 },
+      "datafilePath": "/assets/DataFiles/EntityFiles/skeleton.json"
+    },
+    {
+      "name": "skeleton",
+      "position": { "x": 10, "y": 11 },
+      "datafilePath": "/assets/DataFiles/EntityFiles/skeleton.json"
+    },
+    {
+      "name": "skeleton",
+      "position": { "x": 10, "y": 12 },
+      "datafilePath": "/assets/DataFiles/EntityFiles/skeleton.json"
+    },
+    {
+      "name": "skeleton",
+      "position": { "x": 10, "y": 13 },
+      "datafilePath": "/assets/DataFiles/EntityFiles/skeleton.json"
+    },
+    {
+      "name": "skeleton",
+      "position": { "x": 10, "y": 14 },
+      "datafilePath": "/assets/DataFiles/EntityFiles/skeleton.json"
+    },
+    {
+      "name": "skeleton",
+      "position": { "x": 10, "y": 15 },
+      "datafilePath": "/assets/DataFiles/EntityFiles/skeleton.json"
+    },
+    {
+      "name": "skeleton",
+      "position": { "x": 10, "y": 16 },
+      "datafilePath": "/assets/DataFiles/EntityFiles/skeleton.json"
+    },
+    {
+      "name": "skeleton",
+      "position": { "x": 10, "y": 17 },
+      "datafilePath": "/assets/DataFiles/EntityFiles/skeleton.json"
+    },
+    {
+      "name": "skeleton",
+      "position": { "x": 10, "y": 18 },
+      "datafilePath": "/assets/DataFiles/EntityFiles/skeleton.json"
+    },
+    {
+      "name": "skeleton",
+      "position": { "x": 10, "y": 19 },
+      "datafilePath": "/assets/DataFiles/EntityFiles/skeleton.json"
+    },
+    {
+      "name": "skeleton",
+      "position": { "x": 10, "y": 20 },
+      "datafilePath": "/assets/DataFiles/EntityFiles/skeleton.json"
+    }
+  ]
+}

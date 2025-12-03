@@ -420,7 +420,6 @@ void AnimatedDataCharacter::render(v2 renderPosition)
 
     renderCurrentFrameAt(renderPosition);
     renderHitbox();
-    renderDebugInfo();
 }
 
 // Render the current animation frame

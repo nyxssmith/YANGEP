@@ -155,6 +155,9 @@ LevelV1::LevelV1(const std::string &directoryPath)
     // Mark as successfully initialized
     initialized = true;
     printf("LevelV1: Level '%s' initialized successfully\n", levelName.c_str());
+
+    // Build initial spatial grid with all agents
+    rebuildSpatialGrid();
 }
 
 AnimatedDataCharacterNavMeshAgent *LevelV1::addAgent(std::unique_ptr<AnimatedDataCharacterNavMeshAgent> agent)
@@ -175,6 +178,12 @@ AnimatedDataCharacterNavMeshAgent *LevelV1::addAgent(std::unique_ptr<AnimatedDat
     agent->setLevel(this);
 
     agents.push_back(std::move(agent));
+
+    // Add to spatial grid
+    size_t agentIndex = agents.size() - 1;
+    v2 agentPos = agents.back()->getPosition();
+    spatialGrid.insert(agentIndex, agentPos, 32.0f);
+
     printf("LevelV1: Added agent (total: %zu)\n", agents.size());
 
     return agents.back().get();
@@ -219,6 +228,7 @@ const AnimatedDataCharacterNavMeshAgent *LevelV1::getAgent(size_t index) const
 void LevelV1::clearAgents()
 {
     agents.clear();
+    spatialGrid.clear();
     printf("LevelV1: Cleared all agents\n");
 }
 
@@ -239,6 +249,10 @@ void LevelV1::updateAgents(float dt)
             agent->update(dt, moveVector);
         }
     }
+
+    // Update spatial grid with new positions
+    updateSpatialGrid();
+
     // trigger background updates for all agents
     // these will finish on their own and update the agent as needed
     for (auto &agent : agents)
@@ -258,9 +272,27 @@ void LevelV1::renderAgents(const CFNativeCamera &camera)
 {
     int renderedCount = 0;
     int culledCount = 0;
+    int checkedCount = 0;
 
-    for (auto &agent : agents)
+    // Use spatial grid to only check agents in visible cells
+    CF_Aabb viewBounds = camera.getViewBounds();
+
+    // Expand view bounds slightly to catch agents on the edge
+    viewBounds.min.x -= 64.0f;
+    viewBounds.min.y -= 64.0f;
+    viewBounds.max.x += 64.0f;
+    viewBounds.max.y += 64.0f;
+
+    // Query spatial grid for agents in view area
+    std::vector<size_t> nearbyAgents = spatialGrid.queryAABB(viewBounds);
+    checkedCount = static_cast<int>(nearbyAgents.size());
+
+    for (size_t agentIndex : nearbyAgents)
     {
+        if (agentIndex >= agents.size())
+            continue;
+
+        auto &agent = agents[agentIndex];
         if (agent)
         {
             // Check if agent is marked as on-screen by OnScreenChecks worker
@@ -277,11 +309,9 @@ void LevelV1::renderAgents(const CFNativeCamera &camera)
         }
     }
 
-    // Optional: Uncomment for debugging viewport culling
-    // if (culledCount > 0)
-    // {
-    //     printf("LevelV1: Rendered %d agents, culled %d agents\n", renderedCount, culledCount);
-    // }
+    // Debug output: show how many agents were checked vs total
+    // printf("LevelV1: checked %d/%zu agents, rendered: %d, culled: %d\n",
+    //        checkedCount, agents.size(), renderedCount, culledCount);
 }
 
 void LevelV1::render(const CFNativeCamera &camera, const DataFile &config, float worldX, float worldY)
@@ -384,4 +414,26 @@ bool LevelV1::checkAgentsInArea(const std::vector<CF_Aabb> &areas, CF_Aabb areas
     }
 
     return false;
+}
+
+void LevelV1::updateSpatialGrid()
+{
+    // For simplicity, rebuild the grid each frame
+    // This is efficient enough for hundreds of agents
+    // For thousands, we'd want to track previous positions and use update()
+    rebuildSpatialGrid();
+}
+
+void LevelV1::rebuildSpatialGrid()
+{
+    spatialGrid.clear();
+
+    for (size_t i = 0; i < agents.size(); ++i)
+    {
+        if (agents[i])
+        {
+            v2 pos = agents[i]->getPosition();
+            spatialGrid.insert(i, pos, 32.0f);
+        }
+    }
 }
