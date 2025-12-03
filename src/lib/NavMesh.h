@@ -126,8 +126,8 @@ public:
     const std::vector<std::shared_ptr<NavMeshPath>> &getPaths() const { return paths; }
     int getPathCount() const { return static_cast<int>(paths.size()); }
 
-    // Remove a path by its ID
-    // Returns true if the path was found and removed, false otherwise
+    // Remove a path by its ID (marks as complete rather than removing)
+    // Returns true if the path was found and marked complete, false otherwise
     bool removePathById(int path_id);
 
     // Clear all tracked paths

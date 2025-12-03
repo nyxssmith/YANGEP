@@ -10,6 +10,7 @@ std::vector<std::string> JobSystem::s_workerCurrentJobs;
 std::vector<bool> JobSystem::s_workerBusy;
 std::vector<std::string> JobSystem::s_workerLabels;
 std::vector<std::vector<JobSystem::JobData *>> JobSystem::s_workerQueues;
+std::vector<int> JobSystem::s_workerRunningJobs;
 std::vector<JobSystem::JobData *> JobSystem::s_pendingJobs;
 std::mutex JobSystem::s_trackingMutex;
 
@@ -48,7 +49,15 @@ bool JobSystem::initialize(int num_threads)
     s_workerBusy.resize(num_threads, false);
     s_workerLabels.resize(num_threads, "general");
     s_workerQueues.resize(num_threads);
+    s_workerRunningJobs.resize(num_threads, 0);
     s_pendingJobs.clear();
+
+    // Assign dedicated worker for on-screen checks (last worker)
+    if (num_threads > 1)
+    {
+        s_workerLabels[num_threads - 1] = "onscreenchecks";
+        printf("JobSystem: Worker %d assigned label 'onscreenchecks'\n", num_threads - 1);
+    }
 
     s_initialized = true;
     return true;
@@ -73,6 +82,7 @@ void JobSystem::shutdown()
     s_workerBusy.clear();
     s_workerLabels.clear();
     s_workerQueues.clear();
+    s_workerRunningJobs.clear();
 
     // Clean up any pending jobs
     for (auto *job : s_pendingJobs)
@@ -94,6 +104,13 @@ void JobSystem::jobCallback(void *userData)
     {
         // Execute the job
         data->work();
+
+        // Decrement running job count for this worker
+        if (data->workerIndex >= 0 && data->workerIndex < s_workerCount)
+        {
+            std::lock_guard<std::mutex> lock(s_trackingMutex);
+            s_workerRunningJobs[data->workerIndex]--;
+        }
     }
     delete data;
 }
@@ -106,7 +123,7 @@ void JobSystem::submitJob(std::function<void()> work, const std::string &jobName
         return;
     }
 
-    JobData *data = new JobData{work, jobName, label};
+    JobData *data = new JobData{work, jobName, label, -1};
 
     {
         std::lock_guard<std::mutex> lock(s_trackingMutex);
@@ -144,7 +161,9 @@ void JobSystem::distributeJobs()
                     minQueueWorker = i;
                 }
             }
+            job->workerIndex = minQueueWorker;
             s_workerQueues[minQueueWorker].push_back(job);
+            s_workerRunningJobs[minQueueWorker]++;
         }
         else
         {
@@ -160,7 +179,9 @@ void JobSystem::distributeJobs()
                     minQueueWorker = workerId;
                 }
             }
+            job->workerIndex = minQueueWorker;
             s_workerQueues[minQueueWorker].push_back(job);
+            s_workerRunningJobs[minQueueWorker]++;
         }
     }
 
@@ -202,6 +223,8 @@ void JobSystem::kick()
         return;
     }
 
+    int totalJobs = 0;
+
     // Distribute pending jobs to worker queues
     {
         std::lock_guard<std::mutex> lock(s_trackingMutex);
@@ -213,12 +236,23 @@ void JobSystem::kick()
             for (auto *job : s_workerQueues[i])
             {
                 cf_threadpool_add_task(s_threadpool, jobCallback, job);
+                totalJobs++;
             }
             s_workerQueues[i].clear();
         }
     }
 
-    cf_threadpool_kick(s_threadpool);
+    // CF's kick() only wakes min(task_count, thread_count) workers.
+    // We need to kick multiple times to ensure all jobs get processed.
+    // Each kick wakes up to thread_count workers, so we need ceil(totalJobs / workerCount) kicks.
+    if (totalJobs > 0)
+    {
+        int kicksNeeded = (totalJobs + s_workerCount - 1) / s_workerCount;
+        for (int i = 0; i < kicksNeeded; ++i)
+        {
+            cf_threadpool_kick(s_threadpool);
+        }
+    }
 }
 
 int JobSystem::getWorkerCount()
@@ -250,6 +284,7 @@ std::vector<JobSystem::WorkerInfo> JobSystem::getWorkerInfo()
         worker.currentJobName = s_workerCurrentJobs[i];
         worker.label = s_workerLabels[i];
         worker.pendingJobCount = static_cast<int>(s_workerQueues[i].size());
+        worker.runningJobCount = s_workerRunningJobs[i];
         info.push_back(worker);
     }
 

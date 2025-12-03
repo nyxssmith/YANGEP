@@ -10,7 +10,7 @@
 #include <chrono>
 
 NavMeshPath::NavMeshPath()
-    : id(0), is_valid(false), total_length(0.0f), currentWaypointIndex(0), has_debug_color(false)
+    : id(0), is_valid(false), is_complete(false), total_length(0.0f), currentWaypointIndex(0), has_debug_color(false)
 {
 }
 
@@ -23,6 +23,7 @@ void NavMeshPath::clear()
 {
     waypoints.clear();
     is_valid = false;
+    is_complete = false;
     total_length = 0.0f;
     currentWaypointIndex = 0;
 }

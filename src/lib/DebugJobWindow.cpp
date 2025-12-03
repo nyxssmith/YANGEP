@@ -61,11 +61,13 @@ void DebugJobWindow::render()
             // Pending jobs in queue
             ImGui_Text("  Queued Jobs: %d", worker.pendingJobCount);
 
+            // Running jobs
+            ImGui_Text("  Running Jobs: %d", worker.runningJobCount);
+
             // Status
-            if (worker.isRunning)
+            if (worker.runningJobCount > 0)
             {
                 ImGui_TextColored(ImVec4{0.0f, 1.0f, 0.0f, 1.0f}, "  Status: BUSY");
-                ImGui_Text("  Job: %s", worker.currentJobName.c_str());
             }
             else
             {

@@ -46,6 +46,7 @@ public:
         std::string currentJobName;
         std::string label;   // Worker label (e.g., "general")
         int pendingJobCount; // Number of jobs queued for this worker
+        int runningJobCount; // Number of jobs currently running
     };
     static std::vector<WorkerInfo> getWorkerInfo();
 
@@ -59,6 +60,7 @@ private:
         std::function<void()> work;
         std::string name;
         std::string label; // Job label (e.g., "general")
+        int workerIndex;   // Which worker this job is assigned to (-1 if not assigned)
     };
 
     static CF_Threadpool *s_threadpool;
@@ -70,6 +72,7 @@ private:
     static std::vector<bool> s_workerBusy;
     static std::vector<std::string> s_workerLabels;            // Label for each worker
     static std::vector<std::vector<JobData *>> s_workerQueues; // Per-worker job queues
+    static std::vector<int> s_workerRunningJobs;               // Running jobs per worker
     static std::vector<JobData *> s_pendingJobs;               // Jobs waiting to be distributed
     static std::mutex s_trackingMutex;
 

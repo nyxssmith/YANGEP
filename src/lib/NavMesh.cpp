@@ -653,15 +653,15 @@ bool NavMesh::findPath(NavMeshPath &path, CF_V2 start, CF_V2 end) const
     return false;
 }
 
-// Remove a path by its ID
+// Remove a path by its ID (marks as complete rather than removing)
 bool NavMesh::removePathById(int path_id)
 {
-    for (auto it = paths.begin(); it != paths.end(); ++it)
+    for (auto &path : paths)
     {
-        if ((*it)->getId() == path_id)
+        if (path && path->getId() == path_id)
         {
-            printf("NavMesh::removePathById - Removed path with id %d\n", path_id);
-            paths.erase(it);
+            path->markComplete();
+            printf("NavMesh::removePathById - Marked path with id %d as complete\n", path_id);
             return true;
         }
     }
