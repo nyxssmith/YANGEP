@@ -88,6 +88,8 @@ public:
     const NavPoly &getPolygon(int index) const { return polygons[index]; }
     const NavEdge &getEdge(int index) const { return edges[index]; }
     CF_Aabb getBounds() const { return bounds; }
+    int getTileWidth() const { return tile_width; }
+    int getTileHeight() const { return tile_height; }
 
     // Find which polygon contains a given world point
     // Returns -1 if point is not in any polygon

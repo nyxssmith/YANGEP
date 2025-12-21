@@ -15,7 +15,7 @@
     {
       "enabled": false,
       "title": "Window Config Viewer",
-      "dataFilePath": "/assets/DataFiles/EntityFiles/skeleton.json"
+      "dataFilePath": "/assets/DataFiles/Entities/skeleton.json"
     }
   ],
   "Debug": {
@@ -30,6 +30,7 @@
     "highlightLayerOuterBorders": [],
     "ShowFPSMetrics": true,
     "ShowJobMetrics": true,
+    "ShowPlayerInfo": true,
     "highlightHitboxes": false
   }
 }

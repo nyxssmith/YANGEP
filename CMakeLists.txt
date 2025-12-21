@@ -101,6 +101,7 @@ add_executable(
 	src/lib/Debug/DebugWindowList.cpp
 	src/lib/Debug/DebugFPSWindow.cpp
 	src/lib/Debug/DebugJobWindow.cpp
+	src/lib/Debug/DebugPlayerInfoWindow.cpp
 	src/lib/Level/FileHandling/tsx.cpp
 	src/lib/Level/FileHandling/tmx.cpp
 	src/lib/Level/GameLogic/LevelV1.cpp
@@ -119,6 +120,7 @@ add_executable(
 	src/lib/Combat/HitBox.cpp
 	src/lib/JobSystem/JobSystem.cpp
 	src/lib/JobSystem/OnScreenChecks.cpp
+	src/lib/UI/HighlightTile.cpp
 )
 
 # Our source code will be in the `src` folder.
@@ -134,6 +136,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/JobSystem>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Level/FileHandling>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Level/GameLogic>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/UI>
 )
 
 # Some basic information needed for CMake to generate your Info.plist file.
