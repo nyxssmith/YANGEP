@@ -3,6 +3,30 @@
 
 using namespace Cute;
 
+void highlightArea(CF_Aabb bounds, CF_Color color,
+                   float border_opacity, float fill_opacity)
+{
+    // Create the inner bounds (1 pixel inset for the fill area)
+    constexpr float border_thickness = 1.0f;
+    CF_Aabb inner_bounds = make_aabb(
+        cf_v2(bounds.min.x + border_thickness, bounds.min.y + border_thickness),
+        cf_v2(bounds.max.x - border_thickness, bounds.max.y - border_thickness));
+
+    // Draw the interior fill with lower opacity
+    CF_Color fill_color = color;
+    fill_color.a = fill_opacity;
+    cf_draw_push_color(fill_color);
+    cf_draw_quad_fill(inner_bounds, 0.0f);
+    cf_draw_pop_color();
+
+    // Draw the border using a quad outline with higher opacity
+    CF_Color border_color = color;
+    border_color.a = border_opacity;
+    cf_draw_push_color(border_color);
+    cf_draw_quad(bounds, border_thickness, 0.0f);
+    cf_draw_pop_color();
+}
+
 void highlightTile(const LevelV1 &level, int tile_x, int tile_y, CF_Color color,
                    float border_opacity, float fill_opacity)
 {
@@ -23,28 +47,11 @@ void highlightTile(const LevelV1 &level, int tile_x, int tile_y, CF_Color color,
     float half_width = tile_width / 2.0f;
     float half_height = tile_height / 2.0f;
 
-    // Create the outer tile bounds (full tile)
-    CF_Aabb outer_bounds = make_aabb(
+    // Create the tile bounds
+    CF_Aabb tile_bounds = make_aabb(
         cf_v2(tile_center_x - half_width, tile_center_y - half_height),
         cf_v2(tile_center_x + half_width, tile_center_y + half_height));
 
-    // Create the inner bounds (1 pixel inset for the fill area)
-    constexpr float border_thickness = 1.0f;
-    CF_Aabb inner_bounds = make_aabb(
-        cf_v2(tile_center_x - half_width + border_thickness, tile_center_y - half_height + border_thickness),
-        cf_v2(tile_center_x + half_width - border_thickness, tile_center_y + half_height - border_thickness));
-
-    // Draw the interior fill with lower opacity
-    CF_Color fill_color = color;
-    fill_color.a = fill_opacity;
-    cf_draw_push_color(fill_color);
-    cf_draw_quad_fill(inner_bounds, 0.0f);
-    cf_draw_pop_color();
-
-    // Draw the border using a quad outline with higher opacity
-    CF_Color border_color = color;
-    border_color.a = border_opacity;
-    cf_draw_push_color(border_color);
-    cf_draw_quad(outer_bounds, border_thickness, 0.0f);
-    cf_draw_pop_color();
+    // Use highlightArea to do the actual rendering
+    highlightArea(tile_bounds, color, border_opacity, fill_opacity);
 }

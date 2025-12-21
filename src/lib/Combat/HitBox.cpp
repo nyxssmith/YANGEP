@@ -356,34 +356,16 @@ std::vector<CF_Aabb> HitBox::buildFromTiles(const std::vector<HitboxTile> &tiles
     return hitboxes;
 }
 
-// Render hitbox by highlighting tiles at character position
+// Render hitbox by highlighting the actual bounding boxes
 void HitBox::render(v2 characterPosition, Direction facingDirection, const LevelV1 &level)
 {
-    // Get tile dimensions from level
-    float tile_width = static_cast<float>(level.getTileWidth());
-    float tile_height = static_cast<float>(level.getTileHeight());
-
-    // Convert character world position to tile coordinates
-    int char_tile_x = static_cast<int>(std::round(characterPosition.x / tile_width));
-    int char_tile_y = static_cast<int>(std::round(characterPosition.y / tile_height));
-
     // Get hitbox boxes for the facing direction at character position
     std::vector<CF_Aabb> boxes = getBoxes(facingDirection, characterPosition);
 
-    // Highlight each box as a tile
+    // Highlight each box directly (not snapped to grid)
     CF_Color hitbox_color = cf_make_color_rgb(255, 0, 0); // Red for action hitboxes
     for (const auto &box : boxes)
     {
-        // Calculate center of the box
-        v2 box_center = cf_v2(
-            (box.min.x + box.max.x) / 2.0f,
-            (box.min.y + box.max.y) / 2.0f);
-
-        // Convert box center to tile coordinates
-        int tile_x = static_cast<int>(std::round(box_center.x / tile_width));
-        int tile_y = static_cast<int>(std::round(box_center.y / tile_height));
-
-        // Highlight the tile
-        highlightTile(level, tile_x, tile_y, hitbox_color, 0.9f, 0.4f);
+        highlightArea(box, hitbox_color, 0.9f, 0.4f);
     }
 }
