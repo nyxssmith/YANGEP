@@ -2,17 +2,18 @@
 #include "HitBox.h"
 #include "AnimatedDataCharacter.h"
 #include "LevelV1.h"
+#include "../UI/ColorUtils.h"
 #include <cute.h>
 
 // Constructor that takes a folder path and loads action.json from that folder
-Action::Action(const std::string &folderPath) : hasHitbox(false), hitbox(nullptr), hitboxSize(32.0f), hitboxDistance(0.0f), isActive(false), character(nullptr)
+Action::Action(const std::string &folderPath) : hasHitbox(false), hitbox(nullptr), hitboxSize(32.0f), hitboxDistance(0.0f), isActive(false), character(nullptr), warmup_timer(0.0f), cooldown_timer(0.0f), in_cooldown(false)
 {
     loadFromFolder(folderPath, hitboxSize, hitboxDistance);
 }
 
 // Constructor with custom hitbox size and distance
 Action::Action(const std::string &folderPath, float hitboxSize, float hitboxDistance)
-    : hasHitbox(false), hitbox(nullptr), hitboxSize(hitboxSize), hitboxDistance(hitboxDistance), isActive(false), character(nullptr)
+    : hasHitbox(false), hitbox(nullptr), hitboxSize(hitboxSize), hitboxDistance(hitboxDistance), isActive(false), character(nullptr), warmup_timer(0.0f), cooldown_timer(0.0f), in_cooldown(false)
 {
     loadFromFolder(folderPath, hitboxSize, hitboxDistance);
 }
@@ -36,7 +37,10 @@ Action::Action(const Action &other)
       hitboxSize(other.hitboxSize),
       hitboxDistance(other.hitboxDistance),
       isActive(other.isActive),
-      character(other.character)
+      character(other.character),
+      warmup_timer(other.warmup_timer),
+      cooldown_timer(other.cooldown_timer),
+      in_cooldown(other.in_cooldown)
 {
     // Deep copy the hitbox if it exists
     if (other.hitbox && hasHitbox)
@@ -67,6 +71,9 @@ Action &Action::operator=(const Action &other)
         hitboxDistance = other.hitboxDistance;
         isActive = other.isActive;
         character = other.character;
+        warmup_timer = other.warmup_timer;
+        cooldown_timer = other.cooldown_timer;
+        in_cooldown = other.in_cooldown;
 
         // Deep copy the hitbox if it exists
         if (other.hitbox && hasHitbox)
@@ -152,7 +159,21 @@ HitBox *Action::getHitBox() const
 
 void Action::setActive(bool active)
 {
+    // Debug if trying to activate while in cooldown
+    if (active && in_cooldown)
+    {
+        printf("Action: Warning - Attempting to activate action while in cooldown (%.3f seconds remaining)\n", cooldown_timer);
+    }
+
     isActive = active;
+
+    // Reset timers when activating
+    if (active)
+    {
+        warmup_timer = 0.0f;
+        cooldown_timer = 0.0f;
+        in_cooldown = false;
+    }
 
     // Notify the character if one is associated
     if (character)
@@ -175,6 +196,16 @@ bool Action::getIsActive() const
     return isActive;
 }
 
+float Action::getWarmupTimer() const
+{
+    return warmup_timer;
+}
+
+bool Action::getInCooldown() const
+{
+    return in_cooldown;
+}
+
 void Action::doAction()
 {
     // For now, just set the action to active
@@ -184,12 +215,47 @@ void Action::doAction()
 
 void Action::update(float dt)
 {
-    // For now, empty - will be implemented later
-    // print test
-    printf("Action: Updating action (dt = %.3f)\n", dt);
+    if (!isActive)
+    {
+        return;
+    }
+
+    // Handle warmup phase
+    if (!in_cooldown)
+    {
+        warmup_timer += dt;
+
+        // Check if warmup is complete (convert ms to seconds)
+        float warmupMs = contains("warmup") ? (*this)["warmup"].get<float>() : 0.0f;
+        if (warmup_timer >= warmupMs / 1000.0f)
+        {
+            printf("Action: Warmup complete (%.3f ms)\n", warmupMs);
+            warmup_timer = 0.0f;
+            in_cooldown = true;
+
+            // Set cooldown timer (convert ms to seconds)
+            float cooldownMs = contains("cooldown") ? (*this)["cooldown"].get<float>() : 0.0f;
+            cooldown_timer = cooldownMs / 1000.0f;
+        }
+    }
+    // Handle cooldown phase
+    else
+    {
+        cooldown_timer -= dt;
+
+        // Check if cooldown is complete
+        if (cooldown_timer <= 0.0f)
+        {
+            // Reset everything
+            setActive(false);
+            warmup_timer = 0.0f;
+            cooldown_timer = 0.0f;
+            in_cooldown = false;
+        }
+    }
 }
 
-void Action::renderHitbox()
+void Action::renderHitbox(CF_Color color)
 {
     // Check if we have a hitbox and character to render
     if (!hasHitbox || !hitbox || !character)
@@ -208,8 +274,8 @@ void Action::renderHitbox()
     v2 characterPosition = character->getPosition();
     Direction facingDirection = character->getCurrentDirection();
 
-    // Call hitbox render with character info and level
-    hitbox->render(characterPosition, facingDirection, *level);
+    // Call hitbox render with character info, level, and color
+    hitbox->render(characterPosition, facingDirection, *level, color);
 }
 
 void Action::setCharacter(AnimatedDataCharacter *character)

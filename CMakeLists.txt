@@ -122,6 +122,7 @@ add_executable(
 	src/lib/JobSystem/JobSystem.cpp
 	src/lib/JobSystem/OnScreenChecks.cpp
 	src/lib/UI/HighlightTile.cpp
+	src/lib/UI/ColorUtils.cpp
 )
 
 # Our source code will be in the `src` folder.
@@ -203,6 +204,7 @@ add_executable(${PROJECT_NAME}_tests
     src/lib/Character/Behavior/WanderBehavior.cpp
     src/lib/JobSystem/JobSystem.cpp
     src/lib/UI/HighlightTile.cpp
+    src/lib/UI/ColorUtils.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}_tests gtest gtest_main cute spng_static nlohmann_json::nlohmann_json pugixml-static)

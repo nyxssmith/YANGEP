@@ -2,6 +2,7 @@
 
 #include "../FileHandling/DataFile.h"
 #include <string>
+#include <cute.h>
 
 // Forward declarations
 class HitBox;
@@ -17,6 +18,11 @@ private:
     float hitboxDistance;
     bool isActive;
     AnimatedDataCharacter *character; // Pointer to the character this action belongs to
+
+    // Timing members
+    float warmup_timer;
+    float cooldown_timer;
+    bool in_cooldown;
 
 public:
     Action() = default;
@@ -40,9 +46,11 @@ public:
     // Action state
     void setActive(bool active);
     bool getIsActive() const;
+    float getWarmupTimer() const;
+    bool getInCooldown() const;
     void doAction();
     void update(float dt);
-    void renderHitbox();
+    void renderHitbox(CF_Color color);
 
     // Character association
     void setCharacter(AnimatedDataCharacter *character);

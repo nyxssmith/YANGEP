@@ -6,6 +6,7 @@
 #include "DataFile.h"
 #include "LevelV1.h"
 #include "HitBox.h"
+#include "../UI/ColorUtils.h"
 
 using namespace Cute;
 
@@ -263,16 +264,17 @@ void AnimatedDataCharacter::update(float dt, v2 moveVector)
     if (!initialized)
         return;
 
-    // Don't allow movement if doing an action
-    if (isDoingAction)
+    // Don't allow movement if doing an action in warmup phase
+    // Allow movement during cooldown
+    if (isDoingAction && activeAction && !activeAction->getInCooldown())
     {
         moveVector = v2(0, 0);
+    }
 
-        // Update the active action if one exists
-        if (activeAction)
-        {
-            activeAction->update(dt);
-        }
+    // Update the active action if one exists
+    if (isDoingAction && activeAction)
+    {
+        activeAction->update(dt);
     }
 
     demoTime += dt; // Calculate movement magnitude to determine if we're moving
@@ -660,9 +662,23 @@ Action *AnimatedDataCharacter::getActiveAction() const
 void AnimatedDataCharacter::renderActionHitbox()
 {
     // Only render if doing an action and have an active action
-    if (isDoingAction && activeAction)
+    // Don't render during cooldown phase
+    if (isDoingAction && activeAction && !activeAction->getInCooldown())
     {
-        activeAction->renderHitbox();
+        // Calculate blended color from yellow to red based on warmup progress
+        CF_Color yellow = cf_make_color_rgb(200, 200, 0);
+        CF_Color red = cf_make_color_rgb(255, 0, 0);
+
+        // Get warmup time from action JSON (in ms, convert to seconds)
+        float warmupMs = activeAction->contains("warmup") ? (*activeAction)["warmup"].get<float>() : 0.0f;
+        float warmupTime = warmupMs / 1000.0f;
+
+        // Get current warmup timer
+        float currentWarmupTime = activeAction->getWarmupTimer();
+
+        CF_Color blendedColor = blend(yellow, red, warmupTime, currentWarmupTime);
+
+        activeAction->renderHitbox(blendedColor);
     }
 }
 

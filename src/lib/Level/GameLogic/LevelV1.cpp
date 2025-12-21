@@ -1,6 +1,7 @@
 #include "LevelV1.h"
 #include "CFNativeCamera.h"
 #include "JobSystem.h"
+#include "../UI/ColorUtils.h"
 #include <cstdio>
 
 LevelV1::LevelV1(const std::string &directoryPath)
@@ -297,9 +298,25 @@ void LevelV1::renderAgentActions(const CFNativeCamera &camera, const AnimatedDat
         if (agent && agent->getIsOnScreen())
         {
             // Render action hitbox if agent is doing an action
-            if (agent->getIsDoingAction() && agent->getActiveAction())
+            // Don't render during cooldown phase
+            if (agent->getIsDoingAction() && agent->getActiveAction() && !agent->getActiveAction()->getInCooldown())
             {
-                agent->getActiveAction()->renderHitbox();
+                Action *action = agent->getActiveAction();
+
+                // Calculate blended color from yellow to red based on warmup progress
+                CF_Color yellow = cf_make_color_rgb(200, 200, 0);
+                CF_Color red = cf_make_color_rgb(255, 0, 0);
+
+                // Get warmup time from action JSON (in ms, convert to seconds)
+                float warmupMs = action->contains("warmup") ? (*action)["warmup"].get<float>() : 0.0f;
+                float warmupTime = warmupMs / 1000.0f;
+
+                // Get current warmup timer
+                float currentWarmupTime = action->getWarmupTimer();
+
+                CF_Color blendedColor = blend(yellow, red, warmupTime, currentWarmupTime);
+
+                agent->getActiveAction()->renderHitbox(blendedColor);
             }
         }
     }
