@@ -42,6 +42,9 @@ private:
     // Spatial partitioning grid for efficient queries
     SpatialGrid spatialGrid;
 
+    // Player character reference for hitbox checking (non-owning)
+    const AnimatedDataCharacter *player;
+
     // TMX tile dimensions (cached for convenience)
     int tileWidth;
     int tileHeight;
@@ -172,6 +175,20 @@ public:
      * @return true if any other agents are found in the area, false otherwise
      */
     bool checkAgentsInArea(const std::vector<CF_Aabb> &areas, CF_Aabb areasBounds, const AnimatedDataCharacter *excludeAgent = nullptr) const;
+
+    /**
+     * Check if a character is inside any active action hitbox in warmup phase
+     * @param character The character to check
+     * @param characterBox The bounding box of the character
+     * @return true if character is inside an action hitbox during warmup
+     */
+    bool isCharacterInActionHitbox(const AnimatedDataCharacter *character, CF_Aabb characterBox) const;
+
+    /**
+     * Set the player character reference for hitbox checking
+     * @param player Pointer to the player character
+     */
+    void setPlayer(const AnimatedDataCharacter *player);
 
     /**
      * Update all agents in the level

@@ -5,7 +5,7 @@
 #include <cstdio>
 
 LevelV1::LevelV1(const std::string &directoryPath)
-    : levelDirectory(directoryPath), levelName(""), levelMap(nullptr), navmesh(nullptr), entities(), details(), tileWidth(0), tileHeight(0), initialized(false)
+    : levelDirectory(directoryPath), levelName(""), levelMap(nullptr), navmesh(nullptr), entities(), details(), tileWidth(0), tileHeight(0), initialized(false), player(nullptr)
 {
     printf("LevelV1: Loading level from directory: %s\n", directoryPath.c_str());
 
@@ -464,6 +464,58 @@ bool LevelV1::checkAgentsInArea(const std::vector<CF_Aabb> &areas, CF_Aabb areas
             if (cf_overlaps(area, agentBox))
             {
                 return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+void LevelV1::setPlayer(const AnimatedDataCharacter *playerCharacter)
+{
+    player = playerCharacter;
+}
+
+bool LevelV1::isCharacterInActionHitbox(const AnimatedDataCharacter *character, CF_Aabb characterBox) const
+{
+    // Check player's action if player exists and is doing an action
+    if (player && player != character && player->getIsDoingAction() && player->getActiveAction())
+    {
+        Action *action = player->getActiveAction();
+        if (!action->getInCooldown() && action->getHitBox())
+        {
+            std::vector<CF_Aabb> actionBoxes = action->getHitBox()->getBoxes(
+                player->getCurrentDirection(), player->getPosition());
+
+            for (const auto &actionBox : actionBoxes)
+            {
+                if (cf_overlaps(characterBox, actionBox))
+                {
+                    return true;
+                }
+            }
+        }
+    }
+
+    // Check all agent actions
+    for (size_t i = 0; i < agents.size(); ++i)
+    {
+        const auto &agent = agents[i];
+        if (agent && agent.get() != character && agent->getIsDoingAction() && agent->getActiveAction())
+        {
+            Action *action = agent->getActiveAction();
+            if (!action->getInCooldown() && action->getHitBox())
+            {
+                std::vector<CF_Aabb> actionBoxes = action->getHitBox()->getBoxes(
+                    agent->getCurrentDirection(), agent->getPosition());
+
+                for (const auto &actionBox : actionBoxes)
+                {
+                    if (cf_overlaps(characterBox, actionBox))
+                    {
+                        return true;
+                    }
+                }
             }
         }
     }
