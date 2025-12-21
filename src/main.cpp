@@ -276,8 +276,18 @@ int main(int argc, char *argv[])
 	// Set sprite dimensions for navmesh collision box calculation (tile size is the sprite size)
 	playerCharacter.setSpriteDimensions(static_cast<float>(tile_width), static_cast<float>(tile_height));
 
-	// Set initial hitbox visibility from config
-	playerCharacter.setHitboxActive(debugHighlightCharacterHitboxes);
+	// Set initial hitbox visibility from config for player
+	playerCharacter.sethitboxDebugActive(debugHighlightCharacterHitboxes);
+
+	// Set hitbox visibility for all agents from config
+	for (size_t i = 0; i < level.getAgentCount(); ++i)
+	{
+		AnimatedDataCharacterNavMeshAgent *agent = level.getAgent(i);
+		if (agent)
+		{
+			agent->sethitboxDebugActive(debugHighlightCharacterHitboxes);
+		}
+	}
 
 	// Create player info debug window if enabled (now that player and level are ready)
 	if (ShowPlayerInfo)

@@ -59,7 +59,7 @@ public:
     HitBox *getHitbox() const;
 
     // Set hitbox visibility
-    void setHitboxActive(bool active);
+    void sethitboxDebugActive(bool active);
 
     // Action state
     void setDoingAction(bool doing);
@@ -114,10 +114,10 @@ private:
     bool isDoingAction;
 
     // Hitbox state
-    bool hitboxActive;
+    bool hitboxDebugActive;
     float hitboxSize;
     float hitboxDistance;
-    HitBox *hitbox;
+    HitBox *characterHitbox; // Character's footprint hitbox
     HitboxShape hitboxShape; // for constructor
     LevelV1 *level;          // Pointer to level for agent queries
 

@@ -48,7 +48,7 @@ static bool getPNGDimensions(const std::string &path, uint32_t &width, uint32_t 
 AnimatedDataCharacter::AnimatedDataCharacter()
     : initialized(false), demoTime(0.0f), directionChangeTime(0.0f), animationChangeTime(0.0f),
       currentAnimation("idle"), currentDirection(Direction::DOWN), currentFrame(0), frameTimer(0.0f),
-      position(v2(0, 0)), wasMoving(false), isDoingAction(false), hitboxActive(false), hitboxSize(32.0f), hitboxDistance(48.0f),
+      position(v2(0, 0)), wasMoving(false), isDoingAction(false), hitboxDebugActive(false), hitboxSize(32.0f), hitboxDistance(0.0f),
       hitboxShape(HitboxShape::SQUARE), level(nullptr), actionPointerA(0), actionPointerB(0), activeAction(nullptr)
 {
     // Initialize input state
@@ -65,11 +65,11 @@ AnimatedDataCharacter::AnimatedDataCharacter()
 // Destructor
 AnimatedDataCharacter::~AnimatedDataCharacter()
 {
-    // Cleanup hitbox if it exists
-    if (hitbox)
+    // Cleanup character hitbox if it exists
+    if (characterHitbox)
     {
-        delete hitbox;
-        hitbox = nullptr;
+        delete characterHitbox;
+        characterHitbox = nullptr;
     }
 } // Initialize the character with a datafile path
 bool AnimatedDataCharacter::init(const std::string &datafilePath)
@@ -128,8 +128,23 @@ bool AnimatedDataCharacter::init(const std::string &datafilePath)
         hitboxDistance = charConfig["hitbox_distance"].get<float>();
     }
 
-    // No default hitbox is created - only actions will have hitboxes
-    hitbox = nullptr;
+    // Create default character hitbox - a single tile at the bottom of the sprite
+    // This represents the character's physical footprint
+    std::vector<HitboxTile> characterHitboxTiles;
+    HitboxTile bottomTile;
+    bottomTile.x = 0;
+    bottomTile.y = 0; // At character position (bottom center)
+    bottomTile.delay = 0.0f;
+    bottomTile.damageModifier = 1.0f;
+    characterHitboxTiles.push_back(bottomTile);
+
+    // Create character hitbox from the single tile - this will be centered at the character's position
+    characterHitbox = new HitBox();
+    for (Direction direction : {Direction::UP, Direction::DOWN, Direction::LEFT, Direction::RIGHT})
+    {
+        characterHitbox->boxesByDirection[direction] = HitBox::buildFromTiles(characterHitboxTiles, hitboxSize, 0.0f, direction);
+        characterHitbox->boundingBoxByDirection[direction] = HitBox::buildBoundingBox(characterHitbox->boxesByDirection[direction], direction);
+    }
 
     std::string characterName = charConfig["name"];
     printf("AnimatedDataCharacter: Loading character '%s' from datafile\n", characterName.c_str());
@@ -567,7 +582,7 @@ void AnimatedDataCharacter::renderDebugInfo()
     draw_text(stateText, textPos);
 
     textPos.y -= 20;
-    snprintf(stateText, sizeof(stateText), "Hitbox: %s", hitboxActive ? "ON" : "OFF");
+    snprintf(stateText, sizeof(stateText), "Hitbox: %s", hitboxDebugActive ? "ON" : "OFF");
     draw_text(stateText, textPos);
 
     cf_draw_pop_color();
@@ -605,9 +620,9 @@ LevelV1 *AnimatedDataCharacter::getLevel() const
     return level;
 }
 
-void AnimatedDataCharacter::setHitboxActive(bool active)
+void AnimatedDataCharacter::sethitboxDebugActive(bool active)
 {
-    hitboxActive = active;
+    hitboxDebugActive = active;
 }
 
 void AnimatedDataCharacter::setDoingAction(bool doing)
@@ -646,15 +661,15 @@ void AnimatedDataCharacter::renderHitbox()
     }
 
     // Render character's default hitbox
-    if (!hitboxActive || !hitbox)
+    if (!hitboxDebugActive || !characterHitbox)
         return;
 
     // Default color is yellow for character hitbox
     CF_Color color = cf_make_color_rgb(255, 255, 0); // Yellow
 
     // Check if any agents are in the hitbox area
-    if (level && level->checkAgentsInArea(hitbox->getBoxes(currentDirection, position),
-                                          hitbox->getBoundingBox(currentDirection, position), this))
+    if (level && level->checkAgentsInArea(characterHitbox->getBoxes(currentDirection, position),
+                                          characterHitbox->getBoundingBox(currentDirection, position), this))
     {
         // Change to orange if agents are detected
         color = cf_make_color_rgb(255, 165, 0); // Orange
@@ -664,7 +679,7 @@ void AnimatedDataCharacter::renderHitbox()
     cf_draw_push_color(color);
     cf_draw_push_antialias(false);
 
-    for (const auto &box : hitbox->getBoxes(currentDirection, position))
+    for (const auto &box : characterHitbox->getBoxes(currentDirection, position))
     {
         // Draw thick outline (thickness, chubbiness/rounding)
         cf_draw_box(box, 3.0f, 0.0f);

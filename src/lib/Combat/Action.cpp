@@ -5,7 +5,7 @@
 #include <cute.h>
 
 // Constructor that takes a folder path and loads action.json from that folder
-Action::Action(const std::string &folderPath) : hasHitbox(false), hitbox(nullptr), hitboxSize(32.0f), hitboxDistance(48.0f), isActive(false), character(nullptr)
+Action::Action(const std::string &folderPath) : hasHitbox(false), hitbox(nullptr), hitboxSize(32.0f), hitboxDistance(0.0f), isActive(false), character(nullptr)
 {
     loadFromFolder(folderPath, hitboxSize, hitboxDistance);
 }
