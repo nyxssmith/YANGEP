@@ -1,6 +1,7 @@
 #include "LevelV1.h"
 #include "CFNativeCamera.h"
 #include "JobSystem.h"
+#include "../UI/ColorUtils.h"
 #include <cstdio>
 
 LevelV1::LevelV1(const std::string &directoryPath)
@@ -268,6 +269,59 @@ void LevelV1::updateAgents(float dt)
     JobSystem::kick();
 }
 
+void LevelV1::renderAgentActions(const CFNativeCamera &camera, const AnimatedDataCharacter *player)
+{
+    // Render player's action hitbox first if provided
+    if (player)
+    {
+        const_cast<AnimatedDataCharacter *>(player)->renderActionHitbox();
+    }
+
+    // Use spatial grid to only check agents in visible cells
+    CF_Aabb viewBounds = camera.getViewBounds();
+
+    // Expand view bounds slightly to catch agents on the edge
+    viewBounds.min.x -= 64.0f;
+    viewBounds.min.y -= 64.0f;
+    viewBounds.max.x += 64.0f;
+    viewBounds.max.y += 64.0f;
+
+    // Query spatial grid for agents in view area
+    std::vector<size_t> nearbyAgents = spatialGrid.queryAABB(viewBounds);
+
+    for (size_t agentIndex : nearbyAgents)
+    {
+        if (agentIndex >= agents.size())
+            continue;
+
+        auto &agent = agents[agentIndex];
+        if (agent && agent->getIsOnScreen())
+        {
+            // Render action hitbox if agent is doing an action
+            // Don't render during cooldown phase
+            if (agent->getIsDoingAction() && agent->getActiveAction() && !agent->getActiveAction()->getInCooldown())
+            {
+                Action *action = agent->getActiveAction();
+
+                // Calculate blended color from yellow to red based on warmup progress
+                CF_Color yellow = cf_make_color_rgb(200, 200, 0);
+                CF_Color red = cf_make_color_rgb(255, 0, 0);
+
+                // Get warmup time from action JSON (in ms, convert to seconds)
+                float warmupMs = action->contains("warmup") ? (*action)["warmup"].get<float>() : 0.0f;
+                float warmupTime = warmupMs / 1000.0f;
+
+                // Get current warmup timer
+                float currentWarmupTime = action->getWarmupTimer();
+
+                CF_Color blendedColor = blend(yellow, red, warmupTime, currentWarmupTime);
+
+                agent->getActiveAction()->renderHitbox(blendedColor);
+            }
+        }
+    }
+}
+
 void LevelV1::renderAgents(const CFNativeCamera &camera)
 {
     int renderedCount = 0;
@@ -314,24 +368,22 @@ void LevelV1::renderAgents(const CFNativeCamera &camera)
     //        checkedCount, agents.size(), renderedCount, culledCount);
 }
 
-void LevelV1::render(const CFNativeCamera &camera, const DataFile &config, float worldX, float worldY)
+void LevelV1::renderLayers(const CFNativeCamera &camera, const DataFile &config, float worldX, float worldY)
 {
     if (!initialized || !levelMap)
     {
         return;
     }
 
-    // TODO change render order based on height in world, not agents always on top
-    double layersStart = cf_get_ticks() / 1000.0;
     levelMap->renderAllLayers(camera, config, worldX, worldY);
-    double layersEnd = cf_get_ticks() / 1000.0;
+}
 
-    double agentsStart = cf_get_ticks() / 1000.0;
+void LevelV1::render(const CFNativeCamera &camera, const DataFile &config, float worldX, float worldY)
+{
+    // DEPRECATED: Use renderLayers, renderAgentActions, renderAgents separately for proper layering
+    renderLayers(camera, config, worldX, worldY);
+    renderAgentActions(camera);
     renderAgents(camera);
-    double agentsEnd = cf_get_ticks() / 1000.0;
-
-    printf("LevelV1::render - layers: %.3f ms, agents: %.3f ms\n",
-           layersEnd - layersStart, agentsEnd - agentsStart);
 }
 
 void LevelV1::debugPrint() const

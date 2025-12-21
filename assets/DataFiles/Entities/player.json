@@ -2,9 +2,9 @@
   "name": "player",
   "character_config": {
     "name": "player",
-    "hitbox_shape": "L_SHAPE",
     "hitbox_size": 32,
-    "hitbox_distance": 48,
+    "hitbox_distance": 0,
+    "innate_actions": ["Test-A"],
     "layers": [
       {
         "filename": "BODY_male.png",

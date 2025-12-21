@@ -101,6 +101,7 @@ add_executable(
 	src/lib/Debug/DebugWindowList.cpp
 	src/lib/Debug/DebugFPSWindow.cpp
 	src/lib/Debug/DebugJobWindow.cpp
+	src/lib/Debug/DebugPlayerInfoWindow.cpp
 	src/lib/Level/FileHandling/tsx.cpp
 	src/lib/Level/FileHandling/tmx.cpp
 	src/lib/Level/GameLogic/LevelV1.cpp
@@ -117,8 +118,11 @@ add_executable(
 	src/lib/Character/Behavior/Behavior.cpp
 	src/lib/Character/Behavior/WanderBehavior.cpp
 	src/lib/Combat/HitBox.cpp
+	src/lib/Combat/Action.cpp
 	src/lib/JobSystem/JobSystem.cpp
 	src/lib/JobSystem/OnScreenChecks.cpp
+	src/lib/UI/HighlightTile.cpp
+	src/lib/UI/ColorUtils.cpp
 )
 
 # Our source code will be in the `src` folder.
@@ -134,6 +138,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/JobSystem>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Level/FileHandling>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Level/GameLogic>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/UI>
 )
 
 # Some basic information needed for CMake to generate your Info.plist file.
@@ -192,11 +197,14 @@ add_executable(${PROJECT_NAME}_tests
     src/lib/Level/GameLogic/LevelV1.cpp
     src/lib/Character/AnimatedDataCharacter.cpp
     src/lib/Combat/HitBox.cpp
+    src/lib/Combat/Action.cpp
     src/lib/Character/AnimatedDataCharacterNavMeshAgent.cpp
     src/lib/Character/AnimatedDataCharacterNavMeshPlayer.cpp
     src/lib/Character/Behavior/Behavior.cpp
     src/lib/Character/Behavior/WanderBehavior.cpp
     src/lib/JobSystem/JobSystem.cpp
+    src/lib/UI/HighlightTile.cpp
+    src/lib/UI/ColorUtils.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}_tests gtest gtest_main cute spng_static nlohmann_json::nlohmann_json pugixml-static)
@@ -212,4 +220,5 @@ target_include_directories(${PROJECT_NAME}_tests PUBLIC
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/JobSystem>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Level/FileHandling>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Level/GameLogic>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/UI>
 )

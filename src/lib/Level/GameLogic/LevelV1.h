@@ -180,13 +180,30 @@ public:
     void updateAgents(float dt);
 
     /**
+     * Render all layers of the level map (tiles only)
+     * @param camera Camera to use for rendering
+     * @param config Configuration data file for layer highlighting
+     * @param worldX World X offset
+     * @param worldY World Y offset
+     */
+    void renderLayers(const CFNativeCamera &camera, const DataFile &config, float worldX = 0.0f, float worldY = 0.0f);
+
+    /**
+     * Render all action hitboxes for agents that are visible in the camera viewport
+     * This should be called after renderLayers and before renderAgents
+     * @param camera Camera to use for viewport culling
+     * @param player Optional player character to also render action hitbox for
+     */
+    void renderAgentActions(const CFNativeCamera &camera, const AnimatedDataCharacter *player = nullptr);
+
+    /**
      * Render all agents in the level that are visible in the camera viewport
      * @param camera Camera to use for viewport culling
      */
     void renderAgents(const CFNativeCamera &camera);
 
     /**
-     * Render all layers of the level map
+     * Render all layers of the level map (DEPRECATED - use renderLayers, renderAgentActions, renderAgents separately)
      * @param camera Camera to use for rendering
      * @param config Configuration data file for layer highlighting
      * @param worldX World X offset
