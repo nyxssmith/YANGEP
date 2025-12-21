@@ -5,12 +5,15 @@
 #include "SpriteAnimationLoader.h"
 #include "DataFile.h"
 #include "HitBox.h"
+#include "Action.h"
+#include <vector>
 
 using namespace Cute;
 
 // Forward declaration
 class LevelV1;
 class HitBox;
+class Action;
 
 // Demo class to showcase the new SpriteAnimationLoader system
 class AnimatedDataCharacter
@@ -43,14 +46,37 @@ public:
     // Set current position
     void setPosition(v2 newPosition);
 
+    // Get current direction
+    Direction getCurrentDirection() const;
+
     // Set the level for agent queries
     void setLevel(LevelV1 *level);
+
+    // Get the level
+    LevelV1 *getLevel() const;
 
     // Get hitbox in world coordinates
     HitBox *getHitbox() const;
 
     // Set hitbox visibility
     void setHitboxActive(bool active);
+
+    // Action state
+    void setDoingAction(bool doing);
+    bool getIsDoingAction() const;
+    void setActiveAction(Action *action);
+    Action *getActiveAction() const;
+
+    // ActionsList management
+    bool addAction(const std::string &folderPath);
+    bool removeAction(const std::string &actionName);
+    const std::vector<Action> &getActions() const;
+
+    // Action pointer management
+    void setActionPointerA(size_t index);
+    void setActionPointerB(size_t index);
+    Action *getActionPointerA() const;
+    Action *getActionPointerB() const;
 
 private:
     // The animation loader
@@ -85,6 +111,7 @@ private:
 
     // Movement tracking for animation switching
     bool wasMoving;
+    bool isDoingAction;
 
     // Hitbox state
     bool hitboxActive;
@@ -93,6 +120,12 @@ private:
     HitBox *hitbox;
     HitboxShape hitboxShape; // for constructor
     LevelV1 *level;          // Pointer to level for agent queries
+
+    // ActionsList - list of actions for this character
+    std::vector<Action> actionsList;
+    size_t actionPointerA;
+    size_t actionPointerB;
+    Action *activeAction; // Currently active action
 
     // Helper methods
     void cycleDirection();

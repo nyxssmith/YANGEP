@@ -48,8 +48,8 @@ static bool getPNGDimensions(const std::string &path, uint32_t &width, uint32_t 
 AnimatedDataCharacter::AnimatedDataCharacter()
     : initialized(false), demoTime(0.0f), directionChangeTime(0.0f), animationChangeTime(0.0f),
       currentAnimation("idle"), currentDirection(Direction::DOWN), currentFrame(0), frameTimer(0.0f),
-      position(v2(0, 0)), wasMoving(false), hitboxActive(false), hitboxSize(32.0f), hitboxDistance(48.0f),
-      hitboxShape(HitboxShape::SQUARE), level(nullptr)
+      position(v2(0, 0)), wasMoving(false), isDoingAction(false), hitboxActive(false), hitboxSize(32.0f), hitboxDistance(48.0f),
+      hitboxShape(HitboxShape::SQUARE), level(nullptr), actionPointerA(0), actionPointerB(0), activeAction(nullptr)
 {
     // Initialize input state
     for (int i = 0; i < 4; i++)
@@ -65,10 +65,13 @@ AnimatedDataCharacter::AnimatedDataCharacter()
 // Destructor
 AnimatedDataCharacter::~AnimatedDataCharacter()
 {
-    // Cleanup is automatic
-}
-
-// Initialize the character with a datafile path
+    // Cleanup hitbox if it exists
+    if (hitbox)
+    {
+        delete hitbox;
+        hitbox = nullptr;
+    }
+} // Initialize the character with a datafile path
 bool AnimatedDataCharacter::init(const std::string &datafilePath)
 {
     // Load the datafile
@@ -93,31 +96,40 @@ bool AnimatedDataCharacter::init(const std::string &datafilePath)
         return false;
     }
 
-    // Load hitbox shape if specified in JSON, default to SQUARE
-    if (charConfig.contains("hitbox_shape") && charConfig["hitbox_shape"].is_string() && charConfig.contains("hitbox_size") && charConfig["hitbox_size"].is_number() && charConfig.contains("hitbox_distance") && charConfig["hitbox_distance"].is_number())
+    // Load innate actions if specified in JSON
+    if (charConfig.contains("innate_actions") && charConfig["innate_actions"].is_array())
     {
+        for (const auto &actionPath : charConfig["innate_actions"])
+        {
+            if (actionPath.is_string())
+            {
+                std::string actionName = actionPath.get<std::string>();
+                // Build full path to action folder
+                std::string fullPath = "/assets/DataFiles/Actions/" + actionName;
+                if (addAction(fullPath))
+                {
+                    printf("AnimatedDataCharacter: Loaded innate action '%s' from '%s'\n", actionName.c_str(), fullPath.c_str());
+                }
+                else
+                {
+                    printf("AnimatedDataCharacter: WARNING: Failed to load innate action '%s' from '%s'\n", actionName.c_str(), fullPath.c_str());
+                }
+            }
+        }
+    }
 
-        hitboxSize = charConfig["hitbox_size"].get<float>();
-        hitboxDistance = charConfig["hitbox_distance"].get<float>();
-        std::string hitboxShapeString = charConfig["hitbox_shape"].get<std::string>();
-        if (hitboxShapeString == "T_SHAPE")
-        {
-            hitbox = HitBox::createHitBox(HitboxShape::T_SHAPE, hitboxSize, hitboxDistance);
-        }
-        else if (hitboxShapeString == "L_SHAPE")
-        {
-            hitbox = HitBox::createHitBox(HitboxShape::L_SHAPE, hitboxSize, hitboxDistance);
-        }
-        else
-        {
-            hitbox = HitBox::createHitBox(HitboxShape::SQUARE, hitboxSize, hitboxDistance);
-        }
-    }
-    else
+    // Load hitbox size and distance if specified in JSON (used for actions)
+    if (charConfig.contains("hitbox_size") && charConfig["hitbox_size"].is_number())
     {
-        // Default to SQUARE if not specified
-        hitbox = HitBox::createHitBox(HitboxShape::SQUARE, hitboxSize, hitboxDistance);
+        hitboxSize = charConfig["hitbox_size"].get<float>();
     }
+    if (charConfig.contains("hitbox_distance") && charConfig["hitbox_distance"].is_number())
+    {
+        hitboxDistance = charConfig["hitbox_distance"].get<float>();
+    }
+
+    // No default hitbox is created - only actions will have hitboxes
+    hitbox = nullptr;
 
     std::string characterName = charConfig["name"];
     printf("AnimatedDataCharacter: Loading character '%s' from datafile\n", characterName.c_str());
@@ -236,9 +248,19 @@ void AnimatedDataCharacter::update(float dt, v2 moveVector)
     if (!initialized)
         return;
 
-    demoTime += dt;
+    // Don't allow movement if doing an action
+    if (isDoingAction)
+    {
+        moveVector = v2(0, 0);
 
-    // Calculate movement magnitude to determine if we're moving
+        // Update the active action if one exists
+        if (activeAction)
+        {
+            activeAction->update(dt);
+        }
+    }
+
+    demoTime += dt; // Calculate movement magnitude to determine if we're moving
     float moveMagnitude = sqrt(moveVector.x * moveVector.x + moveVector.y * moveVector.y);
     bool isMoving = moveMagnitude > 0.01f; // Small threshold to avoid floating point issues
 
@@ -301,8 +323,7 @@ void AnimatedDataCharacter::handleInput()
     bool animKey2 = key_just_pressed(CF_KEY_2); // Switch to walkcycle
 
     // Additional controls
-    bool spacePressed = key_just_pressed(CF_KEY_SPACE); // Toggle animation
-    bool rPressed = key_just_pressed(CF_KEY_R);         // Reset position
+    bool rPressed = key_just_pressed(CF_KEY_R); // Reset position
 
     // Handle manual animation input (overrides auto-switching)
     if (animKey1)
@@ -316,12 +337,6 @@ void AnimatedDataCharacter::handleInput()
         currentAnimation = "walkcycle";
         currentFrame = 0;
         frameTimer = 0.0f;
-    }
-
-    // Handle space bar - toggle hitbox visibility
-    if (spacePressed)
-    {
-        hitboxActive = !hitboxActive;
     }
 
     // Handle R key - reset position
@@ -575,9 +590,19 @@ void AnimatedDataCharacter::setPosition(v2 newPosition)
     position = newPosition;
 }
 
+Direction AnimatedDataCharacter::getCurrentDirection() const
+{
+    return currentDirection;
+}
+
 void AnimatedDataCharacter::setLevel(LevelV1 *levelPtr)
 {
     level = levelPtr;
+}
+
+LevelV1 *AnimatedDataCharacter::getLevel() const
+{
+    return level;
 }
 
 void AnimatedDataCharacter::setHitboxActive(bool active)
@@ -585,15 +610,49 @@ void AnimatedDataCharacter::setHitboxActive(bool active)
     hitboxActive = active;
 }
 
+void AnimatedDataCharacter::setDoingAction(bool doing)
+{
+    isDoingAction = doing;
+
+    // Clear active action when no longer doing action
+    if (!doing)
+    {
+        activeAction = nullptr;
+    }
+}
+
+bool AnimatedDataCharacter::getIsDoingAction() const
+{
+    return isDoingAction;
+}
+
+void AnimatedDataCharacter::setActiveAction(Action *action)
+{
+    activeAction = action;
+}
+
+Action *AnimatedDataCharacter::getActiveAction() const
+{
+    return activeAction;
+}
+
 void AnimatedDataCharacter::renderHitbox()
 {
-    if (!hitboxActive)
+    // If doing an action, render the action's hitbox instead
+    if (isDoingAction && activeAction)
+    {
+        activeAction->renderHitbox();
+        return;
+    }
+
+    // Render character's default hitbox
+    if (!hitboxActive || !hitbox)
         return;
 
-    // Default color is yellow
+    // Default color is yellow for character hitbox
     CF_Color color = cf_make_color_rgb(255, 255, 0); // Yellow
 
-    // Check if any agents are in any of the hitbox areas, using the hitbox's bounding box for the areas bounds
+    // Check if any agents are in the hitbox area
     if (level && level->checkAgentsInArea(hitbox->getBoxes(currentDirection, position),
                                           hitbox->getBoundingBox(currentDirection, position), this))
     {
@@ -605,12 +664,114 @@ void AnimatedDataCharacter::renderHitbox()
     cf_draw_push_color(color);
     cf_draw_push_antialias(false);
 
-    for (const auto &hitbox : hitbox->getBoxes(currentDirection, position))
+    for (const auto &box : hitbox->getBoxes(currentDirection, position))
     {
         // Draw thick outline (thickness, chubbiness/rounding)
-        cf_draw_box(hitbox, 3.0f, 0.0f);
+        cf_draw_box(box, 3.0f, 0.0f);
     }
 
     cf_draw_pop_antialias();
     cf_draw_pop_color();
+}
+
+// Add an action to the actions list by loading from folder path
+bool AnimatedDataCharacter::addAction(const std::string &folderPath)
+{
+    Action newAction(folderPath);
+
+    // Check if action loaded successfully
+    if (!newAction.contains("name"))
+    {
+        printf("AnimatedDataCharacter: Failed to add action from '%s' - no 'name' field found\n", folderPath.c_str());
+        return false;
+    }
+
+    std::string actionName = newAction["name"];
+
+    // Check if action with same name already exists
+    for (const auto &existingAction : actionsList)
+    {
+        if (existingAction.contains("name") && existingAction["name"] == actionName)
+        {
+            printf("AnimatedDataCharacter: Action '%s' already exists in actions list\n", actionName.c_str());
+            return false;
+        }
+    }
+    // tell action about self
+    newAction.setCharacter(this);
+    // add to list
+    actionsList.push_back(newAction);
+    printf("AnimatedDataCharacter: Added action '%s' to actions list\n", actionName.c_str());
+    return true;
+}
+
+// Remove an action from the actions list by name
+bool AnimatedDataCharacter::removeAction(const std::string &actionName)
+{
+    for (auto it = actionsList.begin(); it != actionsList.end(); ++it)
+    {
+        if (it->contains("name") && (*it)["name"] == actionName)
+        {
+            actionsList.erase(it);
+            printf("AnimatedDataCharacter: Removed action '%s' from actions list\n", actionName.c_str());
+            return true;
+        }
+    }
+
+    printf("AnimatedDataCharacter: Action '%s' not found in actions list\n", actionName.c_str());
+    return false;
+}
+
+// Get the actions list
+const std::vector<Action> &AnimatedDataCharacter::getActions() const
+{
+    return actionsList;
+}
+
+// Set action pointer A to a specific index
+void AnimatedDataCharacter::setActionPointerA(size_t index)
+{
+    if (index < actionsList.size())
+    {
+        actionPointerA = index;
+        printf("AnimatedDataCharacter: Action pointer A set to index %zu\n", index);
+    }
+    else
+    {
+        printf("AnimatedDataCharacter: Warning - index %zu out of bounds for action pointer A (size: %zu)\n", index, actionsList.size());
+    }
+}
+
+// Set action pointer B to a specific index
+void AnimatedDataCharacter::setActionPointerB(size_t index)
+{
+    if (index < actionsList.size())
+    {
+        actionPointerB = index;
+        printf("AnimatedDataCharacter: Action pointer B set to index %zu\n", index);
+    }
+    else
+    {
+        printf("AnimatedDataCharacter: Warning - index %zu out of bounds for action pointer B (size: %zu)\n", index, actionsList.size());
+    }
+}
+
+// Get action pointer A
+Action *AnimatedDataCharacter::getActionPointerA() const
+{
+    if (actionPointerA < actionsList.size())
+    {
+        return const_cast<Action *>(&actionsList[actionPointerA]);
+    }
+    return nullptr;
+}
+
+// Get action pointer B
+Action *AnimatedDataCharacter::getActionPointerB() const
+{
+    if (actionPointerB < actionsList.size())
+    {
+        return const_cast<Action *>(&actionsList[actionPointerB]);
+    }
+    return nullptr;
 }

@@ -1,5 +1,8 @@
 #include "HitBox.h"
 #include "SpriteAnimationLoader.h"
+#include "LevelV1.h"
+#include "../UI/HighlightTile.h"
+#include <cstdio>
 
 HitBox::HitBox()
 {
@@ -7,6 +10,44 @@ HitBox::HitBox()
 
 HitBox::~HitBox()
 {
+}
+
+HitBox *HitBox::createHitBoxFromJson(const DataFile &hitboxData, float hitboxSize, float hitboxDistance)
+{
+    HitBox *hitBox = new HitBox();
+
+    // Parse tiles from JSON
+    if (!hitboxData.contains("tiles") || !hitboxData["tiles"].is_array())
+    {
+        printf("HitBox: Error - hitbox.json missing 'tiles' array\n");
+        delete hitBox;
+        return nullptr;
+    }
+
+    for (const auto &tileJson : hitboxData["tiles"])
+    {
+        HitboxTile tile;
+        tile.x = tileJson.value("x", 0);
+        tile.y = tileJson.value("y", 0);
+        tile.delay = tileJson.value("delay", 0.0f);
+        tile.damageModifier = tileJson.value("damage_modifier", 1.0f);
+        hitBox->tiles.push_back(tile);
+    }
+
+    // Build boxes for each direction
+    for (Direction direction : {Direction::UP, Direction::DOWN, Direction::LEFT, Direction::RIGHT})
+    {
+        hitBox->boxesByDirection[direction] = HitBox::buildFromTiles(hitBox->tiles, hitboxSize, hitboxDistance, direction);
+        hitBox->boundingBoxByDirection[direction] = HitBox::buildBoundingBox(hitBox->boxesByDirection[direction], direction);
+    }
+
+    printf("HitBox: Created custom hitbox from JSON with %zu tiles\n", hitBox->tiles.size());
+    return hitBox;
+}
+
+const std::vector<HitboxTile> &HitBox::getTiles() const
+{
+    return tiles;
 }
 
 HitBox *HitBox::createHitBox(HitboxShape shape, float hitboxSize, float hitboxDistance)
@@ -239,4 +280,110 @@ std::vector<CF_Aabb> HitBox::buildSquare(float hitboxSize, float hitboxDistance,
     hitboxes.push_back(cf_make_aabb(cf_v2(centerBox.x - halfSize, centerBox.y - halfSize), cf_v2(centerBox.x + halfSize, centerBox.y + halfSize)));
 
     return hitboxes;
+}
+
+// Rotate coordinates based on direction (default is RIGHT)
+v2 HitBox::rotateCoordinate(int x, int y, Direction direction)
+{
+    // Input coordinates assume facing RIGHT
+    // x is horizontal distance (positive = right)
+    // y is perpendicular distance (positive = away from character)
+
+    switch (direction)
+    {
+    case Direction::RIGHT:
+        // No rotation needed - this is the default
+        return cf_v2(x, y);
+
+    case Direction::UP:
+        // Rotate 90 degrees counter-clockwise
+        // Right's y-axis becomes Up's x-axis, Right's x-axis becomes Up's y-axis
+        return cf_v2(y, x);
+
+    case Direction::LEFT:
+        // Rotate 180 degrees
+        // Right becomes Left, so x becomes -x, y becomes -y
+        return cf_v2(-x, -y);
+
+    case Direction::DOWN:
+        // Rotate 90 degrees clockwise
+        // Right's y-axis becomes Down's -x-axis, Right's x-axis becomes Down's -y-axis
+        return cf_v2(-y, -x);
+    }
+
+    return cf_v2(x, y);
+}
+
+// Build hitbox from tile definitions in JSON
+std::vector<CF_Aabb> HitBox::buildFromTiles(const std::vector<HitboxTile> &tiles, float hitboxSize, float hitboxDistance, Direction direction)
+{
+    std::vector<CF_Aabb> hitboxes;
+    float halfSize = hitboxSize / 2.0f;
+
+    for (const auto &tile : tiles)
+    {
+        // Rotate the tile coordinates based on direction
+        v2 rotated = rotateCoordinate(tile.x, tile.y, direction);
+
+        // Scale by hitboxSize and add distance offset
+        v2 tileCenter = cf_v2(
+            rotated.x * hitboxSize,
+            rotated.y * hitboxSize);
+
+        // Add the base distance in the facing direction
+        switch (direction)
+        {
+        case Direction::UP:
+            tileCenter.y += hitboxDistance;
+            break;
+        case Direction::DOWN:
+            tileCenter.y -= hitboxDistance;
+            break;
+        case Direction::LEFT:
+            tileCenter.x -= hitboxDistance;
+            break;
+        case Direction::RIGHT:
+            tileCenter.x += hitboxDistance;
+            break;
+        }
+
+        // Create AABB for this tile
+        hitboxes.push_back(cf_make_aabb(
+            cf_v2(tileCenter.x - halfSize, tileCenter.y - halfSize),
+            cf_v2(tileCenter.x + halfSize, tileCenter.y + halfSize)));
+    }
+
+    return hitboxes;
+}
+
+// Render hitbox by highlighting tiles at character position
+void HitBox::render(v2 characterPosition, Direction facingDirection, const LevelV1 &level)
+{
+    // Get tile dimensions from level
+    float tile_width = static_cast<float>(level.getTileWidth());
+    float tile_height = static_cast<float>(level.getTileHeight());
+
+    // Convert character world position to tile coordinates
+    int char_tile_x = static_cast<int>(std::round(characterPosition.x / tile_width));
+    int char_tile_y = static_cast<int>(std::round(characterPosition.y / tile_height));
+
+    // Get hitbox boxes for the facing direction at character position
+    std::vector<CF_Aabb> boxes = getBoxes(facingDirection, characterPosition);
+
+    // Highlight each box as a tile
+    CF_Color hitbox_color = cf_make_color_rgb(255, 0, 0); // Red for action hitboxes
+    for (const auto &box : boxes)
+    {
+        // Calculate center of the box
+        v2 box_center = cf_v2(
+            (box.min.x + box.max.x) / 2.0f,
+            (box.min.y + box.max.y) / 2.0f);
+
+        // Convert box center to tile coordinates
+        int tile_x = static_cast<int>(std::round(box_center.x / tile_width));
+        int tile_y = static_cast<int>(std::round(box_center.y / tile_height));
+
+        // Highlight the tile
+        highlightTile(level, tile_x, tile_y, hitbox_color, 0.9f, 0.4f);
+    }
 }

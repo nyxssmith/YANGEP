@@ -24,13 +24,13 @@
     "highlightNavMeshPaths": false,
     "highlightAgents": false,
     "highlightSpatialGrid": false,
-    "highlightPlayerNavmeshCollisionBox": true,
+    "highlightPlayerNavmeshCollisionBox": false,
     "highlightLayers": [],
     "highlightLayerBorders": [],
     "highlightLayerOuterBorders": [],
     "ShowFPSMetrics": true,
     "ShowJobMetrics": true,
     "ShowPlayerInfo": true,
-    "highlightHitboxes": false
+    "highlightCharacterHitboxes": true
   }
 }

@@ -8,6 +8,7 @@
 #include "DebugWindowList.h"
 #include "DebugFPSWindow.h"
 #include "DebugJobWindow.h"
+#include "DebugPlayerInfoWindow.h"
 #include "OnScreenChecks.h"
 #include "Utils.h"
 #include "DataFile.h"
@@ -19,6 +20,7 @@
 #include "NavMesh.h"
 #include "NavMeshPath.h"
 #include "AnimatedDataCharacterNavMeshPlayer.h"
+#include "HighlightTile.h"
 using namespace Cute;
 
 int main(int argc, char *argv[])
@@ -85,7 +87,7 @@ int main(int argc, char *argv[])
 	bool debugHighlightNavmesh = false;					  // Default: don't highlight navmesh
 	bool debughighlightNavMeshPaths = false;			  // Default: don't highlight navmesh points
 	bool debugHighlightAgents = false;					  // Default: don't highlight agents
-	bool debugHighlightHitboxes = false;				  // Default: don't show hitboxes
+	bool debugHighlightCharacterHitboxes = false;		  // Default: don't show character hitboxes
 	bool debugHighlightSpatialGrid = false;				  // Default: don't show spatial grid
 	bool debugHighlightPlayerNavmeshCollisionBox = false; // Default: don't show player navmesh collision box
 	if (windowConfig.contains("Debug"))
@@ -111,10 +113,10 @@ int main(int argc, char *argv[])
 			debugHighlightAgents = debug["highlightAgents"];
 			printf("Debug highlightAgents: %s\n", debugHighlightAgents ? "enabled" : "disabled");
 		}
-		if (debug.contains("highlightHitboxes"))
+		if (debug.contains("highlightCharacterHitboxes"))
 		{
-			debugHighlightHitboxes = debug["highlightHitboxes"];
-			printf("Debug highlightHitboxes: %s\n", debugHighlightHitboxes ? "enabled" : "disabled");
+			debugHighlightCharacterHitboxes = debug["highlightCharacterHitboxes"];
+			printf("Debug highlightCharacterHitboxes: %s\n", debugHighlightCharacterHitboxes ? "enabled" : "disabled");
 		}
 		if (debug.contains("highlightSpatialGrid"))
 		{
@@ -202,6 +204,10 @@ int main(int argc, char *argv[])
 	std::unique_ptr<DebugJobWindow> jobWindow;
 	bool showJobMetrics = false;
 
+	// Player info debug window (created later after player is initialized)
+	std::unique_ptr<DebugPlayerInfoWindow> playerInfoWindow;
+	bool ShowPlayerInfo = false;
+
 	if (windowConfig.contains("Debug"))
 	{
 		auto &debug = windowConfig["Debug"];
@@ -229,6 +235,12 @@ int main(int argc, char *argv[])
 				printf("Created Job system debug window\n");
 			}
 		}
+
+		if (debug.contains("ShowPlayerInfo"))
+		{
+			ShowPlayerInfo = debug["ShowPlayerInfo"];
+			printf("Debug ShowPlayerInfo: %s\n", ShowPlayerInfo ? "enabled" : "disabled");
+		}
 	}
 
 	// Create playerCharacter player character
@@ -246,7 +258,7 @@ int main(int argc, char *argv[])
 	printf("Player starting at tile (%.1f, %.1f) = world (%.1f, %.1f)\n",
 		   startTileX, startTileY, startWorldX, startWorldY);
 
-	if (!playerCharacter.init("assets/DataFiles/EntityFiles/player.json"))
+	if (!playerCharacter.init("assets/DataFiles/Entities/player.json"))
 	{
 		destroy_app();
 		return -1;
@@ -265,7 +277,14 @@ int main(int argc, char *argv[])
 	playerCharacter.setSpriteDimensions(static_cast<float>(tile_width), static_cast<float>(tile_height));
 
 	// Set initial hitbox visibility from config
-	playerCharacter.setHitboxActive(debugHighlightHitboxes);
+	playerCharacter.setHitboxActive(debugHighlightCharacterHitboxes);
+
+	// Create player info debug window if enabled (now that player and level are ready)
+	if (ShowPlayerInfo)
+	{
+		playerInfoWindow = std::make_unique<DebugPlayerInfoWindow>("Player Info", playerCharacter, level);
+		printf("Created Player info debug window\n");
+	}
 
 	// Create CF-native camera with explicit viewport dimensions from config
 	CFNativeCamera cfCamera(cf_v2(0.0f, 0.0f), 1.0f, viewportWidth, viewportHeight);
@@ -411,6 +430,17 @@ int main(int argc, char *argv[])
 
 		// Handle playerCharacter animation input (1/2 for idle/walk)
 		// playerCharacter.handleInput();
+
+		// Handle spacebar to trigger action A
+		if (cf_key_just_pressed(CF_KEY_SPACE))
+		{
+			Action *actionA = playerCharacter.getActionPointerA();
+			if (actionA)
+			{
+				actionA->doAction();
+				printf("Player triggered action A\n");
+			}
+		}
 
 		// Camera feature demo keys
 		if (cf_key_just_pressed(CF_KEY_T))
@@ -582,7 +612,10 @@ int main(int argc, char *argv[])
 			cf_draw_pop_color();
 		}
 
-		// Render playerCharacter at player position (world space)
+		// debug just highlight one tile
+		highlightTile(level, 0, 0, cf_make_color_rgb(255, 0, 0));
+		highlightTile(level, 10, 10, cf_make_color_rgb(255, 200, 0));
+		//  Render playerCharacter at player position (world space)
 		playerCharacter.render(playerPosition);
 
 		// Render player's navmesh collision box (if enabled)
@@ -655,6 +688,12 @@ int main(int argc, char *argv[])
 		if (jobWindow)
 		{
 			jobWindow->render();
+		}
+
+		// Render Player info window if enabled
+		if (playerInfoWindow)
+		{
+			playerInfoWindow->render();
 		}
 
 		app_draw_onto_screen();
