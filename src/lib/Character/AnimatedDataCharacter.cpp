@@ -439,7 +439,10 @@ void AnimatedDataCharacter::render()
         return;
 
     renderCurrentFrame();
-    renderHitbox();
+    // Note: Action hitboxes are now rendered by LevelV1::renderAgentActions()
+    // Only render character's default hitbox here
+    if (!isDoingAction)
+        renderHitbox();
 }
 
 // Render the demo at a specific position
@@ -449,7 +452,10 @@ void AnimatedDataCharacter::render(v2 renderPosition)
         return;
 
     renderCurrentFrameAt(renderPosition);
-    renderHitbox();
+    // Note: Action hitboxes are now rendered by LevelV1::renderAgentActions()
+    // Only render character's default hitbox here
+    if (!isDoingAction)
+        renderHitbox();
 }
 
 // Render the current animation frame
@@ -651,14 +657,19 @@ Action *AnimatedDataCharacter::getActiveAction() const
     return activeAction;
 }
 
-void AnimatedDataCharacter::renderHitbox()
+void AnimatedDataCharacter::renderActionHitbox()
 {
-    // If doing an action, render the action's hitbox instead
+    // Only render if doing an action and have an active action
     if (isDoingAction && activeAction)
     {
         activeAction->renderHitbox();
-        return;
     }
+}
+
+void AnimatedDataCharacter::renderHitbox()
+{
+    // Note: Action hitboxes are now rendered separately by LevelV1::renderAgentActions()
+    // This method now only renders the character's default hitbox
 
     // Render character's default hitbox
     if (!hitboxDebugActive || !characterHitbox)

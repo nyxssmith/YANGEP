@@ -554,8 +554,14 @@ int main(int argc, char *argv[])
 		v2 text_position1 = cf_v2(0.0f, 0.0f); // World origin
 		draw_text("Skeleton Adventure - TMX Level Map", text_position1);
 
-		// Render TMX level (with CF-native camera transformations and config for layer highlighting)
-		level.render(cfCamera, windowConfig, 0.0f, 0.0f);
+		// 1. Render level tiles first
+		level.renderLayers(cfCamera, windowConfig, 0.0f, 0.0f);
+
+		// 2. Render all action hitboxes (player and agents) on top of tiles
+		level.renderAgentActions(cfCamera, &playerCharacter);
+
+		// 3. Render agents on top of action hitboxes
+		level.renderAgents(cfCamera);
 
 		if (fpsWindow)
 		{
@@ -625,6 +631,7 @@ int main(int argc, char *argv[])
 		// debug just highlight one tile
 		highlightTile(level, 0, 0, cf_make_color_rgb(255, 0, 0));
 		highlightTile(level, 10, 10, cf_make_color_rgb(255, 200, 0));
+
 		//  Render playerCharacter at player position (world space)
 		playerCharacter.render(playerPosition);
 

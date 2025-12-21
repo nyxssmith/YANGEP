@@ -61,6 +61,9 @@ public:
     // Set hitbox visibility
     void sethitboxDebugActive(bool active);
 
+    // Render only the action hitbox (separate from character rendering)
+    void renderActionHitbox();
+
     // Action state
     void setDoingAction(bool doing);
     bool getIsDoingAction() const;

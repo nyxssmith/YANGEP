@@ -201,7 +201,6 @@ void Action::renderHitbox()
     LevelV1 *level = character->getLevel();
     if (!level)
     {
-        printf("Action: Cannot render hitbox - character has no level\n");
         return;
     }
 
