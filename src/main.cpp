@@ -270,6 +270,9 @@ int main(int argc, char *argv[])
 	// Connect player to level for hitbox collision detection
 	playerCharacter.setLevel(&level);
 
+	// Set player reference in level for action hitbox checking
+	level.setPlayer(&playerCharacter);
+
 	// Connect player to navmesh for walkable area detection
 	playerCharacter.setNavMesh(&level.getNavMesh());
 

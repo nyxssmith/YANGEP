@@ -694,11 +694,24 @@ void AnimatedDataCharacter::renderHitbox()
     // Default color is yellow for character hitbox
     CF_Color color = cf_make_color_rgb(255, 255, 0); // Yellow
 
-    // Check if any agents are in the hitbox area
-    if (level && level->checkAgentsInArea(characterHitbox->getBoxes(currentDirection, position),
-                                          characterHitbox->getBoundingBox(currentDirection, position), this))
+    // Check if this character is inside any active action hitbox in warmup phase
+    bool insideActionHitbox = false;
+    if (level)
     {
-        // Change to orange if agents are detected
+        CF_Aabb characterBox = characterHitbox->getBoundingBox(currentDirection, position);
+        insideActionHitbox = level->isCharacterInActionHitbox(this, characterBox);
+    }
+
+    // Set color based on state
+    if (insideActionHitbox)
+    {
+        // Red if inside an action hitbox during warmup
+        color = cf_make_color_rgb(255, 0, 0); // Red
+    }
+    else if (level && level->checkAgentsInArea(characterHitbox->getBoxes(currentDirection, position),
+                                               characterHitbox->getBoundingBox(currentDirection, position), this))
+    {
+        // Orange if other agents are detected nearby
         color = cf_make_color_rgb(255, 165, 0); // Orange
     }
 
