@@ -628,6 +628,11 @@ LevelV1 *AnimatedDataCharacter::getLevel() const
     return level;
 }
 
+const std::string &AnimatedDataCharacter::getDataFilePath() const
+{
+    return datafile.getpath();
+}
+
 void AnimatedDataCharacter::sethitboxDebugActive(bool active)
 {
     hitboxDebugActive = active;

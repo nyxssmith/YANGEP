@@ -55,6 +55,9 @@ public:
     // Get the level
     LevelV1 *getLevel() const;
 
+    // Get the datafile path
+    const std::string &getDataFilePath() const;
+
     // Get hitbox in world coordinates
     HitBox *getHitbox() const;
 

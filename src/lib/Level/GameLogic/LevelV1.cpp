@@ -476,6 +476,46 @@ void LevelV1::setPlayer(const AnimatedDataCharacter *playerCharacter)
     player = playerCharacter;
 }
 
+std::vector<AnimatedDataCharacterNavMeshAgent *> LevelV1::get_entities_at(int tile_x, int tile_y) const
+{
+    std::vector<AnimatedDataCharacterNavMeshAgent *> entities_at_tile;
+
+    // Convert tile coordinates to world coordinates using same logic as highlightTile
+    // tile_x: 0 = left column, increases rightward
+    // tile_y: 0 = bottom row, increases upward (rendering convention)
+    float tile_center_x = tile_x * static_cast<float>(tileWidth);
+    float tile_center_y = tile_y * static_cast<float>(tileHeight);
+
+    float half_width = static_cast<float>(tileWidth) / 2.0f;
+    float half_height = static_cast<float>(tileHeight) / 2.0f;
+
+    // Create the tile bounds
+    CF_Aabb tile_bounds = make_aabb(
+        cf_v2(tile_center_x - half_width, tile_center_y - half_height),
+        cf_v2(tile_center_x + half_width, tile_center_y + half_height));
+
+    // Query spatial grid for agents in this tile area
+    std::vector<size_t> nearbyAgents = spatialGrid.queryAABB(tile_bounds);
+
+    // Check each nearby agent to see if they're actually in the tile bounds
+    for (size_t agentIndex : nearbyAgents)
+    {
+        if (agentIndex >= agents.size())
+            continue;
+
+        const auto &agent = agents[agentIndex];
+        v2 agentPos = agent->getPosition();
+
+        // Check if agent position is within tile bounds
+        if (cf_contains_point(tile_bounds, agentPos))
+        {
+            entities_at_tile.push_back(agent.get());
+        }
+    }
+
+    return entities_at_tile;
+}
+
 bool LevelV1::isCharacterInActionHitbox(const AnimatedDataCharacter *character, CF_Aabb characterBox) const
 {
     // Check player's action if player exists and is doing an action

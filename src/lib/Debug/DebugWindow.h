@@ -10,6 +10,8 @@ public:
     virtual ~DebugWindow() = default;
     virtual void render();
 
+    bool isShown() const { return m_show; }
+
 protected:
     std::string m_title;
     bool m_show;
