@@ -2,6 +2,6 @@
   "name": "print_2s",
   "states": [
     { "name": "wait", "inputs": { "ms": 2000 } },
-    { "name": "print", "inputs": { "to_print": "this is a test" } }
+    { "name": "print", "inputs": { "to_print": "this is a test 2s" } }
   ]
 }

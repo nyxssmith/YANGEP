@@ -320,6 +320,31 @@ bool AnimatedDataCharacterNavMeshAgent::loadStateMachinesFromFolder(const std::s
     const auto &stateMachinesArray = stateMachinesData["state_machines"];
     for (const auto &stateMachineJson : stateMachinesArray)
     {
+        // Check if this is a string instead of a JSON object
+        if (stateMachineJson.is_string())
+        {
+            // The string is a filename - load the state machine from file
+            std::string stateMachineName = stateMachineJson.get<std::string>();
+            std::string stateMachinePath = "assets/DataFiles/StateMachines/" + stateMachineName + ".json";
+
+            // Load the state machine file
+            DataFile stateMachineFile;
+            if (!stateMachineFile.load(stateMachinePath))
+            {
+                printf("  - WARNING: Failed to load state machine file '%s'\n", stateMachinePath.c_str());
+                continue;
+            }
+
+            // Create a StateMachine from the loaded file (DataFile inherits from nlohmann::json)
+            StateMachine stateMachine(stateMachineFile);
+
+            printf("  - Adding state machine from file: '%s'\n", stateMachine.getName().c_str());
+
+            // Add it to the controller (move ownership)
+            stateMachineController.addStateMachine(std::move(stateMachine));
+            continue;
+        }
+
         // Create a StateMachine from the JSON blob
         StateMachine stateMachine(stateMachineJson);
 

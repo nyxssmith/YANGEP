@@ -1,6 +1,5 @@
 #include "StateLibrary.h"
-// #include "States/WaitState.h"
-// #include "States/PrintState.h"
+#include "States/WaitState.h"
 #include <cstdio>
 
 StateLibrary::StateLibrary()
@@ -57,11 +56,7 @@ std::vector<std::string> StateLibrary::getRegisteredStateNames() const
 
 void StateLibrary::initializeBuiltInStates()
 {
-    //// Register WaitState
-    // registerState("wait", []() -> std::unique_ptr<State>
-    //               { return std::make_unique<WaitState>(); });
-
-    //// Register PrintState
-    // registerState("print", []() -> std::unique_ptr<State>
-    //               { return std::make_unique<PrintState>(); });
+    // Register WaitState
+    registerState("wait", []() -> std::unique_ptr<State>
+                  { return std::make_unique<WaitState>(); });
 }

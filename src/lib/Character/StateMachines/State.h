@@ -25,12 +25,13 @@ public:
     const DataFile &getDefaultValues() const;
     void setDefaultValues(const DataFile &values);
 
+protected:
+    // Common initialization from json data
+    virtual void initFromJson();
+
 private:
     DataFile defaultValues;
     bool isRunning;
-
-    // Common initialization from json data
-    void initFromJson();
 };
 
 #endif // STATE_H

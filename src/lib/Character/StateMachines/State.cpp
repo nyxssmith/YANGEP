@@ -55,6 +55,8 @@ const DataFile &State::getDefaultValues() const
 void State::setDefaultValues(const DataFile &values)
 {
     defaultValues = values;
+    // Re-initialize from the new values
+    initFromJson();
 }
 
 void State::initFromJson()

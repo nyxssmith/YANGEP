@@ -1,0 +1,7 @@
+{
+  "name": "print_5s",
+  "states": [
+    { "name": "wait", "inputs": { "ms": 5000 } },
+    { "name": "print", "inputs": { "to_print": "this is a test 5s" } }
+  ]
+}
