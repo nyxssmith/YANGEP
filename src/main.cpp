@@ -9,6 +9,7 @@
 #include "DebugFPSWindow.h"
 #include "DebugJobWindow.h"
 #include "DebugPlayerInfoWindow.h"
+#include "DebugCharacterInfoWindow.h"
 #include "OnScreenChecks.h"
 #include "Utils.h"
 #include "DataFile.h"
@@ -213,6 +214,9 @@ int main(int argc, char *argv[])
 	// Player info debug window (created later after player is initialized)
 	std::unique_ptr<DebugPlayerInfoWindow> playerInfoWindow;
 	bool ShowPlayerInfo = false;
+
+	// Character info debug windows (created on click)
+	std::vector<std::unique_ptr<DebugCharacterInfoWindow>> characterInfoWindows;
 
 	if (windowConfig.contains("Debug"))
 	{
@@ -422,6 +426,45 @@ int main(int argc, char *argv[])
 
 					printf("Mouse Click - Screen: (%.1f, %.1f) | World: (%.1f, %.1f) | Tile: (%d, %d)\n",
 						   mouseWindowX, mouseWindowY, mouseWorldPos.x, mouseWorldPos.y, renderTileX, renderTileY);
+
+					// Get all entities at this tile
+					auto entities = level.get_entities_at(renderTileX, renderTileY);
+					if (entities.empty())
+					{
+						printf("  No entities at tile (%d, %d)\n", renderTileX, renderTileY);
+					}
+					else
+					{
+						printf("  Entities at tile (%d, %d):\n", renderTileX, renderTileY);
+						for (auto *entity : entities)
+						{
+							printf("    - %s\n", entity->getDataFilePath().c_str());
+
+							// Check if we already have a window tracking this entity
+							bool alreadyTracking = false;
+							for (const auto &window : characterInfoWindows)
+							{
+								if (window->isTracking(entity))
+								{
+									alreadyTracking = true;
+									break;
+								}
+							}
+
+							// Create a new debug window for this entity if not already tracking
+							if (!alreadyTracking)
+							{
+								std::string windowTitle = "Character Info: " + entity->getDataFilePath();
+								auto newWindow = std::make_unique<DebugCharacterInfoWindow>(windowTitle, entity, level);
+								characterInfoWindows.push_back(std::move(newWindow));
+								printf("      Created debug window for entity\n");
+							}
+							else
+							{
+								printf("      Already tracking this entity\n");
+							}
+						}
+					}
 				}
 				else
 				{
@@ -785,6 +828,21 @@ int main(int argc, char *argv[])
 		{
 			playerInfoWindow->render();
 		}
+
+		// Render all character info windows
+		for (auto &characterWindow : characterInfoWindows)
+		{
+			characterWindow->render();
+		}
+
+		// Remove closed character info windows
+		characterInfoWindows.erase(
+			std::remove_if(characterInfoWindows.begin(), characterInfoWindows.end(),
+						   [](const std::unique_ptr<DebugCharacterInfoWindow> &window)
+						   {
+							   return !window->isShown();
+						   }),
+			characterInfoWindows.end());
 
 		app_draw_onto_screen();
 	}

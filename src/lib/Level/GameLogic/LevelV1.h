@@ -191,6 +191,15 @@ public:
     void setPlayer(const AnimatedDataCharacter *player);
 
     /**
+     * Get all entities (agents) at a specific tile coordinate
+     * Uses rendering coordinate system: tile_x=0 is left, tile_y=0 is bottom
+     * @param tile_x The x coordinate of the tile (0 = left column)
+     * @param tile_y The y coordinate of the tile (0 = bottom row)
+     * @return Vector of pointers to agents at that tile location
+     */
+    std::vector<AnimatedDataCharacterNavMeshAgent *> get_entities_at(int tile_x, int tile_y) const;
+
+    /**
      * Update all agents in the level
      * @param dt Delta time in seconds
      */

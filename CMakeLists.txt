@@ -102,6 +102,7 @@ add_executable(
 	src/lib/Debug/DebugFPSWindow.cpp
 	src/lib/Debug/DebugJobWindow.cpp
 	src/lib/Debug/DebugPlayerInfoWindow.cpp
+	src/lib/Debug/DebugCharacterInfoWindow.cpp
 	src/lib/Level/FileHandling/tsx.cpp
 	src/lib/Level/FileHandling/tmx.cpp
 	src/lib/Level/GameLogic/LevelV1.cpp
