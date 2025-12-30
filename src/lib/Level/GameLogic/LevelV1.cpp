@@ -101,19 +101,19 @@ LevelV1::LevelV1(const std::string &directoryPath)
         for (const auto &entityEntry : entities["entities"])
         {
             // Check if entity has required fields
-            if (!entityEntry.contains("datafilePath"))
+            if (!entityEntry.contains("path"))
             {
-                printf("LevelV1 Warning: Entity missing 'datafilePath' field, skipping\n");
+                printf("LevelV1 Warning: Entity missing 'path' field, skipping\n");
                 continue;
             }
 
-            std::string datafilePath = entityEntry["datafilePath"].get<std::string>();
+            std::string entityPath = entityEntry["path"].get<std::string>();
             std::string entityName = entityEntry.contains("name") ? entityEntry["name"].get<std::string>() : "unnamed";
 
-            printf("LevelV1: Creating agent '%s' from: %s\n", entityName.c_str(), datafilePath.c_str());
+            printf("LevelV1: Creating agent '%s' from: %s\n", entityName.c_str(), entityPath.c_str());
 
             // Create the agent
-            auto agent = createAgentFromFile(datafilePath);
+            auto agent = createAgentFromFile(entityPath);
 
             if (agent)
             {

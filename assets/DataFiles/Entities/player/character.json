@@ -1,0 +1,32 @@
+{
+  "name": "player",
+  "hitbox_size": 32,
+  "hitbox_distance": 0,
+  "innate_actions": ["Test-A"],
+  "layers": [
+    {
+      "filename": "BODY_male.png",
+      "tile_size": 64
+    },
+    {
+      "filename": "FEET_shoes_brown.png",
+      "tile_size": 64
+    },
+    {
+      "filename": "HANDS_plate_armor_gloves.png",
+      "tile_size": 64
+    },
+    {
+      "filename": "TORSO_chain_armor_torso.png",
+      "tile_size": 64
+    },
+    {
+      "filename": "LEGS_plate_armor_pants.png",
+      "tile_size": 64
+    },
+    {
+      "filename": "HEAD_hair_blonde.png",
+      "tile_size": 64
+    }
+  ]
+}

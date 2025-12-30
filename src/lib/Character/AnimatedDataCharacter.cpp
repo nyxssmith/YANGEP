@@ -72,39 +72,34 @@ AnimatedDataCharacter::~AnimatedDataCharacter()
         delete characterHitbox;
         characterHitbox = nullptr;
     }
-} // Initialize the character with a datafile path
-bool AnimatedDataCharacter::init(const std::string &datafilePath)
+} // Initialize the character with a folder path containing character.json
+bool AnimatedDataCharacter::init(const std::string &folderPath)
 {
+    // Construct path to character.json in the folder
+    std::string characterFilePath = folderPath + "/character.json";
+
     // Load the datafile
-    if (!datafile.load(datafilePath))
+    if (!datafile.load(characterFilePath))
     {
-        printf("AnimatedDataCharacter: ERROR: Failed to load datafile from %s\n", datafilePath.c_str());
+        printf("AnimatedDataCharacter: ERROR: Failed to load character.json from %s\n", folderPath.c_str());
         return false;
     }
 
-    // Validate datafile structure
-    if (!datafile.contains("character_config"))
+    // DataFile inherits from nlohmann::json, so use it directly as the character config
+    if (!datafile.contains("name") || !datafile.contains("layers"))
     {
-        printf("AnimatedDataCharacter: ERROR: Datafile missing 'character_config' section\n");
-        return false;
-    }
-
-    auto &charConfig = datafile["character_config"];
-
-    if (!charConfig.contains("name") || !charConfig.contains("layers"))
-    {
-        printf("AnimatedDataCharacter: ERROR: character_config missing required fields\n");
+        printf("AnimatedDataCharacter: ERROR: character.json missing required fields (name or layers)\n");
         return false;
     }
 
     // Load innate actions if specified in JSON
-    if (charConfig.contains("innate_actions") && charConfig["innate_actions"].is_array())
+    if (datafile.contains("innate_actions") && datafile["innate_actions"].is_array())
     {
-        for (const auto &actionPath : charConfig["innate_actions"])
+        for (const auto &actionPath : datafile["innate_actions"])
         {
             if (actionPath.is_string())
             {
-                std::string actionName = actionPath.get<std::string>();
+                std::string actionName = actionPath;
                 // Build full path to action folder
                 std::string fullPath = "/assets/DataFiles/Actions/" + actionName;
                 if (addAction(fullPath))
@@ -120,13 +115,13 @@ bool AnimatedDataCharacter::init(const std::string &datafilePath)
     }
 
     // Load hitbox size and distance if specified in JSON (used for actions)
-    if (charConfig.contains("hitbox_size") && charConfig["hitbox_size"].is_number())
+    if (datafile.contains("hitbox_size") && datafile["hitbox_size"].is_number())
     {
-        hitboxSize = charConfig["hitbox_size"].get<float>();
+        hitboxSize = datafile["hitbox_size"];
     }
-    if (charConfig.contains("hitbox_distance") && charConfig["hitbox_distance"].is_number())
+    if (datafile.contains("hitbox_distance") && datafile["hitbox_distance"].is_number())
     {
-        hitboxDistance = charConfig["hitbox_distance"].get<float>();
+        hitboxDistance = datafile["hitbox_distance"];
     }
 
     // Create default character hitbox - a single tile at the bottom of the sprite
@@ -147,17 +142,17 @@ bool AnimatedDataCharacter::init(const std::string &datafilePath)
         characterHitbox->boundingBoxByDirection[direction] = HitBox::buildBoundingBox(characterHitbox->boxesByDirection[direction], direction);
     }
 
-    std::string characterName = charConfig["name"];
+    std::string characterName = datafile["name"];
     printf("AnimatedDataCharacter: Loading character '%s' from datafile\n", characterName.c_str());
 
     // Get the first layer from the layers array
-    if (!charConfig["layers"].is_array() || charConfig["layers"].empty())
+    if (!datafile["layers"].is_array() || datafile["layers"].empty())
     {
-        printf("AnimatedDataCharacter: ERROR: character_config.layers is empty or not an array\n");
+        printf("AnimatedDataCharacter: ERROR: layers is empty or not an array\n");
         return false;
     }
 
-    auto &firstLayer = charConfig["layers"][0];
+    auto &firstLayer = datafile["layers"][0];
 
     if (!firstLayer.contains("filename"))
     {
@@ -173,9 +168,9 @@ bool AnimatedDataCharacter::init(const std::string &datafilePath)
 
     // Collect all layer filenames
     std::vector<std::string> layerFilenames;
-    for (size_t i = 0; i < charConfig["layers"].size(); i++)
+    for (size_t i = 0; i < datafile["layers"].size(); i++)
     {
-        auto &layer = charConfig["layers"][i];
+        auto &layer = datafile["layers"][i];
         if (layer.contains("filename"))
         {
             std::string filename = layer["filename"];

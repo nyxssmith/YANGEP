@@ -268,7 +268,7 @@ int main(int argc, char *argv[])
 	printf("Player starting at tile (%.1f, %.1f) = world (%.1f, %.1f)\n",
 		   startTileX, startTileY, startWorldX, startWorldY);
 
-	if (!playerCharacter.init("assets/DataFiles/Entities/player.json"))
+	if (!playerCharacter.init("assets/DataFiles/Entities/player"))
 	{
 		destroy_app();
 		return -1;

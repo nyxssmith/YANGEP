@@ -22,8 +22,8 @@ public:
     AnimatedDataCharacter();
     ~AnimatedDataCharacter();
 
-    // Initialize the character with a datafile path
-    bool init(const std::string &datafilePath);
+    // Initialize the character with a folder path containing character.json
+    bool init(const std::string &folderPath);
 
     // Update demo state with a move vector
     void update(float dt, v2 moveVector);
