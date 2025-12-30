@@ -127,6 +127,8 @@ add_executable(
 	src/lib/Character/StateMachines/StateLibrary.cpp
 	src/lib/Character/StateMachines/States/WaitState.cpp
 	src/lib/Character/StateMachines/States/PrintState.cpp
+	src/lib/Character/StateMachines/States/WanderNewPositionState.cpp
+	src/lib/Character/StateMachines/States/MoveToPositionState.cpp
 	src/lib/Combat/HitBox.cpp
 	src/lib/Combat/Action.cpp
 	src/lib/JobSystem/JobSystem.cpp
@@ -221,6 +223,8 @@ add_executable(${PROJECT_NAME}_tests
     src/lib/Character/StateMachines/StateLibrary.cpp
     src/lib/Character/StateMachines/States/WaitState.cpp
     src/lib/Character/StateMachines/States/PrintState.cpp
+    src/lib/Character/StateMachines/States/WanderNewPositionState.cpp
+    src/lib/Character/StateMachines/States/MoveToPositionState.cpp
     src/lib/JobSystem/JobSystem.cpp
     src/lib/UI/HighlightTile.cpp
     src/lib/UI/ColorUtils.cpp

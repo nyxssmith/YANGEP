@@ -1,17 +1,17 @@
 #include "State.h"
 
 State::State()
-    : defaultValues(), isRunning(false)
+    : defaultValues(), isRunning(false), agent(nullptr)
 {
 }
 
 State::State(const DataFile &defaultValues)
-    : defaultValues(defaultValues), isRunning(false)
+    : defaultValues(defaultValues), isRunning(false), agent(nullptr)
 {
 }
 
 State::State(const std::string &datafilePath)
-    : defaultValues(), isRunning(false)
+    : defaultValues(), isRunning(false), agent(nullptr)
 {
     if (defaultValues.load(datafilePath))
     {
@@ -20,7 +20,7 @@ State::State(const std::string &datafilePath)
 }
 
 State::State(const nlohmann::json &jsonData)
-    : defaultValues(), isRunning(false)
+    : defaultValues(), isRunning(false), agent(nullptr)
 {
     // Copy json data into defaultValues
     *static_cast<nlohmann::json *>(&defaultValues) = jsonData;
@@ -89,4 +89,14 @@ void State::reset()
 {
     // Base implementation does nothing
     // Override in derived classes to reset state-specific values
+}
+
+void State::setAgent(AnimatedDataCharacterNavMeshAgent *agent)
+{
+    this->agent = agent;
+}
+
+AnimatedDataCharacterNavMeshAgent *State::getAgent() const
+{
+    return agent;
 }

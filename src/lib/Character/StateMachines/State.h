@@ -8,6 +8,9 @@
 #include <nlohmann/json.hpp>
 #include <memory>
 
+// Forward declaration
+class AnimatedDataCharacterNavMeshAgent;
+
 class State
 {
 public:
@@ -26,6 +29,12 @@ public:
 
     // Reset the state (called when transitioning to running)
     virtual void reset();
+
+    // Set the agent this state belongs to
+    void setAgent(AnimatedDataCharacterNavMeshAgent *agent);
+
+    // Get the agent this state belongs to
+    AnimatedDataCharacterNavMeshAgent *getAgent() const;
 
     // Get the default values datafile
     const DataFile &getDefaultValues() const;
@@ -48,6 +57,7 @@ protected:
 private:
     DataFile defaultValues;
     bool isRunning;
+    AnimatedDataCharacterNavMeshAgent *agent; // Non-owning pointer to the agent
 };
 
 #endif // STATE_H

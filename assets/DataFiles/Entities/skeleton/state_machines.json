@@ -1,10 +1,19 @@
 {
   "state_machines": [
     {
-      "name": "idle",
-      "states": [{ "name": "wait", "inputs": { "ms": 20000 } }]
+      "name": "wander2",
+      "states": [
+        { "name": "wait", "inputs": { "ms": 3000 } },
+        { "name": "wander_new_position", "inputs": { "tiles_radius": 5 } },
+        { "name": "move_to_position" }
+      ]
     },
-    "print_2s"
+    {
+      "name": "idle",
+      "states": [{ "name": "wait", "inputs": { "ms": 2000 } }]
+    },
+    "print_5s",
+    "wander"
   ],
-  "default_state_machine": "idle"
+  "default_state_machine": "wander"
 }

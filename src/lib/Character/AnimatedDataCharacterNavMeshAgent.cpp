@@ -362,6 +362,9 @@ bool AnimatedDataCharacterNavMeshAgent::loadStateMachinesFromFolder(const std::s
 
             printf("  - Adding state machine from file: '%s'\n", stateMachine.getName().c_str());
 
+            // Set the agent for all states in this state machine
+            stateMachine.setAgent(this);
+
             // Add it to the controller (move ownership)
             stateMachineController.addStateMachine(std::move(stateMachine));
             continue;
@@ -371,6 +374,9 @@ bool AnimatedDataCharacterNavMeshAgent::loadStateMachinesFromFolder(const std::s
         StateMachine stateMachine(stateMachineJson);
 
         printf("  - Adding state machine: '%s'\n", stateMachine.getName().c_str());
+
+        // Set the agent for all states in this state machine
+        stateMachine.setAgent(this);
 
         // Add it to the controller (move ownership)
         stateMachineController.addStateMachine(std::move(stateMachine));

@@ -1,6 +1,8 @@
 #include "StateLibrary.h"
 #include "States/WaitState.h"
 #include "States/PrintState.h"
+#include "States/WanderNewPositionState.h"
+#include "States/MoveToPositionState.h"
 #include <cstdio>
 
 StateLibrary::StateLibrary()
@@ -64,4 +66,12 @@ void StateLibrary::initializeBuiltInStates()
     // Register PrintState
     registerState("print", []() -> std::unique_ptr<State>
                   { return std::make_unique<PrintState>(); });
+
+    // Register WanderNewPositionState
+    registerState("wander_new_position", []() -> std::unique_ptr<State>
+                  { return std::make_unique<WanderNewPositionState>(); });
+
+    // Register MoveToPositionState
+    registerState("move_to_position", []() -> std::unique_ptr<State>
+                  { return std::make_unique<MoveToPositionState>(); });
 }

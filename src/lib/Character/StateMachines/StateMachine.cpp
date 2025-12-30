@@ -207,3 +207,15 @@ void StateMachine::reset()
         currentStateIndex = -1;
     }
 }
+
+void StateMachine::setAgent(AnimatedDataCharacterNavMeshAgent *agent)
+{
+    // Set the agent for all states
+    for (auto &state : states)
+    {
+        if (state)
+        {
+            state->setAgent(agent);
+        }
+    }
+}

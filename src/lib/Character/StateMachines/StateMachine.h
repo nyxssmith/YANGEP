@@ -9,6 +9,9 @@
 #include <memory>
 #include <nlohmann/json.hpp>
 
+// Forward declaration
+class AnimatedDataCharacterNavMeshAgent;
+
 class StateMachine : public DataFile
 {
 public:
@@ -52,6 +55,9 @@ public:
 
     // Reset the state machine to its initial state
     void reset();
+
+    // Set the agent for all states in this state machine
+    void setAgent(AnimatedDataCharacterNavMeshAgent *agent);
 
     // Get the loop counter (how many times the state machine has cycled)
     int getLoopCounter() const;
