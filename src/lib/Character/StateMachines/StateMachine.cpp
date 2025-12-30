@@ -180,3 +180,30 @@ int StateMachine::getLoopCounter() const
 {
     return loopCounter;
 }
+
+void StateMachine::reset()
+{
+    // Set all states to not running
+    for (auto &state : states)
+    {
+        if (state)
+        {
+            state->setIsRunning(false);
+        }
+    }
+
+    // Reset loop counter
+    loopCounter = 0;
+
+    // Move to first state
+    if (!states.empty())
+    {
+        currentStateIndex = 0;
+        // Set the first state as running (this will trigger its reset)
+        states[0]->setIsRunning(true);
+    }
+    else
+    {
+        currentStateIndex = -1;
+    }
+}

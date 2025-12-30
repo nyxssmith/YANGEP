@@ -41,6 +41,10 @@ bool StateMachineController::setCurrentStateMachine(const std::string &name)
         {
             currentStateMachineName = name;
             currentStateMachine = &stateMachineList[i];
+
+            // Reset the state machine to its initial state
+            currentStateMachine->reset();
+
             return true;
         }
     }
@@ -55,6 +59,10 @@ bool StateMachineController::setCurrentStateMachineByIndex(size_t index)
     {
         currentStateMachineName = stateMachineList[index].getName();
         currentStateMachine = &stateMachineList[index];
+
+        // Reset the state machine to its initial state
+        currentStateMachine->reset();
+
         return true;
     }
 

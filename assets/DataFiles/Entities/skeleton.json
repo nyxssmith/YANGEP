@@ -1,7 +1,0 @@
-{
-  "name": "skeleton",
-  "character_config": {
-    "name": "skeleton",
-    "layers": [{ "filename": "BODY_skeleton.png", "tile_size": 64 }]
-  }
-}

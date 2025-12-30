@@ -50,6 +50,9 @@ public:
     // Update the current state and check if it's done running
     void update(float dt);
 
+    // Reset the state machine to its initial state
+    void reset();
+
     // Get the loop counter (how many times the state machine has cycled)
     int getLoopCounter() const;
 

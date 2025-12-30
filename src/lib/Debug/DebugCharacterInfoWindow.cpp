@@ -116,6 +116,15 @@ void DebugCharacterInfoWindow::render()
                 ImGui_Text("  %s", machineName.c_str());
                 ImGui_SameLine();
 
+                // Button to set this as the current state machine
+                char setCurrentLabel[128];
+                snprintf(setCurrentLabel, sizeof(setCurrentLabel), "Set Current##machine_%zu", i);
+                if (ImGui_ButtonEx(setCurrentLabel, (ImVec2){0, 0}))
+                {
+                    controller->setCurrentStateMachine(machineName);
+                }
+                ImGui_SameLine();
+
                 // Button to open debug window for this state machine
                 char buttonLabel[128];
                 snprintf(buttonLabel, sizeof(buttonLabel), "Debug##machine_%zu", i);
