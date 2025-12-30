@@ -4,7 +4,6 @@
 #include "AnimatedDataCharacter.h"
 #include "NavMesh.h"
 #include "NavMeshPath.h"
-#include "WanderBehavior.h"
 #include "StateMachineController.h"
 #include <memory>
 #include <atomic>
@@ -63,10 +62,6 @@ public:
     // Clear the current navigation path
     void clearCurrentNavMeshPath();
 
-    // Get the wander behavior
-    WanderBehavior *getWanderBehavior();
-    const WanderBehavior *getWanderBehavior() const;
-
     // Get the state machine controller
     StateMachineController *getStateMachineController();
     const StateMachineController *getStateMachineController() const;
@@ -91,9 +86,6 @@ private:
 
     // Current navigation path
     std::shared_ptr<NavMeshPath> currentNavMeshPath;
-
-    // Wander behavior for this agent
-    WanderBehavior wanderBehavior;
 
     // State machine controller for this agent
     StateMachineController stateMachineController;

@@ -118,8 +118,6 @@ add_executable(
 	src/lib/Character/AnimatedDataCharacter.cpp
 	src/lib/Character/AnimatedDataCharacterNavMeshAgent.cpp
 	src/lib/Character/AnimatedDataCharacterNavMeshPlayer.cpp
-	src/lib/Character/Behavior/Behavior.cpp
-	src/lib/Character/Behavior/WanderBehavior.cpp
 	src/lib/Character/Coordinator/Coordinator.cpp
 	src/lib/Character/StateMachines/State.cpp
 	src/lib/Character/StateMachines/StateMachine.cpp
@@ -214,8 +212,6 @@ add_executable(${PROJECT_NAME}_tests
     src/lib/Combat/Action.cpp
     src/lib/Character/AnimatedDataCharacterNavMeshAgent.cpp
     src/lib/Character/AnimatedDataCharacterNavMeshPlayer.cpp
-    src/lib/Character/Behavior/Behavior.cpp
-    src/lib/Character/Behavior/WanderBehavior.cpp
     src/lib/Character/Coordinator/Coordinator.cpp
     src/lib/Character/StateMachines/State.cpp
     src/lib/Character/StateMachines/StateMachine.cpp

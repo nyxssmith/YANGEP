@@ -183,18 +183,6 @@ void AnimatedDataCharacterNavMeshAgent::clearCurrentNavMeshPath()
     currentNavMeshPath = nullptr;
 }
 
-// Get the wander behavior
-WanderBehavior *AnimatedDataCharacterNavMeshAgent::getWanderBehavior()
-{
-    return &wanderBehavior;
-}
-
-// Get the wander behavior (const version)
-const WanderBehavior *AnimatedDataCharacterNavMeshAgent::getWanderBehavior() const
-{
-    return &wanderBehavior;
-}
-
 // Get the state machine controller
 StateMachineController *AnimatedDataCharacterNavMeshAgent::getStateMachineController()
 {
