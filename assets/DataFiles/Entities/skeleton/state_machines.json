@@ -2,7 +2,7 @@
   "state_machines": [
     {
       "name": "idle",
-      "states": [{ "name": "wait", "inputs": { "ms": 2000 } }]
+      "states": [{ "name": "wait", "inputs": { "ms": 20000 } }]
     },
     "print_2s"
   ],

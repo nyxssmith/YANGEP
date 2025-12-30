@@ -45,6 +45,13 @@ bool State::getIsRunning() const
 void State::setIsRunning(bool running)
 {
     printf("State: Setting isRunning to %s\n", running ? "true" : "false");
+
+    // If transitioning from false to true, call reset
+    if (!isRunning && running)
+    {
+        reset();
+    }
+
     isRunning = running;
 }
 
@@ -76,4 +83,10 @@ CF_V2 State::FaceDirection(CF_V2 currentDirection)
 {
     // Base implementation returns the current direction unchanged
     return currentDirection;
+}
+
+void State::reset()
+{
+    // Base implementation does nothing
+    // Override in derived classes to reset state-specific values
 }

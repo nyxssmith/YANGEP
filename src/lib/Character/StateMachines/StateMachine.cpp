@@ -95,6 +95,8 @@ void StateMachine::initFromJson()
     if (!states.empty())
     {
         currentStateIndex = 0;
+        // set the current state to running
+        states[currentStateIndex]->setIsRunning(true);
     }
 }
 
@@ -169,6 +171,8 @@ void StateMachine::update(float dt)
             currentStateIndex = 0;
             loopCounter++;
         }
+        // now tell that state to start running
+        states[currentStateIndex]->setIsRunning(true);
     }
 }
 

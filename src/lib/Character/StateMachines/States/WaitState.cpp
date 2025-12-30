@@ -42,6 +42,7 @@ void WaitState::update(float dt)
     // Check if wait is complete
     if (elapsedTimeMs >= wait_ms)
     {
+        printf("WaitState: Wait of %.2f ms complete (elapsed: %.2f ms)\n", wait_ms, elapsedTimeMs);
         setIsRunning(false);
     }
 }
@@ -63,6 +64,7 @@ bool WaitState::isComplete() const
 
 void WaitState::reset()
 {
+    // Reset the elapsed time counter
     elapsedTimeMs = 0.0f;
-    setIsRunning(true);
+    printf("WaitState: Reset - waiting for %.2f ms\n", wait_ms);
 }

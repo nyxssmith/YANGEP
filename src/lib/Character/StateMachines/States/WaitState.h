@@ -22,7 +22,7 @@ public:
     bool isComplete() const;
 
     // Reset the wait timer
-    void reset();
+    void reset() override;
 
 protected:
     // Override initFromJson to load wait_ms from inputs

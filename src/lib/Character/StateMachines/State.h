@@ -24,6 +24,9 @@ public:
     bool getIsRunning() const;
     void setIsRunning(bool running);
 
+    // Reset the state (called when transitioning to running)
+    virtual void reset();
+
     // Get the default values datafile
     const DataFile &getDefaultValues() const;
     void setDefaultValues(const DataFile &values);
