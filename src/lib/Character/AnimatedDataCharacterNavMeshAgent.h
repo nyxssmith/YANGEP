@@ -4,7 +4,7 @@
 #include "AnimatedDataCharacter.h"
 #include "NavMesh.h"
 #include "NavMeshPath.h"
-#include "WanderBehavior.h"
+#include "StateMachineController.h"
 #include <memory>
 #include <atomic>
 
@@ -16,6 +16,9 @@ class AnimatedDataCharacterNavMeshAgent : public AnimatedDataCharacter
 public:
     AnimatedDataCharacterNavMeshAgent();
     ~AnimatedDataCharacterNavMeshAgent();
+
+    // Override init to also load state machines
+    bool init(const std::string &folderPath);
 
     // Set the navmesh this agent is operating on
     void setNavMesh(NavMesh *navmesh);
@@ -59,9 +62,12 @@ public:
     // Clear the current navigation path
     void clearCurrentNavMeshPath();
 
-    // Get the wander behavior
-    WanderBehavior *getWanderBehavior();
-    const WanderBehavior *getWanderBehavior() const;
+    // Get the state machine controller
+    StateMachineController *getStateMachineController();
+    const StateMachineController *getStateMachineController() const;
+
+    // Load state machines from a folder containing state_machines.json
+    bool loadStateMachinesFromFolder(const std::string &folderPath);
 
     // Background update jobs for different scenarios
     void OnScreenBackgroundUpdateJob(float dt);
@@ -81,8 +87,8 @@ private:
     // Current navigation path
     std::shared_ptr<NavMeshPath> currentNavMeshPath;
 
-    // Wander behavior for this agent
-    WanderBehavior wanderBehavior;
+    // State machine controller for this agent
+    StateMachineController stateMachineController;
 
     // Background job state
     std::atomic<bool> backgroundJobRunning;

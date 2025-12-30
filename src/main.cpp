@@ -9,6 +9,7 @@
 #include "DebugFPSWindow.h"
 #include "DebugJobWindow.h"
 #include "DebugPlayerInfoWindow.h"
+#include "DebugCharacterInfoWindow.h"
 #include "OnScreenChecks.h"
 #include "Utils.h"
 #include "DataFile.h"
@@ -90,6 +91,7 @@ int main(int argc, char *argv[])
 	bool debugHighlightCharacterHitboxes = false;		  // Default: don't show character hitboxes
 	bool debugHighlightSpatialGrid = false;				  // Default: don't show spatial grid
 	bool debugHighlightPlayerNavmeshCollisionBox = false; // Default: don't show player navmesh collision box
+	bool clickToInspectCharacter = false;				  // Default: don't inspect character on click
 	if (windowConfig.contains("Debug"))
 	{
 		auto &debug = windowConfig["Debug"];
@@ -127,6 +129,11 @@ int main(int argc, char *argv[])
 		{
 			debugHighlightPlayerNavmeshCollisionBox = debug["highlightPlayerNavmeshCollisionBox"];
 			printf("Debug highlightPlayerNavmeshCollisionBox: %s\n", debugHighlightPlayerNavmeshCollisionBox ? "enabled" : "disabled");
+		}
+		if (debug.contains("clickToInspectCharacter"))
+		{
+			clickToInspectCharacter = debug["clickToInspectCharacter"];
+			printf("Debug clickToInspectCharacter: %s\n", clickToInspectCharacter ? "enabled" : "disabled");
 		}
 	}
 
@@ -208,6 +215,9 @@ int main(int argc, char *argv[])
 	std::unique_ptr<DebugPlayerInfoWindow> playerInfoWindow;
 	bool ShowPlayerInfo = false;
 
+	// Character info debug windows (created on click)
+	std::vector<std::unique_ptr<DebugCharacterInfoWindow>> characterInfoWindows;
+
 	if (windowConfig.contains("Debug"))
 	{
 		auto &debug = windowConfig["Debug"];
@@ -258,7 +268,7 @@ int main(int argc, char *argv[])
 	printf("Player starting at tile (%.1f, %.1f) = world (%.1f, %.1f)\n",
 		   startTileX, startTileY, startWorldX, startWorldY);
 
-	if (!playerCharacter.init("assets/DataFiles/Entities/player.json"))
+	if (!playerCharacter.init("assets/DataFiles/Entities/player"))
 	{
 		destroy_app();
 		return -1;
@@ -359,6 +369,109 @@ int main(int argc, char *argv[])
 		if (cf_key_just_pressed(CF_KEY_ESCAPE))
 		{
 			break;
+		}
+
+		// Handle mouse click for character inspection
+		if (clickToInspectCharacter && cf_mouse_just_pressed(CF_MOUSE_BUTTON_LEFT))
+		{
+			// Get mouse position in window coordinates
+			float mouseWindowX = cf_mouse_x();
+			float mouseWindowY = cf_mouse_y();
+
+			// Get current window dimensions
+			int windowWidth = cf_app_get_width();
+			int windowHeight = cf_app_get_height();
+
+			// Get viewport dimensions from camera
+			v2 viewportSize = cfCamera.getViewportSize();
+
+			// Calculate viewport offset (assuming viewport is centered in window)
+			float viewportOffsetX = (windowWidth - viewportSize.x) * 0.5f;
+			float viewportOffsetY = (windowHeight - viewportSize.y) * 0.5f;
+
+			// Convert window coordinates to viewport coordinates
+			float mouseViewportX = mouseWindowX - viewportOffsetX;
+			float mouseViewportY = mouseWindowY - viewportOffsetY;
+
+			// Check if mouse is within viewport bounds
+			if (mouseViewportX < 0 || mouseViewportX >= viewportSize.x ||
+				mouseViewportY < 0 || mouseViewportY >= viewportSize.y)
+			{
+				printf("Mouse Click - Outside viewport bounds\n");
+			}
+			else
+			{
+				// Convert viewport to world coordinates
+				// CF uses a coordinate system where (0,0) is at the center of the viewport
+				// Mouse coordinates are top-left origin, so we need to convert:
+				// 1. Convert viewport coords from top-left origin to center origin
+				v2 centered = cf_v2(mouseViewportX - viewportSize.x * 0.5f,
+									-(mouseViewportY - viewportSize.y * 0.5f)); // Negate Y to flip from Y-down to Y-up
+				// 2. Apply inverse zoom
+				float zoom = cfCamera.getZoom();
+				centered = cf_v2(centered.x / zoom, centered.y / zoom);
+				// 3. Add camera position to get world coordinates
+				v2 cameraPos = cfCamera.getPosition();
+				v2 mouseWorldPos = cf_v2(centered.x + cameraPos.x, centered.y + cameraPos.y);
+
+				// Convert world coordinates to tile coordinates using the level's TMX conversion
+				int tmxTileX, tmxTileY;
+				if (level.getLevelMap().worldToMapCoords(mouseWorldPos.x, mouseWorldPos.y, 0.0f, 0.0f, tmxTileX, tmxTileY))
+				{
+					// Convert TMX coordinates (Y-down, 0 = top) to rendering coordinates (Y-up, 0 = bottom)
+					// This matches what highlightTile() expects
+					int mapHeight = level.getLevelMap().getMapHeight();
+					int renderTileX = tmxTileX;
+					int renderTileY = mapHeight - 1 - tmxTileY;
+
+					printf("Mouse Click - Screen: (%.1f, %.1f) | World: (%.1f, %.1f) | Tile: (%d, %d)\n",
+						   mouseWindowX, mouseWindowY, mouseWorldPos.x, mouseWorldPos.y, renderTileX, renderTileY);
+
+					// Get all entities at this tile
+					auto entities = level.get_entities_at(renderTileX, renderTileY);
+					if (entities.empty())
+					{
+						printf("  No entities at tile (%d, %d)\n", renderTileX, renderTileY);
+					}
+					else
+					{
+						printf("  Entities at tile (%d, %d):\n", renderTileX, renderTileY);
+						for (auto *entity : entities)
+						{
+							printf("    - %s\n", entity->getDataFilePath().c_str());
+
+							// Check if we already have a window tracking this entity
+							bool alreadyTracking = false;
+							for (const auto &window : characterInfoWindows)
+							{
+								if (window->isTracking(entity))
+								{
+									alreadyTracking = true;
+									break;
+								}
+							}
+
+							// Create a new debug window for this entity if not already tracking
+							if (!alreadyTracking)
+							{
+								std::string windowTitle = "Character Info: " + entity->getDataFilePath();
+								auto newWindow = std::make_unique<DebugCharacterInfoWindow>(windowTitle, entity, level);
+								characterInfoWindows.push_back(std::move(newWindow));
+								printf("      Created debug window for entity\n");
+							}
+							else
+							{
+								printf("      Already tracking this entity\n");
+							}
+						}
+					}
+				}
+				else
+				{
+					printf("Mouse Click - Screen: (%.1f, %.1f) | World: (%.1f, %.1f) | Tile: OUT OF BOUNDS\n",
+						   mouseWindowX, mouseWindowY, mouseWorldPos.x, mouseWorldPos.y);
+				}
+			}
 		}
 
 		// Player movement (WASD) - only one direction at a time, most recent key takes priority
@@ -715,6 +828,21 @@ int main(int argc, char *argv[])
 		{
 			playerInfoWindow->render();
 		}
+
+		// Render all character info windows
+		for (auto &characterWindow : characterInfoWindows)
+		{
+			characterWindow->render();
+		}
+
+		// Remove closed character info windows
+		characterInfoWindows.erase(
+			std::remove_if(characterInfoWindows.begin(), characterInfoWindows.end(),
+						   [](const std::unique_ptr<DebugCharacterInfoWindow> &window)
+						   {
+							   return !window->isShown();
+						   }),
+			characterInfoWindows.end());
 
 		app_draw_onto_screen();
 	}

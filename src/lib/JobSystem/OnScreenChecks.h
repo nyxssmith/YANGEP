@@ -7,6 +7,7 @@ using namespace Cute;
 // Forward declarations
 class CFNativeCamera;
 class LevelV1;
+class Coordinator;
 
 // On-screen checks job functions
 // These functions are designed to run on the "onscreenchecks" dedicated worker thread
@@ -28,5 +29,8 @@ namespace OnScreenChecks
 
     // Shutdown and cleanup (call after requestShutdown and job completion)
     void shutdown();
+
+    // Get the coordinator instance for accessing on-screen agents
+    Coordinator *getCoordinator();
 
 } // namespace OnScreenChecks

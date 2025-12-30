@@ -9,13 +9,13 @@
   "DebugWindows": [
     {
       "enabled": false,
-      "title": "DataFile Viewer",
+      "title": "Window Config Viewer",
       "dataFilePath": "/assets/window-config.json"
     },
     {
       "enabled": false,
-      "title": "Window Config Viewer",
-      "dataFilePath": "/assets/DataFiles/Entities/skeleton.json"
+      "title": "Data File Viewer - Skeleton",
+      "dataFilePath": "/assets/DataFiles/Entities/skeleton/character.json"
     }
   ],
   "Debug": {
@@ -29,8 +29,9 @@
     "highlightLayerBorders": [],
     "highlightLayerOuterBorders": [],
     "ShowFPSMetrics": true,
-    "ShowJobMetrics": true,
-    "ShowPlayerInfo": true,
-    "highlightCharacterHitboxes": true
+    "ShowJobMetrics": false,
+    "ShowPlayerInfo": false,
+    "highlightCharacterHitboxes": true,
+    "clickToInspectCharacter": true
   }
 }

@@ -1,3 +1,8 @@
 camera zoom and viewport desyncassets/Levels/test_one
 change render order based on height in world, not agents always on top
 nav paths are not cleaned up
+state library not singleton
+png loader not singleton
+state machine gui needs to be able to edit the live and datafile values for the states (perhaps a save-to-live and save-to-datafile button)
+todolist inside of combat dir needs addressing
+state machine debug window doesnt know the names of any states

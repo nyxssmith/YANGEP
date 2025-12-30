@@ -20,10 +20,10 @@ class AnimatedDataCharacter
 {
 public:
     AnimatedDataCharacter();
-    ~AnimatedDataCharacter();
+    virtual ~AnimatedDataCharacter();
 
-    // Initialize the character with a datafile path
-    bool init(const std::string &datafilePath);
+    // Initialize the character with a folder path containing character.json
+    bool init(const std::string &folderPath);
 
     // Update demo state with a move vector
     void update(float dt, v2 moveVector);
@@ -54,6 +54,9 @@ public:
 
     // Get the level
     LevelV1 *getLevel() const;
+
+    // Get the datafile path
+    const std::string &getDataFilePath() const;
 
     // Get hitbox in world coordinates
     HitBox *getHitbox() const;

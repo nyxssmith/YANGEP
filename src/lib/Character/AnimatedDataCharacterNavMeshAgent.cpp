@@ -1,6 +1,9 @@
 #include "AnimatedDataCharacterNavMeshAgent.h"
 #include "JobSystem.h"
+#include "DataFile.h"
+#include "StateMachine.h"
 #include <cute.h>
+#include <cstdio>
 
 using namespace Cute;
 
@@ -17,6 +20,21 @@ AnimatedDataCharacterNavMeshAgent::AnimatedDataCharacterNavMeshAgent()
 AnimatedDataCharacterNavMeshAgent::~AnimatedDataCharacterNavMeshAgent()
 {
     // We don't own the navmesh, so we don't delete it
+}
+
+// Override init to also load state machines
+bool AnimatedDataCharacterNavMeshAgent::init(const std::string &folderPath)
+{
+    // Call parent init first
+    if (!AnimatedDataCharacter::init(folderPath))
+    {
+        return false;
+    }
+
+    // Load state machines from the same folder
+    loadStateMachinesFromFolder(folderPath);
+
+    return true;
 }
 
 // Set the navmesh this agent is operating on
@@ -78,6 +96,14 @@ bool AnimatedDataCharacterNavMeshAgent::isOnWalkableArea() const
 // Override update to track navmesh position
 void AnimatedDataCharacterNavMeshAgent::update(float dt, v2 moveVector)
 {
+
+    // call the current state machine update
+    StateMachine *currentStateMachine = stateMachineController.getCurrentStateMachine();
+    if (currentStateMachine)
+    {
+        currentStateMachine->update(dt);
+    }
+
     // Call parent update
     AnimatedDataCharacter::update(dt, moveVector);
 
@@ -157,16 +183,16 @@ void AnimatedDataCharacterNavMeshAgent::clearCurrentNavMeshPath()
     currentNavMeshPath = nullptr;
 }
 
-// Get the wander behavior
-WanderBehavior *AnimatedDataCharacterNavMeshAgent::getWanderBehavior()
+// Get the state machine controller
+StateMachineController *AnimatedDataCharacterNavMeshAgent::getStateMachineController()
 {
-    return &wanderBehavior;
+    return &stateMachineController;
 }
 
-// Get the wander behavior (const version)
-const WanderBehavior *AnimatedDataCharacterNavMeshAgent::getWanderBehavior() const
+// Get the state machine controller (const version)
+const StateMachineController *AnimatedDataCharacterNavMeshAgent::getStateMachineController() const
 {
-    return &wanderBehavior;
+    return &stateMachineController;
 }
 
 // Background update job for on-screen agents (more detailed AI)
@@ -204,9 +230,16 @@ void AnimatedDataCharacterNavMeshAgent::OnScreenBackgroundUpdateJob(float dt)
             {
                 currentNavMeshPath->markComplete();
             }
-            // get new path and exit
-            const int wanderRadius = 500;
-            currentNavMeshPath = wanderBehavior.GetNewPath(*navmesh, currentPosition, wanderRadius);
+            // get new path from current state
+            StateMachine *currentStateMachine = stateMachineController.getCurrentStateMachine();
+            if (currentStateMachine)
+            {
+                State *currentState = currentStateMachine->getCurrentState();
+                if (currentState)
+                {
+                    currentNavMeshPath = currentState->GetNewPath(*navmesh, currentPosition);
+                }
+            }
 
             if (!currentNavMeshPath || !currentNavMeshPath->isValid())
             {
@@ -232,9 +265,16 @@ void AnimatedDataCharacterNavMeshAgent::OnScreenBackgroundUpdateJob(float dt)
     // else
     else
     {
-        // get new path from wander behavior
-        const int wanderRadius = 500;
-        currentNavMeshPath = wanderBehavior.GetNewPath(*navmesh, currentPosition, wanderRadius);
+        // get new path from current state
+        StateMachine *currentStateMachine = stateMachineController.getCurrentStateMachine();
+        if (currentStateMachine)
+        {
+            State *currentState = currentStateMachine->getCurrentState();
+            if (currentState)
+            {
+                currentNavMeshPath = currentState->GetNewPath(*navmesh, currentPosition);
+            }
+        }
 
         backgroundMoveVector = cf_v2(0.0f, 0.0f);
     }
@@ -255,4 +295,91 @@ void AnimatedDataCharacterNavMeshAgent::OffScreenBackgroundUpdateJob(float dt)
 // Background AI calculation (runs in worker thread)
 void AnimatedDataCharacterNavMeshAgent::calculateMoveVector(float dt)
 {
+}
+
+// Load state machines from a folder containing state_machines.json
+bool AnimatedDataCharacterNavMeshAgent::loadStateMachinesFromFolder(const std::string &folderPath)
+{
+    // Construct the path to state_machines.json
+    std::string stateMachinesPath = folderPath + "/state_machines.json";
+
+    // Create a DataFile to load the state machines configuration
+    DataFile stateMachinesData;
+    if (!stateMachinesData.load(stateMachinesPath))
+    {
+        printf("AnimatedDataCharacterNavMeshAgent: Failed to load state_machines.json from '%s'\n", folderPath.c_str());
+        return false;
+    }
+
+    // Check for required keys
+    if (!stateMachinesData.contains("state_machines") || !stateMachinesData["state_machines"].is_array())
+    {
+        printf("AnimatedDataCharacterNavMeshAgent: state_machines.json missing 'state_machines' array\n");
+        return false;
+    }
+
+    if (!stateMachinesData.contains("default_state_machine"))
+    {
+        printf("AnimatedDataCharacterNavMeshAgent: state_machines.json missing 'default_state_machine' key\n");
+        return false;
+    }
+
+    printf("AnimatedDataCharacterNavMeshAgent: Loaded state_machines.json from '%s'\n", folderPath.c_str());
+
+    // Iterate through each state machine in the array
+    const auto &stateMachinesArray = stateMachinesData["state_machines"];
+    for (const auto &stateMachineJson : stateMachinesArray)
+    {
+        // Check if this is a string instead of a JSON object
+        if (stateMachineJson.is_string())
+        {
+            // The string is a filename - load the state machine from file
+            std::string stateMachineName = stateMachineJson.get<std::string>();
+            std::string stateMachinePath = "assets/DataFiles/StateMachines/" + stateMachineName + ".json";
+
+            // Load the state machine file
+            DataFile stateMachineFile;
+            if (!stateMachineFile.load(stateMachinePath))
+            {
+                printf("  - WARNING: Failed to load state machine file '%s'\n", stateMachinePath.c_str());
+                continue;
+            }
+
+            // Create a StateMachine from the loaded file (DataFile inherits from nlohmann::json)
+            StateMachine stateMachine(stateMachineFile);
+
+            printf("  - Adding state machine from file: '%s'\n", stateMachine.getName().c_str());
+
+            // Set the agent for all states in this state machine
+            stateMachine.setAgent(this);
+
+            // Add it to the controller (move ownership)
+            stateMachineController.addStateMachine(std::move(stateMachine));
+            continue;
+        }
+
+        // Create a StateMachine from the JSON blob
+        StateMachine stateMachine(stateMachineJson);
+
+        printf("  - Adding state machine: '%s'\n", stateMachine.getName().c_str());
+
+        // Set the agent for all states in this state machine
+        stateMachine.setAgent(this);
+
+        // Add it to the controller (move ownership)
+        stateMachineController.addStateMachine(std::move(stateMachine));
+    }
+
+    // Set the default state machine
+    std::string defaultStateMachineName = stateMachinesData["default_state_machine"];
+    if (stateMachineController.setCurrentStateMachine(defaultStateMachineName))
+    {
+        printf("  - Set default state machine to: '%s'\n", defaultStateMachineName.c_str());
+    }
+    else
+    {
+        printf("  - WARNING: Failed to set default state machine '%s'\n", defaultStateMachineName.c_str());
+    }
+
+    return true;
 }

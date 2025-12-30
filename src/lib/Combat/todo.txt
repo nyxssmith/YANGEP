@@ -1,0 +1,15 @@
+
+player on spacebar does action to show a hitbox
+    is a line of 3 in front, goes out from player to elsewhere
+        cascaded boxes
+
+make seperate executable take in cli path to a hitbox or --new
+    can create a action and hitbox by clicking on cells in the grid
+        each cell gets a window for putting in damage and time offset
+
+
+
+
+add a "    "clickToInspectCharacter": true" option to window config
+
+make it so that if that option is selected

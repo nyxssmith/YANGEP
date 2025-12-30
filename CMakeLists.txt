@@ -102,6 +102,9 @@ add_executable(
 	src/lib/Debug/DebugFPSWindow.cpp
 	src/lib/Debug/DebugJobWindow.cpp
 	src/lib/Debug/DebugPlayerInfoWindow.cpp
+	src/lib/Debug/DebugCharacterInfoWindow.cpp
+	src/lib/Debug/DebugStateMachineWindow.cpp
+	src/lib/Debug/DebugStateWindow.cpp
 	src/lib/Level/FileHandling/tsx.cpp
 	src/lib/Level/FileHandling/tmx.cpp
 	src/lib/Level/GameLogic/LevelV1.cpp
@@ -115,8 +118,15 @@ add_executable(
 	src/lib/Character/AnimatedDataCharacter.cpp
 	src/lib/Character/AnimatedDataCharacterNavMeshAgent.cpp
 	src/lib/Character/AnimatedDataCharacterNavMeshPlayer.cpp
-	src/lib/Character/Behavior/Behavior.cpp
-	src/lib/Character/Behavior/WanderBehavior.cpp
+	src/lib/Character/Coordinator/Coordinator.cpp
+	src/lib/Character/StateMachines/State.cpp
+	src/lib/Character/StateMachines/StateMachine.cpp
+	src/lib/Character/StateMachines/StateMachineController.cpp
+	src/lib/Character/StateMachines/StateLibrary.cpp
+	src/lib/Character/StateMachines/States/WaitState.cpp
+	src/lib/Character/StateMachines/States/PrintState.cpp
+	src/lib/Character/StateMachines/States/WanderNewPositionState.cpp
+	src/lib/Character/StateMachines/States/MoveToPositionState.cpp
 	src/lib/Combat/HitBox.cpp
 	src/lib/Combat/Action.cpp
 	src/lib/JobSystem/JobSystem.cpp
@@ -131,7 +141,9 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Camera>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Character>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Character/Behavior>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Character/Coordinator>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Character/FileHandling>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Character/StateMachines>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Combat>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Debug>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/FileHandling>
@@ -200,8 +212,15 @@ add_executable(${PROJECT_NAME}_tests
     src/lib/Combat/Action.cpp
     src/lib/Character/AnimatedDataCharacterNavMeshAgent.cpp
     src/lib/Character/AnimatedDataCharacterNavMeshPlayer.cpp
-    src/lib/Character/Behavior/Behavior.cpp
-    src/lib/Character/Behavior/WanderBehavior.cpp
+    src/lib/Character/Coordinator/Coordinator.cpp
+    src/lib/Character/StateMachines/State.cpp
+    src/lib/Character/StateMachines/StateMachine.cpp
+    src/lib/Character/StateMachines/StateMachineController.cpp
+    src/lib/Character/StateMachines/StateLibrary.cpp
+    src/lib/Character/StateMachines/States/WaitState.cpp
+    src/lib/Character/StateMachines/States/PrintState.cpp
+    src/lib/Character/StateMachines/States/WanderNewPositionState.cpp
+    src/lib/Character/StateMachines/States/MoveToPositionState.cpp
     src/lib/JobSystem/JobSystem.cpp
     src/lib/UI/HighlightTile.cpp
     src/lib/UI/ColorUtils.cpp
@@ -213,7 +232,9 @@ target_include_directories(${PROJECT_NAME}_tests PUBLIC
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Camera>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Character>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Character/Behavior>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Character/Coordinator>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Character/FileHandling>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Character/StateMachines>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Combat>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Debug>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/FileHandling>

@@ -456,13 +456,13 @@ std::shared_ptr<NavMeshPath> NavMesh::generatePath(CF_V2 start, CF_V2 end)
 
     if (start_poly == -1)
     {
-        printf("NavMesh::generatePath - Start position (%.1f, %.1f) is not on navmesh\n", start.x, start.y);
+        // printf("NavMesh::generatePath - Start position (%.1f, %.1f) is not on navmesh\n", start.x, start.y);
         return path;
     }
 
     if (end_poly == -1)
     {
-        printf("NavMesh::generatePath - End position (%.1f, %.1f) is not on navmesh\n", end.x, end.y);
+        // printf("NavMesh::generatePath - End position (%.1f, %.1f) is not on navmesh\n", end.x, end.y);
         return path;
     }
 
@@ -476,7 +476,7 @@ std::shared_ptr<NavMeshPath> NavMesh::generatePath(CF_V2 start, CF_V2 end)
         // Assign ID and add to tracked paths
         path->id = next_path_id++;
         paths.push_back(path);
-        printf("NavMesh::generatePath - Path generated successfully (id: %d, total paths: %d)\n", path->id, static_cast<int>(paths.size()));
+        // printf("NavMesh::generatePath - Path generated successfully (id: %d, total paths: %d)\n", path->id, static_cast<int>(paths.size()));
     }
 
     return path;
@@ -490,12 +490,12 @@ std::shared_ptr<NavMeshPath> NavMesh::generatePathToPoint(CF_V2 start, const std
 
     if (!point)
     {
-        printf("NavMesh::generatePathToPoint - Point '%s' not found on navmesh\n", point_name.c_str());
+        // printf("NavMesh::generatePathToPoint - Point '%s' not found on navmesh\n", point_name.c_str());
         return std::make_shared<NavMeshPath>();
     }
 
-    printf("NavMesh::generatePathToPoint - Pathfinding to point '%s' at (%.1f, %.1f)\n",
-           point_name.c_str(), point->position.x, point->position.y);
+    // printf("NavMesh::generatePathToPoint - Pathfinding to point '%s' at (%.1f, %.1f)\n",
+    //        point_name.c_str(), point->position.x, point->position.y);
 
     return generatePath(start, point->position);
 }
@@ -527,8 +527,8 @@ bool NavMesh::findPath(NavMeshPath &path, CF_V2 start, CF_V2 end) const
         auto end_time = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
 
-        printf("NavMesh::findPath - Direct path (same polygon), length: %.1f, time: %.3f ms\n",
-               path.total_length, duration.count() / 1000.0);
+        // printf("NavMesh::findPath - Direct path (same polygon), length: %.1f, time: %.3f ms\n",
+        //        path.total_length, duration.count() / 1000.0);
         return true;
     }
 
@@ -607,8 +607,8 @@ bool NavMesh::findPath(NavMeshPath &path, CF_V2 start, CF_V2 end) const
             auto end_time = std::chrono::high_resolution_clock::now();
             auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
 
-            printf("NavMesh::findPath - Path found with %d waypoints, length: %.1f, time: %.3f ms\n",
-                   path.getWaypointCount(), path.total_length, duration.count() / 1000.0);
+            // printf("NavMesh::findPath - Path found with %d waypoints, length: %.1f, time: %.3f ms\n",
+            //        path.getWaypointCount(), path.total_length, duration.count() / 1000.0);
 
             return true;
         }
@@ -647,7 +647,7 @@ bool NavMesh::findPath(NavMeshPath &path, CF_V2 start, CF_V2 end) const
 
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
-    printf("NavMesh::findPath - No path found, time: %.3f ms\n", duration.count() / 1000.0);
+    // printf("NavMesh::findPath - No path found, time: %.3f ms\n", duration.count() / 1000.0);
 
     // No path found
     return false;
