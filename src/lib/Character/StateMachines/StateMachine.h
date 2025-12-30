@@ -47,11 +47,18 @@ public:
     // Returns true if state was found and set, false otherwise
     bool setCurrentState(const std::string &stateName);
 
+    // Update the current state and check if it's done running
+    void update(float dt);
+
+    // Get the loop counter (how many times the state machine has cycled)
+    int getLoopCounter() const;
+
 private:
     std::string name;
     StateLibrary stateLibrary;
     std::vector<std::unique_ptr<State>> states;
     int currentStateIndex; // -1 if no state is active
+    int loopCounter;       // Increments each time the state machine cycles back to first state
 
     // Common initialization from json data
     void initFromJson();

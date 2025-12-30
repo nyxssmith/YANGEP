@@ -1,12 +1,12 @@
 #include "StateMachine.h"
 
 StateMachine::StateMachine()
-    : DataFile(), name(""), currentStateIndex(-1)
+    : DataFile(), name(""), currentStateIndex(-1), loopCounter(0)
 {
 }
 
 StateMachine::StateMachine(const std::string &datafilePath)
-    : DataFile(), name(""), currentStateIndex(-1)
+    : DataFile(), name(""), currentStateIndex(-1), loopCounter(0)
 {
     if (load(datafilePath))
     {
@@ -15,7 +15,7 @@ StateMachine::StateMachine(const std::string &datafilePath)
 }
 
 StateMachine::StateMachine(const nlohmann::json &jsonData)
-    : DataFile(), name(""), currentStateIndex(-1)
+    : DataFile(), name(""), currentStateIndex(-1), loopCounter(0)
 {
     // Copy json data into this DataFile (which is a json object)
     *static_cast<nlohmann::json *>(this) = jsonData;
@@ -140,4 +140,39 @@ bool StateMachine::setCurrentState(const std::string &stateName)
         }
     }
     return false;
+}
+
+void StateMachine::update(float dt)
+{
+    // Get the current state
+    State *currentState = getCurrentState();
+    if (!currentState)
+    {
+        return;
+    }
+
+    // Update the current state
+    currentState->update(dt);
+
+    // Check if the state is done running
+    if (!currentState->getIsRunning())
+    {
+        // State is complete, could advance to next state here
+        // For now, just cycle to the next state in the list
+        if (currentStateIndex + 1 < static_cast<int>(states.size()))
+        {
+            currentStateIndex++;
+        }
+        else
+        {
+            // Wrap around to the first state
+            currentStateIndex = 0;
+            loopCounter++;
+        }
+    }
+}
+
+int StateMachine::getLoopCounter() const
+{
+    return loopCounter;
 }

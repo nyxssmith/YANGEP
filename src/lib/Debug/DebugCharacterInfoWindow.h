@@ -1,5 +1,8 @@
 #pragma once
 #include "DebugWindow.h"
+#include "DebugStateMachineWindow.h"
+#include <vector>
+#include <memory>
 
 // Forward declarations
 class AnimatedDataCharacter;
@@ -23,4 +26,5 @@ public:
 private:
     AnimatedDataCharacter *m_character; // Non-owning pointer to the character
     const LevelV1 &m_level;
+    std::vector<std::unique_ptr<DebugStateMachineWindow>> m_stateMachineWindows; // State machine debug windows
 };

@@ -97,15 +97,11 @@ bool AnimatedDataCharacterNavMeshAgent::isOnWalkableArea() const
 void AnimatedDataCharacterNavMeshAgent::update(float dt, v2 moveVector)
 {
 
-    // call the current state update
+    // call the current state machine update
     StateMachine *currentStateMachine = stateMachineController.getCurrentStateMachine();
     if (currentStateMachine)
     {
-        State *currentState = currentStateMachine->getCurrentState();
-        if (currentState)
-        {
-            currentState->update(dt);
-        }
+        currentStateMachine->update(dt);
     }
 
     // Call parent update
