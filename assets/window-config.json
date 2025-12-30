@@ -15,7 +15,7 @@
     {
       "enabled": false,
       "title": "Data File Viewer - Skeleton",
-      "dataFilePath": "/assets/DataFiles/Entities/skeleton.json"
+      "dataFilePath": "/assets/DataFiles/Entities/skeleton/character.json"
     }
   ],
   "Debug": {
