@@ -9,12 +9,12 @@
   "DebugWindows": [
     {
       "enabled": false,
-      "title": "DataFile Viewer",
+      "title": "Window Config Viewer",
       "dataFilePath": "/assets/window-config.json"
     },
     {
       "enabled": false,
-      "title": "Window Config Viewer",
+      "title": "Data File Viewer - Skeleton",
       "dataFilePath": "/assets/DataFiles/Entities/skeleton.json"
     }
   ],
