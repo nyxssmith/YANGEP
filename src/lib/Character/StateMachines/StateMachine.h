@@ -39,10 +39,19 @@ public:
     const std::vector<std::unique_ptr<State>> &getStates() const;
     std::vector<std::unique_ptr<State>> &getStates();
 
+    // Get the current state
+    State *getCurrentState();
+    const State *getCurrentState() const;
+
+    // Set the current state by name
+    // Returns true if state was found and set, false otherwise
+    bool setCurrentState(const std::string &stateName);
+
 private:
     std::string name;
     StateLibrary stateLibrary;
     std::vector<std::unique_ptr<State>> states;
+    int currentStateIndex; // -1 if no state is active
 
     // Common initialization from json data
     void initFromJson();

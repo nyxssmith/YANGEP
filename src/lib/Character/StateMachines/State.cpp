@@ -44,6 +44,7 @@ bool State::getIsRunning() const
 
 void State::setIsRunning(bool running)
 {
+    printf("State: Setting isRunning to %s\n", running ? "true" : "false");
     isRunning = running;
 }
 
@@ -63,4 +64,16 @@ void State::initFromJson()
 {
     // Base implementation does nothing
     // Override in derived classes if needed
+}
+
+std::shared_ptr<NavMeshPath> State::GetNewPath(NavMesh &navmesh, CF_V2 currentPosition)
+{
+    // Base implementation returns an invalid/empty path
+    return std::make_shared<NavMeshPath>();
+}
+
+CF_V2 State::FaceDirection(CF_V2 currentDirection)
+{
+    // Base implementation returns the current direction unchanged
+    return currentDirection;
 }

@@ -96,6 +96,18 @@ bool AnimatedDataCharacterNavMeshAgent::isOnWalkableArea() const
 // Override update to track navmesh position
 void AnimatedDataCharacterNavMeshAgent::update(float dt, v2 moveVector)
 {
+
+    // call the current state update
+    StateMachine *currentStateMachine = stateMachineController.getCurrentStateMachine();
+    if (currentStateMachine)
+    {
+        State *currentState = currentStateMachine->getCurrentState();
+        if (currentState)
+        {
+            currentState->update(dt);
+        }
+    }
+
     // Call parent update
     AnimatedDataCharacter::update(dt, moveVector);
 
@@ -234,9 +246,16 @@ void AnimatedDataCharacterNavMeshAgent::OnScreenBackgroundUpdateJob(float dt)
             {
                 currentNavMeshPath->markComplete();
             }
-            // get new path and exit
-            const int wanderRadius = 500;
-            currentNavMeshPath = wanderBehavior.GetNewPath(*navmesh, currentPosition, wanderRadius);
+            // get new path from current state
+            StateMachine *currentStateMachine = stateMachineController.getCurrentStateMachine();
+            if (currentStateMachine)
+            {
+                State *currentState = currentStateMachine->getCurrentState();
+                if (currentState)
+                {
+                    currentNavMeshPath = currentState->GetNewPath(*navmesh, currentPosition);
+                }
+            }
 
             if (!currentNavMeshPath || !currentNavMeshPath->isValid())
             {
@@ -262,9 +281,16 @@ void AnimatedDataCharacterNavMeshAgent::OnScreenBackgroundUpdateJob(float dt)
     // else
     else
     {
-        // get new path from wander behavior
-        const int wanderRadius = 500;
-        currentNavMeshPath = wanderBehavior.GetNewPath(*navmesh, currentPosition, wanderRadius);
+        // get new path from current state
+        StateMachine *currentStateMachine = stateMachineController.getCurrentStateMachine();
+        if (currentStateMachine)
+        {
+            State *currentState = currentStateMachine->getCurrentState();
+            if (currentState)
+            {
+                currentNavMeshPath = currentState->GetNewPath(*navmesh, currentPosition);
+            }
+        }
 
         backgroundMoveVector = cf_v2(0.0f, 0.0f);
     }
