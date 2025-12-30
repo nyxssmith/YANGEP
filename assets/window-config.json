@@ -29,8 +29,8 @@
     "highlightLayerBorders": [],
     "highlightLayerOuterBorders": [],
     "ShowFPSMetrics": true,
-    "ShowJobMetrics": true,
-    "ShowPlayerInfo": true,
+    "ShowJobMetrics": false,
+    "ShowPlayerInfo": false,
     "highlightCharacterHitboxes": true,
     "clickToInspectCharacter": true
   }

@@ -1,0 +1,2 @@
+this is a directory of premade state machines
+they are to be used like behaviors to switch between

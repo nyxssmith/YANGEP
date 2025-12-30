@@ -1,5 +1,6 @@
 #include "DebugCharacterInfoWindow.h"
 #include "AnimatedDataCharacter.h"
+#include "AnimatedDataCharacterNavMeshAgent.h"
 #include "LevelV1.h"
 #include <cute.h>
 
@@ -74,6 +75,39 @@ void DebugCharacterInfoWindow::render()
         ImGui_Text("Active Action: None");
     }
     ImGui_Unindent();
+
+    ImGui_Separator();
+
+    // Display state machine info if this is a NavMeshAgent
+    AnimatedDataCharacterNavMeshAgent *agent = dynamic_cast<AnimatedDataCharacterNavMeshAgent *>(m_character);
+    if (agent)
+    {
+        ImGui_Text("State Machine:");
+        ImGui_Indent();
+
+        StateMachineController *controller = agent->getStateMachineController();
+        if (controller)
+        {
+            const std::string &currentName = controller->getCurrentStateMachineName();
+            if (!currentName.empty())
+            {
+                ImGui_Text("Current: %s", currentName.c_str());
+            }
+            else
+            {
+                ImGui_Text("Current: None");
+            }
+
+            const auto &machines = controller->getStateMachines();
+            ImGui_Text("Total Machines: %zu", machines.size());
+        }
+        else
+        {
+            ImGui_Text("No controller");
+        }
+
+        ImGui_Unindent();
+    }
 
     ImGui_End();
 }

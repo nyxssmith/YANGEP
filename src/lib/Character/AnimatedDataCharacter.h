@@ -20,7 +20,7 @@ class AnimatedDataCharacter
 {
 public:
     AnimatedDataCharacter();
-    ~AnimatedDataCharacter();
+    virtual ~AnimatedDataCharacter();
 
     // Initialize the character with a folder path containing character.json
     bool init(const std::string &folderPath);

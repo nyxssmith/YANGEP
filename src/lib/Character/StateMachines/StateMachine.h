@@ -1,0 +1,51 @@
+#ifndef STATE_MACHINE_H
+#define STATE_MACHINE_H
+
+#include "DataFile.h"
+#include "StateLibrary.h"
+#include "State.h"
+#include <string>
+#include <vector>
+#include <memory>
+#include <nlohmann/json.hpp>
+
+class StateMachine : public DataFile
+{
+public:
+    StateMachine();
+    explicit StateMachine(const std::string &datafilePath);
+    explicit StateMachine(const nlohmann::json &jsonData);
+    ~StateMachine();
+
+    // Delete copy operations (contains unique_ptrs)
+    StateMachine(const StateMachine &) = delete;
+    StateMachine &operator=(const StateMachine &) = delete;
+
+    // Move operations
+    StateMachine(StateMachine &&) = default;
+    StateMachine &operator=(StateMachine &&) = default;
+
+    // Get the name of this state machine
+    const std::string &getName() const;
+
+    // Set the name of this state machine
+    void setName(const std::string &newName);
+
+    // Get the state library
+    StateLibrary *getStateLibrary();
+    const StateLibrary *getStateLibrary() const;
+
+    // Get the list of states
+    const std::vector<std::unique_ptr<State>> &getStates() const;
+    std::vector<std::unique_ptr<State>> &getStates();
+
+private:
+    std::string name;
+    StateLibrary stateLibrary;
+    std::vector<std::unique_ptr<State>> states;
+
+    // Common initialization from json data
+    void initFromJson();
+};
+
+#endif // STATE_MACHINE_H

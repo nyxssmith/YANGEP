@@ -1,0 +1,16 @@
+{
+  "state_machines": [
+    {
+      "name": "wander",
+      "states": [
+        { "name": "wait", "inputs": { "ms": 3000 } },
+        { "name": "find_position", "inputs": { "range": 5 } },
+        { "name": "move_to_position" }
+      ]
+    },
+    {
+      "name": "idle",
+      "states": [{ "name": "wait", "inputs": { "ms": 2000 } }]
+    }
+  ]
+}
