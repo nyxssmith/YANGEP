@@ -1,1 +1,1 @@
-0.0.22-nyx-feature-simple-state-machine-d16f36d
+0.0.23-nyx-feature-simple-state-machine-bf1c992

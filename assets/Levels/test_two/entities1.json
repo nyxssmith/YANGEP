@@ -3,7 +3,7 @@
     {
       "name": "skeleton",
       "position": { "x": 10, "y": 10 },
-      "datafilePath": "/assets/DataFiles/Entities/skeleton.json"
+      "path": "/assets/DataFiles/Entities/skeleton"
     }
   ]
 }
