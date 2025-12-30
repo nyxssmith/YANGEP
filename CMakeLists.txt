@@ -117,6 +117,7 @@ add_executable(
 	src/lib/Character/AnimatedDataCharacterNavMeshPlayer.cpp
 	src/lib/Character/Behavior/Behavior.cpp
 	src/lib/Character/Behavior/WanderBehavior.cpp
+	src/lib/Character/Coordinator/Coordinator.cpp
 	src/lib/Combat/HitBox.cpp
 	src/lib/Combat/Action.cpp
 	src/lib/JobSystem/JobSystem.cpp
@@ -131,6 +132,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Camera>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Character>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Character/Behavior>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Character/Coordinator>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Character/FileHandling>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Combat>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Debug>
@@ -202,6 +204,7 @@ add_executable(${PROJECT_NAME}_tests
     src/lib/Character/AnimatedDataCharacterNavMeshPlayer.cpp
     src/lib/Character/Behavior/Behavior.cpp
     src/lib/Character/Behavior/WanderBehavior.cpp
+    src/lib/Character/Coordinator/Coordinator.cpp
     src/lib/JobSystem/JobSystem.cpp
     src/lib/UI/HighlightTile.cpp
     src/lib/UI/ColorUtils.cpp
@@ -213,6 +216,7 @@ target_include_directories(${PROJECT_NAME}_tests PUBLIC
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Camera>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Character>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Character/Behavior>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Character/Coordinator>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Character/FileHandling>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Combat>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Debug>

@@ -2,6 +2,8 @@
 #include "JobSystem.h"
 #include "CFNativeCamera.h"
 #include "LevelV1.h"
+#include "Coordinator.h"
+#include "AnimatedDataCharacterNavMeshAgent.h"
 #include <stdio.h>
 #include <atomic>
 #include <cmath>
@@ -13,6 +15,9 @@ namespace OnScreenChecks
     static v2 *s_playerPosition = nullptr;
     static CFNativeCamera *s_camera = nullptr;
     static LevelV1 *s_level = nullptr;
+
+    // Coordinator for managing on-screen agents
+    static Coordinator s_coordinator;
 
     // Shutdown signal for the worker loop
     static std::atomic<bool> s_shutdownRequested{false};
@@ -70,7 +75,12 @@ namespace OnScreenChecks
                         // If agent is not in the nearby set, mark as off-screen
                         if (nearbySet.find(i) == nearbySet.end())
                         {
+                            bool wasOnScreen = agent->getIsOnScreen();
                             agent->setIsOnScreen(false);
+                            if (wasOnScreen)
+                            {
+                                s_coordinator.removeAgent(agent);
+                            }
                             continue;
                         }
 
@@ -81,7 +91,18 @@ namespace OnScreenChecks
                             cf_v2(agentPos.x + agentHalfSize, agentPos.y + agentHalfSize));
 
                         bool visible = s_camera->isVisible(agentBounds);
+                        bool wasOnScreen = agent->getIsOnScreen();
                         agent->setIsOnScreen(visible);
+
+                        // Update coordinator based on visibility change
+                        if (visible && !wasOnScreen)
+                        {
+                            s_coordinator.addAgent(agent);
+                        }
+                        else if (!visible && wasOnScreen)
+                        {
+                            s_coordinator.removeAgent(agent);
+                        }
                     }
                 }
 
@@ -103,11 +124,17 @@ namespace OnScreenChecks
 
     void shutdown()
     {
+        s_coordinator.clear();
         s_playerPosition = nullptr;
         s_camera = nullptr;
         s_level = nullptr;
         s_shutdownRequested = false;
         printf("OnScreenChecks: Shutdown complete\n");
+    }
+
+    Coordinator *getCoordinator()
+    {
+        return &s_coordinator;
     }
 
 } // namespace OnScreenChecks
