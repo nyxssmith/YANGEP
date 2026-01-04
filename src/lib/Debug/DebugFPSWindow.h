@@ -1,6 +1,7 @@
 #pragma once
 #include "DebugWindow.h"
 #include <vector>
+#include <deque>
 #include <string>
 #include <chrono>
 
@@ -27,4 +28,9 @@ private:
     std::chrono::high_resolution_clock::time_point m_lastMark;
     std::vector<ProfileSection> m_sections;
     double m_totalFrameTime_ms;
+
+    // FPS tracking
+    std::deque<float> m_fpsHistory;
+    float m_lowestFPSLast1000Frames;
+    static constexpr size_t MAX_FPS_HISTORY = 1000;
 };
