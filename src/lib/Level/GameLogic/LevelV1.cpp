@@ -94,6 +94,86 @@ LevelV1::LevelV1(const std::string &directoryPath)
         printf("LevelV1 Warning: No navmesh layers found in level. Navigation mesh not created.\n");
     }
 
+    // Apply navmesh cuts from cut layers
+    if (navmesh->getPolygonCount() > 0)
+    {
+        int total_cuts = 0;
+
+        // Process bottom edge cuts
+        for (const auto &cutLayer : levelMap->getCutBottomLayers())
+        {
+            printf("LevelV1: Processing cut layer (bottom): %s\n", cutLayer->name.c_str());
+            for (int y = 0; y < cutLayer->height; y++)
+            {
+                for (int x = 0; x < cutLayer->width; x++)
+                {
+                    int gid = cutLayer->getTileGID(x, y);
+                    if (gid != 0) // Tile is marked for cut
+                    {
+                        navmesh->applyCut(x, y, NAV_CUT_EDGE_BOTTOM);
+                        total_cuts++;
+                    }
+                }
+            }
+        }
+
+        // Process top edge cuts
+        for (const auto &cutLayer : levelMap->getCutTopLayers())
+        {
+            printf("LevelV1: Processing cut layer (top): %s\n", cutLayer->name.c_str());
+            for (int y = 0; y < cutLayer->height; y++)
+            {
+                for (int x = 0; x < cutLayer->width; x++)
+                {
+                    int gid = cutLayer->getTileGID(x, y);
+                    if (gid != 0)
+                    {
+                        navmesh->applyCut(x, y, NAV_CUT_EDGE_TOP);
+                        total_cuts++;
+                    }
+                }
+            }
+        }
+
+        // Process right edge cuts
+        for (const auto &cutLayer : levelMap->getCutRightLayers())
+        {
+            printf("LevelV1: Processing cut layer (right): %s\n", cutLayer->name.c_str());
+            for (int y = 0; y < cutLayer->height; y++)
+            {
+                for (int x = 0; x < cutLayer->width; x++)
+                {
+                    int gid = cutLayer->getTileGID(x, y);
+                    if (gid != 0)
+                    {
+                        navmesh->applyCut(x, y, NAV_CUT_EDGE_RIGHT);
+                        total_cuts++;
+                    }
+                }
+            }
+        }
+
+        // Process left edge cuts
+        for (const auto &cutLayer : levelMap->getCutLeftLayers())
+        {
+            printf("LevelV1: Processing cut layer (left): %s\n", cutLayer->name.c_str());
+            for (int y = 0; y < cutLayer->height; y++)
+            {
+                for (int x = 0; x < cutLayer->width; x++)
+                {
+                    int gid = cutLayer->getTileGID(x, y);
+                    if (gid != 0)
+                    {
+                        navmesh->applyCut(x, y, NAV_CUT_EDGE_LEFT);
+                        total_cuts++;
+                    }
+                }
+            }
+        }
+
+        printf("LevelV1: Applied %d navmesh cuts\n", total_cuts);
+    }
+
     // Create agents from entities.json
     if (entities.contains("entities") && entities["entities"].is_array())
     {

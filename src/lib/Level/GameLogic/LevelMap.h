@@ -59,6 +59,12 @@ private:
     // Structure layers for multi-level rendering
     std::vector<std::shared_ptr<StructureLayer>> structures;
 
+    // NavMesh cut layers for each edge
+    std::vector<std::shared_ptr<TMXLayer>> cut_bottom_layers;
+    std::vector<std::shared_ptr<TMXLayer>> cut_top_layers;
+    std::vector<std::shared_ptr<TMXLayer>> cut_right_layers;
+    std::vector<std::shared_ptr<TMXLayer>> cut_left_layers;
+
     // Override to filter structure layers from regular layers
     bool loadLayers() override;
 
@@ -97,6 +103,14 @@ public:
      * @param structure The structure layer to add
      */
     void addStructure(std::shared_ptr<StructureLayer> structure);
+
+    /**
+     * Get cut layer lists
+     */
+    const std::vector<std::shared_ptr<TMXLayer>> &getCutBottomLayers() const { return cut_bottom_layers; }
+    const std::vector<std::shared_ptr<TMXLayer>> &getCutTopLayers() const { return cut_top_layers; }
+    const std::vector<std::shared_ptr<TMXLayer>> &getCutRightLayers() const { return cut_right_layers; }
+    const std::vector<std::shared_ptr<TMXLayer>> &getCutLeftLayers() const { return cut_left_layers; }
 
     /**
      * Render a single TMX layer

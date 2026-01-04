@@ -11,4 +11,4 @@ render order based on hieght in world is costly
 render order for structures not quite perfect
 strange FPS dips down to 30 fps and then back to 600s (was 800+ w/o height sorting)
 Hitbox does not rotate, try making an L shape, for left/right facing boxes
-structures have no hitbox (maybe a feature for now, might need other layer to cut navmesh)
+fences are not quite structuring nicely

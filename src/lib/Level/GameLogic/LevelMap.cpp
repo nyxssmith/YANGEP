@@ -24,6 +24,10 @@ bool LevelMap::loadLayers()
     int regular_layer_count = 0;
     int navmesh_layer_count = 0;
     int structure_layer_count = 0;
+    int cut_bottom_count = 0;
+    int cut_top_count = 0;
+    int cut_right_count = 0;
+    int cut_left_count = 0;
 
     for (pugi::xml_node layer_node : map_node.children("layer"))
     {
@@ -103,28 +107,65 @@ bool LevelMap::loadLayers()
             continue; // Skip base class layer lists
         }
 
-        // Check if this is a navmesh layer
-        bool is_navmesh_layer = (layer_name_lower.find("navmesh") == 0 ||
-                                 layer_name_lower.find("nav_") == 0);
+        // Check if this is a cut layer
+        bool is_cut_bottom = (layer_name_lower.find("cutb") == 0);
+        bool is_cut_top = (layer_name_lower.find("cutt") == 0);
+        bool is_cut_right = (layer_name_lower.find("cutr") == 0);
+        bool is_cut_left = (layer_name_lower.find("cutl") == 0);
 
-        if (is_navmesh_layer)
+        if (is_cut_bottom)
         {
-            navmesh_layers.push_back(layer);
-            navmesh_layer_count++;
-            printf("  -> Added to navmesh layers\n");
+            cut_bottom_layers.push_back(layer);
+            cut_bottom_count++;
+            printf("  -> Added to cut bottom layers\n");
+        }
+        else if (is_cut_top)
+        {
+            cut_top_layers.push_back(layer);
+            cut_top_count++;
+            printf("  -> Added to cut top layers\n");
+        }
+        else if (is_cut_right)
+        {
+            cut_right_layers.push_back(layer);
+            cut_right_count++;
+            printf("  -> Added to cut right layers\n");
+        }
+        else if (is_cut_left)
+        {
+            cut_left_layers.push_back(layer);
+            cut_left_count++;
+            printf("  -> Added to cut left layers\n");
         }
         else
         {
-            layers.push_back(layer);
-            regular_layer_count++;
-            printf("  -> Added to regular layers\n");
+            // Check if this is a navmesh layer
+            bool is_navmesh_layer = (layer_name_lower.find("navmesh") == 0 ||
+                                     layer_name_lower.find("nav_") == 0);
+
+            if (is_navmesh_layer)
+            {
+                navmesh_layers.push_back(layer);
+                navmesh_layer_count++;
+                printf("  -> Added to navmesh layers\n");
+            }
+            else
+            {
+                layers.push_back(layer);
+                regular_layer_count++;
+                printf("  -> Added to regular layers\n");
+            }
         }
     }
 
-    printf("Loaded %d regular layers, %d navmesh layers, and %d structure layers\n",
+    printf("Loaded %d regular layers, %d navmesh layers, %d structure layers\n",
            regular_layer_count, navmesh_layer_count, structure_layer_count);
+    printf("        %d cut bottom, %d cut top, %d cut right, %d cut left\n",
+           cut_bottom_count, cut_top_count, cut_right_count, cut_left_count);
 
-    return !layers.empty() || !navmesh_layers.empty() || !structures.empty();
+    return !layers.empty() || !navmesh_layers.empty() || !structures.empty() ||
+           !cut_bottom_layers.empty() || !cut_top_layers.empty() ||
+           !cut_right_layers.empty() || !cut_left_layers.empty();
 }
 
 StructureLayer::StructureLayer(const TMXLayer &tmxLayer)
