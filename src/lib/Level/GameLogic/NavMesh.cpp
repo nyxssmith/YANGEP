@@ -9,7 +9,8 @@
 #include <chrono>
 
 NavMesh::NavMesh()
-    : tile_width(32), tile_height(32), next_path_id(1)
+    : tile_width(32), tile_height(32), next_path_id(1),
+      world_x(0.0f), world_y(0.0f), grid_width(0), grid_height(0)
 {
     bounds = make_aabb(cf_v2(0, 0), cf_v2(0, 0));
 }
@@ -100,6 +101,106 @@ bool NavMesh::buildFromLayer(const tmx &map, const std::string &layer_name,
     return buildFromLayer(layer, map.getTileWidth(), map.getTileHeight(), world_x, world_y, invert);
 }
 
+int NavMesh::findPolygonByTile(int tile_x, int tile_y) const
+{
+    if (polygons.empty())
+        return -1;
+
+    // Calculate expected center position for this tile using stored world offset
+    float expected_x = world_x + (tile_x * tile_width);
+    float expected_y = world_y + ((grid_height - 1 - tile_y) * tile_height);
+
+    // Search for polygon with matching center (with tolerance)
+    const float EPSILON = 1.0f;
+    for (size_t i = 0; i < polygons.size(); i++)
+    {
+        float dx = polygons[i].center.x - expected_x;
+        float dy = polygons[i].center.y - expected_y;
+        float dist_sq = dx * dx + dy * dy;
+
+        if (dist_sq < EPSILON * EPSILON)
+        {
+            return static_cast<int>(i);
+        }
+    }
+
+    return -1;
+}
+
+void NavMesh::applyCut(int tile_x, int tile_y, NavMeshCutEdge edge)
+{
+    // Find the polygon at the given tile coordinates
+    int poly_index = -1;
+
+    // Since we create polygons in row-major order in generateFromTileGrid,
+    // we need to find which polygon corresponds to this tile
+    // For the simple 1-tile-per-polygon case, we can calculate the expected index
+
+    // However, if some tiles weren't walkable, the polygon index won't match tile index
+    // We need to search through polygons to find the one at this tile position
+
+    // Calculate which neighbor to disconnect based on the edge
+    int neighbor_tile_x = tile_x;
+    int neighbor_tile_y = tile_y;
+
+    switch (edge)
+    {
+    case NAV_CUT_EDGE_TOP:
+        neighbor_tile_y = tile_y - 1; // TMX coords: Y down, so top is Y-1
+        break;
+    case NAV_CUT_EDGE_BOTTOM:
+        neighbor_tile_y = tile_y + 1; // TMX coords: Y down, so bottom is Y+1
+        break;
+    case NAV_CUT_EDGE_LEFT:
+        neighbor_tile_x = tile_x - 1;
+        break;
+    case NAV_CUT_EDGE_RIGHT:
+        neighbor_tile_x = tile_x + 1;
+        break;
+    }
+
+    // Bounds check
+    if (neighbor_tile_x < 0 || neighbor_tile_x >= grid_width ||
+        neighbor_tile_y < 0 || neighbor_tile_y >= grid_height)
+    {
+        // Neighbor is out of bounds, nothing to cut
+        return;
+    }
+
+    // Search for the polygon indices that correspond to these tiles
+    poly_index = findPolygonByTile(tile_x, tile_y);
+    int neighbor_poly_index = findPolygonByTile(neighbor_tile_x, neighbor_tile_y);
+
+    if (poly_index == -1 || neighbor_poly_index == -1)
+    {
+        printf("NavMesh::applyCut - Could not find polygons for tile (%d,%d) or neighbor (%d,%d)\n",
+               tile_x, tile_y, neighbor_tile_x, neighbor_tile_y);
+        return;
+    }
+
+    // Remove the neighbor relationship in both directions
+    auto &poly = polygons[poly_index];
+    auto &neighbor_poly = polygons[neighbor_poly_index];
+
+    // Remove neighbor_poly_index from poly's neighbors
+    auto it = std::find(poly.neighbors.begin(), poly.neighbors.end(), neighbor_poly_index);
+    if (it != poly.neighbors.end())
+    {
+        poly.neighbors.erase(it);
+        printf("NavMesh::applyCut - Removed neighbor %d from polygon %d (tile %d,%d edge %d)\n",
+               neighbor_poly_index, poly_index, tile_x, tile_y, static_cast<int>(edge));
+    }
+
+    // Remove poly_index from neighbor_poly's neighbors
+    it = std::find(neighbor_poly.neighbors.begin(), neighbor_poly.neighbors.end(), poly_index);
+    if (it != neighbor_poly.neighbors.end())
+    {
+        neighbor_poly.neighbors.erase(it);
+        printf("NavMesh::applyCut - Removed neighbor %d from polygon %d\n",
+               poly_index, neighbor_poly_index);
+    }
+}
+
 CF_V2 NavMesh::tileToWorld(int tile_x, int tile_y, float world_x, float world_y) const
 {
     // Convert from TMX tile coordinates to world coordinates (centered on tile)
@@ -113,6 +214,12 @@ void NavMesh::generateFromTileGrid(const std::vector<bool> &walkable_tiles,
                                    int grid_width, int grid_height,
                                    float world_x, float world_y)
 {
+    // Store grid parameters for later use (e.g., applyCut)
+    this->grid_width = grid_width;
+    this->grid_height = grid_height;
+    this->world_x = world_x;
+    this->world_y = world_y;
+
     // Simple approach: Create one rectangle polygon per walkable tile
     // This can be optimized later by merging adjacent tiles
 
@@ -304,6 +411,118 @@ bool NavMesh::isWalkable(CF_V2 point) const
     return findPolygonAt(point) != -1;
 }
 
+// Check if two line segments intersect
+// Returns true if segments (p1,p2) and (p3,p4) intersect
+static bool lineSegmentsIntersect(CF_V2 p1, CF_V2 p2, CF_V2 p3, CF_V2 p4)
+{
+    auto sign = [](float x)
+    { return (x > 0.0f) ? 1 : (x < 0.0f) ? -1
+                                         : 0; };
+
+    auto ccw = [&sign](CF_V2 a, CF_V2 b, CF_V2 c)
+    {
+        float val = (c.y - a.y) * (b.x - a.x) - (b.y - a.y) * (c.x - a.x);
+        return sign(val);
+    };
+
+    int d1 = ccw(p3, p4, p1);
+    int d2 = ccw(p3, p4, p2);
+    int d3 = ccw(p1, p2, p3);
+    int d4 = ccw(p1, p2, p4);
+
+    if (((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) &&
+        ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0)))
+    {
+        return true;
+    }
+
+    // Check for collinear cases (on the line)
+    if (d1 == 0 || d2 == 0 || d3 == 0 || d4 == 0)
+    {
+        // Check if points are on the segments
+        auto onSegment = [](CF_V2 p, CF_V2 q, CF_V2 r)
+        {
+            return q.x <= std::max(p.x, r.x) && q.x >= std::min(p.x, r.x) &&
+                   q.y <= std::max(p.y, r.y) && q.y >= std::min(p.y, r.y);
+        };
+
+        if (d1 == 0 && onSegment(p3, p1, p4))
+            return true;
+        if (d2 == 0 && onSegment(p3, p2, p4))
+            return true;
+        if (d3 == 0 && onSegment(p1, p3, p2))
+            return true;
+        if (d4 == 0 && onSegment(p1, p4, p2))
+            return true;
+    }
+
+    return false;
+}
+
+bool NavMesh::crossesBoundaryEdge(CF_V2 start, CF_V2 end) const
+{
+    // Check each edge in the navmesh
+    for (const auto &edge : edges)
+    {
+        // Find which polygon this edge belongs to
+        int poly_idx = edge.poly_a;
+        if (poly_idx < 0 || poly_idx >= static_cast<int>(polygons.size()))
+            continue;
+
+        const auto &poly = polygons[poly_idx];
+
+        // Check if this edge is a boundary (no neighbor on the other side)
+        bool is_boundary = true;
+
+        // Check all neighbors of this polygon
+        for (int neighbor_idx : poly.neighbors)
+        {
+            if (neighbor_idx < 0 || neighbor_idx >= static_cast<int>(polygons.size()))
+                continue;
+
+            const auto &neighbor = polygons[neighbor_idx];
+
+            // Check if the neighbor shares this edge (possibly reversed)
+            const float EPSILON = 0.1f;
+            for (size_t i = 0; i < neighbor.vertices.size(); i++)
+            {
+                size_t next_i = (i + 1) % neighbor.vertices.size();
+                CF_V2 neighbor_edge_start = neighbor.vertices[i];
+                CF_V2 neighbor_edge_end = neighbor.vertices[next_i];
+
+                // Check if edges match (same or reversed direction)
+                CF_V2 diff1 = cf_v2(edge.start.x - neighbor_edge_start.x, edge.start.y - neighbor_edge_start.y);
+                CF_V2 diff2 = cf_v2(edge.end.x - neighbor_edge_end.x, edge.end.y - neighbor_edge_end.y);
+                CF_V2 diff3 = cf_v2(edge.start.x - neighbor_edge_end.x, edge.start.y - neighbor_edge_end.y);
+                CF_V2 diff4 = cf_v2(edge.end.x - neighbor_edge_start.x, edge.end.y - neighbor_edge_start.y);
+
+                bool same_edge = (cf_len(diff1) < EPSILON && cf_len(diff2) < EPSILON);
+                bool reversed_edge = (cf_len(diff3) < EPSILON && cf_len(diff4) < EPSILON);
+
+                if (same_edge || reversed_edge)
+                {
+                    is_boundary = false;
+                    break;
+                }
+            }
+
+            if (!is_boundary)
+                break;
+        }
+
+        // If this is a boundary edge, check if the movement path crosses it
+        if (is_boundary)
+        {
+            if (lineSegmentsIntersect(start, end, edge.start, edge.end))
+            {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
 void NavMesh::debugRender(const class CFNativeCamera &camera) const
 {
     // Render both polygons and edges with default colors
@@ -360,7 +579,7 @@ void NavMesh::debugRenderPolygons(const class CFNativeCamera &camera, CF_Color c
 
 void NavMesh::debugRenderEdges(const class CFNativeCamera &camera, CF_Color color) const
 {
-    cf_draw_push_color(color);
+    const float EPSILON = 0.1f; // Tolerance for edge matching
 
     for (const auto &edge : edges)
     {
@@ -376,11 +595,64 @@ void NavMesh::debugRenderEdges(const class CFNativeCamera &camera, CF_Color colo
         if (!camera.isVisible(edge_bounds))
             continue;
 
+        // Check if this edge is shared with a neighbor polygon
+        // An edge is a boundary edge if it's not shared (only belongs to one polygon)
+        bool is_boundary = true;
+
+        if (edge.poly_a >= 0 && edge.poly_a < static_cast<int>(polygons.size()))
+        {
+            const auto &poly = polygons[edge.poly_a];
+
+            // Check all neighbors of this polygon
+            for (int neighbor_idx : poly.neighbors)
+            {
+                if (neighbor_idx < 0 || neighbor_idx >= static_cast<int>(polygons.size()))
+                    continue;
+
+                const auto &neighbor = polygons[neighbor_idx];
+
+                // Check if the neighbor shares this edge (possibly reversed)
+                for (size_t i = 0; i < neighbor.vertices.size(); i++)
+                {
+                    size_t next_i = (i + 1) % neighbor.vertices.size();
+                    CF_V2 neighbor_edge_start = neighbor.vertices[i];
+                    CF_V2 neighbor_edge_end = neighbor.vertices[next_i];
+
+                    // Check if edges match (same direction)
+                    CF_V2 diff1 = cf_v2(edge.start.x - neighbor_edge_start.x, edge.start.y - neighbor_edge_start.y);
+                    CF_V2 diff2 = cf_v2(edge.end.x - neighbor_edge_end.x, edge.end.y - neighbor_edge_end.y);
+
+                    // Check if edges match (reversed direction)
+                    CF_V2 diff3 = cf_v2(edge.start.x - neighbor_edge_end.x, edge.start.y - neighbor_edge_end.y);
+                    CF_V2 diff4 = cf_v2(edge.end.x - neighbor_edge_start.x, edge.end.y - neighbor_edge_start.y);
+
+                    bool same_edge = (cf_len(diff1) < EPSILON && cf_len(diff2) < EPSILON);
+                    bool reversed_edge = (cf_len(diff3) < EPSILON && cf_len(diff4) < EPSILON);
+
+                    if (same_edge || reversed_edge)
+                    {
+                        is_boundary = false;
+                        break;
+                    }
+                }
+
+                if (!is_boundary)
+                    break;
+            }
+        }
+
+        // Use purple for boundary edges, red for internal edges
+        CF_Color edge_color = is_boundary
+                                  ? cf_make_color_rgba(128, 0, 128, 204) // Purple with ~80% opacity
+                                  : cf_make_color_rgba(255, 0, 0, 204);  // Red with ~80% opacity
+
+        cf_draw_push_color(edge_color);
+
         // Draw edge as a line
         cf_draw_line(edge.start, edge.end, 2.0f); // 2px thick line
-    }
 
-    cf_draw_pop_color();
+        cf_draw_pop_color();
+    }
 }
 
 bool NavMesh::addPoint(const std::string &name, CF_V2 position)

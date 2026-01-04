@@ -11,6 +11,26 @@
 struct TMXLayer;
 class tmx;
 
+// Enum for tile edges
+enum NavMeshCutEdge
+{
+    NAV_CUT_EDGE_TOP = 0,
+    NAV_CUT_EDGE_RIGHT = 1,
+    NAV_CUT_EDGE_BOTTOM = 2,
+    NAV_CUT_EDGE_LEFT = 3
+};
+
+// Structure to represent a navigation mesh cut (edge blocking navigation)
+struct NavMeshCut
+{
+    int tile_x;          // Tile X coordinate
+    int tile_y;          // Tile Y coordinate
+    NavMeshCutEdge edge; // Which edge of the tile is cut
+
+    NavMeshCut() : tile_x(0), tile_y(0), edge(NAV_CUT_EDGE_TOP) {}
+    NavMeshCut(int x, int y, NavMeshCutEdge e) : tile_x(x), tile_y(y), edge(e) {}
+};
+
 // Structure to represent a navigation polygon (convex polygon)
 struct NavPoly
 {
@@ -46,6 +66,10 @@ private:
     CF_Aabb bounds;                                  // Bounding box of the entire mesh
     int tile_width;                                  // Tile width from TMX
     int tile_height;                                 // Tile height from TMX
+    float world_x;                                   // World X offset used during generation
+    float world_y;                                   // World Y offset used during generation
+    int grid_width;                                  // Grid width in tiles
+    int grid_height;                                 // Grid height in tiles
 
     // Helper functions for mesh generation
     void generateFromTileGrid(const std::vector<bool> &walkable_tiles,
@@ -55,6 +79,10 @@ private:
     void triangulate();
     void calculateNeighbors();
     void calculateCentroids();
+
+    // Find polygon index by TMX tile coordinates
+    // Returns -1 if no polygon at that tile
+    int findPolygonByTile(int tile_x, int tile_y) const;
 
     // Helper function for pathfinding (A* implementation)
     bool findPath(NavMeshPath &path, CF_V2 start, CF_V2 end) const;
@@ -82,6 +110,11 @@ public:
     // Clear the navigation mesh
     void clear();
 
+    // Apply a navmesh cut to block navigation across an edge
+    // tile_x, tile_y: TMX tile coordinates (0,0 = top-left)
+    // edge: which edge of the tile to cut
+    void applyCut(int tile_x, int tile_y, NavMeshCutEdge edge);
+
     // Query functions
     int getPolygonCount() const { return static_cast<int>(polygons.size()); }
     int getEdgeCount() const { return static_cast<int>(edges.size()); }
@@ -97,6 +130,10 @@ public:
 
     // Check if a world point is walkable
     bool isWalkable(CF_V2 point) const;
+
+    // Check if a line segment crosses any boundary edge (including cut edges)
+    // Returns true if the movement would cross an edge with no neighbor
+    bool crossesBoundaryEdge(CF_V2 start, CF_V2 end) const;
 
     // NavMesh point management
     // Add a point to the mesh (automatically finds containing polygon)

@@ -120,6 +120,12 @@ bool AnimatedDataCharacterNavMeshPlayer::wouldBeOnWalkableArea(v2 futurePosition
         return true; // No navmesh means no restrictions
     }
 
+    // Get current collision box center
+    CF_Aabb currentBox = getNavMeshCollisionBox();
+    float currentCenterX = (currentBox.min.x + currentBox.max.x) / 2.0f;
+    float currentCenterY = ((currentBox.min.y + currentBox.max.y) / 2.0f) + (COLLISION_BOX_HEIGHT / 2.0f);
+    CF_V2 currentPosition = cf_v2(currentCenterX, currentCenterY);
+
     // Calculate what the collision box would be at the future position
     float spriteBottomY = futurePosition.y - spriteHeight;
     float halfWidth = spriteWidth / 2.0f;
@@ -133,7 +139,19 @@ bool AnimatedDataCharacterNavMeshPlayer::wouldBeOnWalkableArea(v2 futurePosition
     float centerY = ((futureBox.min.y + futureBox.max.y) / 2.0f) + (COLLISION_BOX_HEIGHT / 2.0f);
     CF_V2 checkPosition = cf_v2(centerX, centerY);
 
-    return navmesh->isWalkable(checkPosition);
+    // Check if the future position is on walkable area
+    if (!navmesh->isWalkable(checkPosition))
+    {
+        return false;
+    }
+
+    // Check if the movement path crosses any boundary edges (including cuts)
+    if (navmesh->crossesBoundaryEdge(currentPosition, checkPosition))
+    {
+        return false;
+    }
+
+    return true;
 }
 
 // Update with navmesh collision checking
@@ -168,4 +186,3 @@ void AnimatedDataCharacterNavMeshPlayer::update(float dt, v2 moveVector)
         updateCurrentPolygon();
     }
 }
-
