@@ -515,7 +515,6 @@ void AnimatedDataCharacter::renderCurrentFrame()
         // Fallback to legacy single sprite
         cf_draw_sprite(&currentAnimFrame->sprite);
     }
-
 }
 
 // Render the current animation frame at a specific position
@@ -650,6 +649,11 @@ LevelV1 *AnimatedDataCharacter::getLevel() const
 const std::string &AnimatedDataCharacter::getDataFilePath() const
 {
     return datafile.getpath();
+}
+
+HitBox *AnimatedDataCharacter::getHitbox() const
+{
+    return characterHitbox;
 }
 
 void AnimatedDataCharacter::sethitboxDebugActive(bool active)
@@ -878,4 +882,15 @@ Action *AnimatedDataCharacter::getActionPointerB() const
         return const_cast<Action *>(&actionsList[actionPointerB]);
     }
     return nullptr;
+}
+
+// Handle hit from another character
+void AnimatedDataCharacter::OnHit(AnimatedDataCharacter *character, Damage damage)
+{
+    // Trigger red flash effect when hit
+    triggerEffect("red", 3, 1.0f, 0.80f);
+
+    // Print debug message
+    printf("AnimatedDataCharacter: Hit by character with damage value: %.2f\n", damage.value);
+    // TODO call damage.DoDamage(this);
 }

@@ -750,6 +750,72 @@ bool LevelV1::isCharacterInActionHitbox(const AnimatedDataCharacter *character, 
     return false;
 }
 
+std::vector<AnimatedDataCharacter *> LevelV1::getCharactersInActionHitbox(const Action *action, const AnimatedDataCharacter *excludeCharacter) const
+{
+    std::vector<AnimatedDataCharacter *> charactersInHitbox;
+
+    if (!action || !action->getHitBox())
+    {
+        return charactersInHitbox;
+    }
+
+    // Get the character performing the action
+    AnimatedDataCharacter *actionCharacter = action->getCharacter();
+    if (!actionCharacter)
+    {
+        return charactersInHitbox;
+    }
+
+    // Get the action's hitboxes
+    std::vector<CF_Aabb> actionBoxes = action->getHitBox()->getBoxes(
+        actionCharacter->getCurrentDirection(), actionCharacter->getPosition());
+
+    // Check player if exists and not excluded
+    if (player && player != excludeCharacter && player != actionCharacter)
+    {
+        HitBox *playerHitbox = player->getHitbox();
+        if (playerHitbox)
+        {
+            CF_Aabb playerBox = playerHitbox->getBoundingBox(
+                player->getCurrentDirection(), player->getPosition());
+
+            for (const auto &actionBox : actionBoxes)
+            {
+                if (cf_overlaps(playerBox, actionBox))
+                {
+                    charactersInHitbox.push_back(const_cast<AnimatedDataCharacter *>(player));
+                    break;
+                }
+            }
+        }
+    }
+
+    // Check all agents
+    for (const auto &agent : agents)
+    {
+        if (agent && agent.get() != excludeCharacter && agent.get() != actionCharacter)
+        {
+            HitBox *agentHitbox = agent->getHitbox();
+            if (agentHitbox)
+            {
+                CF_Aabb agentBox = agentHitbox->getBoundingBox(
+                    agent->getCurrentDirection(), agent->getPosition());
+
+                for (const auto &actionBox : actionBoxes)
+                {
+                    if (cf_overlaps(agentBox, actionBox))
+                    {
+                        charactersInHitbox.push_back(agent.get());
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    return charactersInHitbox;
+}
+
 void LevelV1::updateSpatialGrid()
 {
     // For simplicity, rebuild the grid each frame

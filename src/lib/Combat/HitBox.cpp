@@ -1,6 +1,7 @@
 #include "HitBox.h"
 #include "SpriteAnimationLoader.h"
 #include "LevelV1.h"
+#include "AnimatedDataCharacter.h"
 #include "../UI/HighlightTile.h"
 #include <cstdio>
 

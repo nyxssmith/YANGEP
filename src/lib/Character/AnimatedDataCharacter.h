@@ -7,6 +7,7 @@
 #include "HitBox.h"
 #include "Action.h"
 #include "IVisualEffect.h"
+#include "Damage.h"
 #include <memory>
 #include <vector>
 #include <deque>
@@ -89,6 +90,9 @@ public:
     void setActionPointerB(size_t index);
     Action *getActionPointerA() const;
     Action *getActionPointerB() const;
+
+    // Hit handling
+    void OnHit(AnimatedDataCharacter *character, Damage damage);
 
 private:
     // The animation loader
