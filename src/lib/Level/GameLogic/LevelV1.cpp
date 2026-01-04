@@ -162,12 +162,46 @@ LevelV1::LevelV1(const std::string &directoryPath)
     rebuildSpatialGrid();
 
     // Add all structures to the rendered objects list
+    // Calculate their worldY positions once since they never move
     for (size_t i = 0; i < levelMap->getStructureCount(); ++i)
     {
         auto structure = levelMap->getStructure(i);
         if (structure)
         {
-            renderedObjects.add(ObjectRenderedByWorldPosition(structure.get()));
+            ObjectRenderedByWorldPosition structureObj(structure.get());
+
+            // Calculate worldY for this structure (only done once)
+            float minWorldY = 999999.0f;
+            bool foundTile = false;
+
+            for (int y = 0; y < structure->height; y++)
+            {
+                for (int x = 0; x < structure->width; x++)
+                {
+                    int gid = structure->getTileGID(x, y);
+                    if (gid != 0) // Non-empty tile
+                    {
+                        // Convert tile coordinates to world coordinates
+                        float worldY = ((structure->height - 1 - y) * tileHeight);
+                        if (worldY < minWorldY)
+                        {
+                            minWorldY = worldY;
+                        }
+                        foundTile = true;
+                    }
+                }
+            }
+
+            if (foundTile)
+            {
+                structureObj.setWorldY(minWorldY);
+            }
+            else
+            {
+                structureObj.setWorldY(0.0f);
+            }
+
+            renderedObjects.add(structureObj);
         }
     }
 

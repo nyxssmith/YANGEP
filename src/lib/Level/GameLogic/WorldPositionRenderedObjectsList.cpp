@@ -24,8 +24,6 @@ ObjectRenderedByWorldPosition::ObjectRenderedByWorldPosition(AnimatedDataCharact
 
 void ObjectRenderedByWorldPosition::render(const CFNativeCamera &camera, const DataFile &config, AnimatedDataCharacter *player, float worldX, float worldY)
 {
-    // TODO fix FPS drops down to 30fps, log timing this takes and put breakpoint on log time
-
     switch (type)
     {
     case 0: // StructureLayer
@@ -152,7 +150,7 @@ bool WorldPositionRenderedObjectsList::remove(const ObjectRenderedByWorldPositio
 
 void WorldPositionRenderedObjectsList::sort()
 {
-    // Calculate worldY for each object
+    // Calculate worldY for dynamic objects only (structures are calculated once when added)
     Node *current = head;
     int tileWidth = 32;  // TODO: Get actual tile width from somewhere
     int tileHeight = 32; // TODO: Get actual tile height from somewhere
@@ -165,41 +163,7 @@ void WorldPositionRenderedObjectsList::sort()
         {
         case 0: // StructureLayer
         {
-            StructureLayer *structure = obj.asStructureLayer();
-            if (structure)
-            {
-                // Find minimum world Y position across all tiles
-                float minWorldY = 999999.0f;
-                bool foundTile = false;
-
-                for (int y = 0; y < structure->height; y++)
-                {
-                    for (int x = 0; x < structure->width; x++)
-                    {
-                        int gid = structure->getTileGID(x, y);
-                        if (gid != 0) // Non-empty tile
-                        {
-                            // Convert tile coordinates to world coordinates
-                            float worldY = ((structure->height - 1 - y) * tileHeight);
-                            if (worldY < minWorldY)
-                            {
-                                minWorldY = worldY;
-                            }
-                            foundTile = true;
-                        }
-                    }
-                }
-
-                if (foundTile)
-                {
-                    // WorldY = (min of all tile worldY positions) - (tile_height/2)
-                    obj.setWorldY(minWorldY);
-                }
-                else
-                {
-                    obj.setWorldY(0.0f);
-                }
-            }
+            // Skip - structure positions are calculated once when added since they never move
             break;
         }
 
