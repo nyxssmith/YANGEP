@@ -10,6 +10,7 @@
 #include "DebugJobWindow.h"
 #include "DebugPlayerInfoWindow.h"
 #include "DebugCharacterInfoWindow.h"
+#include "DebugCoordinatorWindow.h"
 #include "OnScreenChecks.h"
 #include "Utils.h"
 #include "DataFile.h"
@@ -221,6 +222,10 @@ int main(int argc, char *argv[])
 	std::unique_ptr<DebugPlayerInfoWindow> playerInfoWindow;
 	bool ShowPlayerInfo = false;
 
+	// Coordinator debug window (created later after OnScreenChecks is initialized)
+	std::unique_ptr<DebugCoordinatorWindow> coordinatorWindow;
+	bool ShowCoordinatorInfo = false;
+
 	// Character info debug windows (created on click)
 	std::vector<std::unique_ptr<DebugCharacterInfoWindow>> characterInfoWindows;
 
@@ -256,6 +261,12 @@ int main(int argc, char *argv[])
 		{
 			ShowPlayerInfo = debug["ShowPlayerInfo"];
 			printf("Debug ShowPlayerInfo: %s\n", ShowPlayerInfo ? "enabled" : "disabled");
+		}
+
+		if (debug.contains("ShowCoordinatorInfo"))
+		{
+			ShowCoordinatorInfo = debug["ShowCoordinatorInfo"];
+			printf("Debug ShowCoordinatorInfo: %s\n", ShowCoordinatorInfo ? "enabled" : "disabled");
 		}
 	}
 
@@ -344,6 +355,16 @@ int main(int argc, char *argv[])
 	// Initialize and start on-screen checks worker
 	OnScreenChecks::initialize(&playerPosition, &cfCamera, &level);
 	OnScreenChecks::start();
+
+	// Create coordinator debug window if enabled (now that OnScreenChecks is initialized)
+	if (ShowCoordinatorInfo)
+	{
+		coordinatorWindow = std::make_unique<DebugCoordinatorWindow>("Coordinator Info",
+																	 OnScreenChecks::getCoordinator(),
+																	 &playerCharacter,
+																	 level);
+		printf("Created Coordinator debug window\n");
+	}
 
 	// Main loop
 	printf("Skeleton Adventure Game:\n");
@@ -841,6 +862,12 @@ int main(int argc, char *argv[])
 		if (playerInfoWindow)
 		{
 			playerInfoWindow->render();
+		}
+
+		// Render Coordinator info window if enabled
+		if (coordinatorWindow)
+		{
+			coordinatorWindow->render();
 		}
 
 		// Render all character info windows

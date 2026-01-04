@@ -31,6 +31,7 @@
     "ShowFPSMetrics": true,
     "ShowJobMetrics": false,
     "ShowPlayerInfo": false,
+    "ShowCoordinatorInfo": true,
     "highlightCharacterHitboxes": true,
     "clickToInspectCharacter": true
   }

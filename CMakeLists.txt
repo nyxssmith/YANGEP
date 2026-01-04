@@ -108,6 +108,7 @@ add_executable(
 	src/lib/Debug/DebugJobWindow.cpp
 	src/lib/Debug/DebugPlayerInfoWindow.cpp
 	src/lib/Debug/DebugCharacterInfoWindow.cpp
+	src/lib/Debug/DebugCoordinatorWindow.cpp
 	src/lib/Debug/DebugStateMachineWindow.cpp
 	src/lib/Debug/DebugStateWindow.cpp
 	src/lib/Level/FileHandling/tsx.cpp
