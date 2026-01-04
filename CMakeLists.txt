@@ -143,6 +143,8 @@ add_executable(
 	src/lib/Effects/GreenFlashEffect.cpp
 	src/lib/Effects/EffectFactory.cpp
 	src/lib/Effects/ShaderRegistry.cpp
+	src/lib/Effects/TrailGhostEffect.cpp
+	src/lib/Effects/GhostTrailRenderer.cpp
 	src/lib/UI/HighlightTile.cpp
 	src/lib/UI/ColorUtils.cpp
 )
@@ -242,6 +244,8 @@ add_executable(${PROJECT_NAME}_tests
     src/lib/Effects/GreenFlashEffect.cpp
     src/lib/Effects/EffectFactory.cpp
     src/lib/Effects/ShaderRegistry.cpp
+	src/lib/Effects/TrailGhostEffect.cpp
+	src/lib/Effects/GhostTrailRenderer.cpp
     src/lib/UI/HighlightTile.cpp
     src/lib/UI/ColorUtils.cpp
 )

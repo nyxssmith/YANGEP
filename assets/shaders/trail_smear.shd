@@ -1,0 +1,15 @@
+layout (set = 3, binding = 1) uniform shd_uniforms {
+	float strength;
+};
+
+vec4 shader(vec4 color, vec2 pos, vec2 screen_uv, vec4 params)
+{
+	// Simple afterimage look: bias towards white but preserve premultiplied alpha.
+	float t = clamp(strength, 0.0, 1.0);
+	// Mix towards white premultiplied by alpha to keep rgb <= a.
+	vec3 premulWhite = vec3(1.0) * color.a;
+	vec3 mixed = mix(color.rgb, premulWhite, t);
+	return vec4(mixed, color.a);
+}
+
+

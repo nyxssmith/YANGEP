@@ -18,6 +18,8 @@ using namespace Cute;
 class LevelV1;
 class HitBox;
 class Action;
+class IGhostTrailEffect;
+class GhostTrailRenderer;
 
 // Demo class to showcase the new SpriteAnimationLoader system
 class AnimatedDataCharacter
@@ -93,6 +95,8 @@ public:
 
     // Hit handling
     void OnHit(AnimatedDataCharacter *character, Damage damage);
+    // Active ghost-trail (if any), nullptr otherwise
+    IGhostTrailEffect *getActiveGhostTrailEffect() const;
 
 private:
     // The animation loader
@@ -156,6 +160,9 @@ private:
     std::deque<std::unique_ptr<IVisualEffect>> effectQueue;
     void beginFrontEffect();
     void endFrontEffect();
+
+    // Allow renderer to access frame rendering helpers
+    friend class GhostTrailRenderer;
 };
 
 #endif // ANIMATED_DATA_CHARACTER_H

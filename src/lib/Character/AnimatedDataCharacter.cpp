@@ -8,6 +8,10 @@
 #include "HitBox.h"
 #include "../UI/ColorUtils.h"
 #include "EffectFactory.h"
+#include "../Effects/IGhostTrailEffect.h"
+#include "../Effects/GhostTrailRenderer.h"
+#include "../Effects/ShaderRegistry.h"
+#include <cute_draw.h>
 
 using namespace Cute;
 
@@ -267,6 +271,11 @@ void AnimatedDataCharacter::update(float dt, v2 moveVector)
         if (front)
         {
             front->update(dt);
+            // If the effect supports ghost trails, feed it the current position.
+            if (auto ghost = dynamic_cast<IGhostTrailEffect*>(front.get()))
+            {
+                ghost->updateSubjectPosition(position);
+            }
             if (!front->isActive())
             {
                 effectQueue.pop_front();
@@ -454,9 +463,13 @@ void AnimatedDataCharacter::render()
     if (!initialized)
         return;
 
+    // Draw ghost trail instances behind the character if active.
+    GhostTrailRenderer::renderGhostsForCharacter(*this);
+
     beginFrontEffect();
     renderCurrentFrame();
     endFrontEffect();
+    // end
     // Note: Action hitboxes are now rendered by LevelV1::renderAgentActions()
     // Only render character's default hitbox here
     if (!isDoingAction)
@@ -468,6 +481,9 @@ void AnimatedDataCharacter::render(v2 renderPosition)
 {
     if (!initialized)
         return;
+
+    // Draw ghost trail instances at their recorded world positions
+    GhostTrailRenderer::renderGhostsForCharacter(*this);
 
     beginFrontEffect();
     renderCurrentFrameAt(renderPosition);
@@ -686,6 +702,16 @@ Action *AnimatedDataCharacter::getActiveAction() const
 {
     return activeAction;
 }
+
+IGhostTrailEffect* AnimatedDataCharacter::getActiveGhostTrailEffect() const
+{
+    if (!effectQueue.empty() && effectQueue.front())
+    {
+        return dynamic_cast<IGhostTrailEffect*>(effectQueue.front().get());
+    }
+    return nullptr;
+}
+
 
 void AnimatedDataCharacter::triggerEffect(const std::string &name, int flashes, float totalDuration, float maxIntensity)
 {
