@@ -293,25 +293,25 @@ v2 HitBox::rotateCoordinate(int x, int y, Direction direction)
     {
     case Direction::RIGHT:
         // No rotation needed - this is the default
-        return cf_v2(x, y);
+        return cf_v2((float)x, (float)y);
 
     case Direction::UP:
         // Rotate 90 degrees counter-clockwise
         // Right's y-axis becomes Up's x-axis, Right's x-axis becomes Up's y-axis
-        return cf_v2(y, x);
+        return cf_v2((float)y, (float)x);
 
     case Direction::LEFT:
         // Rotate 180 degrees
         // Right becomes Left, so x becomes -x, y becomes -y
-        return cf_v2(-x, -y);
+        return cf_v2((float)-x, (float)-y);
 
     case Direction::DOWN:
         // Rotate 90 degrees clockwise
         // Right's y-axis becomes Down's -x-axis, Right's x-axis becomes Down's -y-axis
-        return cf_v2(-y, -x);
+        return cf_v2((float)-y, (float)-x);
     }
 
-    return cf_v2(x, y);
+    return cf_v2((float)x, (float)y);
 }
 
 // Build hitbox from tile definitions in JSON
