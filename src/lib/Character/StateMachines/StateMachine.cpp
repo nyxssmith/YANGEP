@@ -63,7 +63,7 @@ void StateMachine::initFromJson()
             // Each state should have a "name" field (the state type)
             if (!stateJson.contains("name") || !stateJson["name"].is_string())
             {
-                printf("StateMachine '%s': Skipping state with missing or invalid 'name' field\n", name.c_str());
+                // printf("StateMachine '%s': Skipping state with missing or invalid 'name' field\n", name.c_str());
                 continue;
             }
 
@@ -74,7 +74,7 @@ void StateMachine::initFromJson()
 
             if (!state)
             {
-                printf("StateMachine '%s': Failed to create state '%s'\n", name.c_str(), stateName.c_str());
+                // printf("StateMachine '%s': Failed to create state '%s'\n", name.c_str(), stateName.c_str());
                 continue;
             }
 
@@ -87,7 +87,7 @@ void StateMachine::initFromJson()
             }
 
             states.push_back(std::move(state));
-            printf("StateMachine '%s': Added state '%s'\n", name.c_str(), stateName.c_str());
+            // printf("StateMachine '%s': Added state '%s'\n", name.c_str(), stateName.c_str());
         }
     }
 

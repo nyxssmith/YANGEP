@@ -30,7 +30,7 @@ void MoveToPositionState::update(float dt)
     AnimatedDataCharacterNavMeshAgent *agent = getAgent();
     if (!agent)
     {
-        printf("MoveToPositionState: No agent set, marking as complete\n");
+        // printf("MoveToPositionState: No agent set, marking as complete\n");
         setIsRunning(false);
         return;
     }
@@ -39,7 +39,7 @@ void MoveToPositionState::update(float dt)
     auto currentPath = agent->getCurrentNavMeshPath();
     if (!currentPath || !currentPath->isValid() || currentPath->isComplete())
     {
-        printf("MoveToPositionState: Path is complete or invalid, marking state as complete\n");
+        // printf("MoveToPositionState: Path is complete or invalid, marking state as complete\n");
         setIsRunning(false);
     }
 }

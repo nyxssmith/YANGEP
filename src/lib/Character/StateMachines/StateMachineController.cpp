@@ -49,7 +49,7 @@ bool StateMachineController::setCurrentStateMachine(const std::string &name)
         }
     }
 
-    printf("StateMachineController: State machine with name '%s' not found\n", name.c_str());
+    // printf("StateMachineController: State machine with name '%s' not found\n", name.c_str());
     return false;
 }
 
@@ -66,7 +66,7 @@ bool StateMachineController::setCurrentStateMachineByIndex(size_t index)
         return true;
     }
 
-    printf("StateMachineController: Index %zu out of range (size: %zu)\n", index, stateMachineList.size());
+    // printf("StateMachineController: Index %zu out of range (size: %zu)\n", index, stateMachineList.size());
     return false;
 }
 

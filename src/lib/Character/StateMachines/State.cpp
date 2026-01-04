@@ -44,7 +44,7 @@ bool State::getIsRunning() const
 
 void State::setIsRunning(bool running)
 {
-    printf("State: Setting isRunning to %s\n", running ? "true" : "false");
+    // printf("State: Setting isRunning to %s\n", running ? "true" : "false");
 
     // If transitioning from false to true, call reset
     if (!isRunning && running)
