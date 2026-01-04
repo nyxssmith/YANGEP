@@ -22,7 +22,7 @@ void PrintState::initFromJson()
         if (defaults["to_print"].is_string())
         {
             to_print = defaults["to_print"].get<std::string>();
-            printf("PrintState: Loaded print text: '%s'\n", to_print.c_str());
+            // printf("PrintState: Loaded print text: '%s'\n", to_print.c_str());
         }
     }
 }
@@ -35,7 +35,7 @@ void PrintState::update(float dt)
     }
 
     // Print the text to stdout
-    printf("%s\n", to_print.c_str());
+    // printf("%s\n", to_print.c_str());
 
     // Mark as complete
     setIsRunning(false);
