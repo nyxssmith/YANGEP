@@ -7,4 +7,6 @@ todolist inside of combat dir needs addressing
 state machine debug window doesnt know the names of any states
 Navmesh generate path called from many workers at same time not async safe        paths.push_back(path);
     malloc(): unaligned tcache chunk detected
-render order based on hieght in world is costly and for structures not quite perfect
+render order based on hieght in world is costly
+render order for structures not quite perfect
+strange FPS dips down to 30 fps and then back to 600s (was 800+ w/o height sorting)
