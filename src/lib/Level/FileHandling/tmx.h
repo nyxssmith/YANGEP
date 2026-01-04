@@ -35,6 +35,7 @@ private:
     // Tilesets used by this map
     std::vector<std::shared_ptr<TMXTileset>> tilesets;
 
+protected:
     // Layers in this map
     std::vector<std::shared_ptr<TMXLayer>> layers;
 
@@ -42,6 +43,7 @@ private:
     // These are separated from regular rendering layers
     std::vector<std::shared_ptr<TMXLayer>> navmesh_layers;
 
+private:
     // Layer highlighting configuration (layer name -> should highlight)
     std::map<std::string, bool> layer_highlight_map;
 
@@ -59,10 +61,13 @@ private:
 
     // Helper functions
     bool loadTilesets();
-    bool loadLayers();
-    std::shared_ptr<TMXTileset> findTilesetForGID(int gid) const;
     void parseCSVData(const std::string &csv_data, std::vector<int> &tile_data) const;
 
+protected:
+    virtual bool loadLayers();
+    std::shared_ptr<TMXTileset> findTilesetForGID(int gid) const;
+
+private:
     // Calculate border edges for a layer (returns AABBs for each border tile)
     std::vector<CF_Aabb> calculateLayerBorderEdges(int layer_index, float world_x, float world_y) const;
 

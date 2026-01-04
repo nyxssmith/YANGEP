@@ -4,6 +4,7 @@
 #include "../UI/ColorUtils.h"
 #include <cstdio>
 
+// LevelV1 implementation
 LevelV1::LevelV1(const std::string &directoryPath)
     : levelDirectory(directoryPath), levelName(""), levelMap(nullptr), navmesh(nullptr), entities(), details(), tileWidth(0), tileHeight(0), initialized(false), player(nullptr)
 {
@@ -59,7 +60,7 @@ LevelV1::LevelV1(const std::string &directoryPath)
     std::string tmxPath = directoryPath + "/" + levelName + ".tmx";
     try
     {
-        levelMap = std::make_unique<tmx>(tmxPath);
+        levelMap = std::make_unique<LevelMap>(tmxPath);
         printf("LevelV1: Loaded TMX map from: %s\n", tmxPath.c_str());
 
         // Cache tile dimensions
@@ -159,6 +160,61 @@ LevelV1::LevelV1(const std::string &directoryPath)
 
     // Build initial spatial grid with all agents
     rebuildSpatialGrid();
+
+    // Add all structures to the rendered objects list
+    // Calculate their worldY positions once since they never move
+    for (size_t i = 0; i < levelMap->getStructureCount(); ++i)
+    {
+        auto structure = levelMap->getStructure(i);
+        if (structure)
+        {
+            ObjectRenderedByWorldPosition structureObj(structure.get());
+
+            // Calculate worldY for this structure (only done once)
+            float minWorldY = 999999.0f;
+            bool foundTile = false;
+
+            for (int y = 0; y < structure->height; y++)
+            {
+                for (int x = 0; x < structure->width; x++)
+                {
+                    int gid = structure->getTileGID(x, y);
+                    if (gid != 0) // Non-empty tile
+                    {
+                        // Convert tile coordinates to world coordinates
+                        float worldY = ((structure->height - 1 - y) * tileHeight);
+                        if (worldY < minWorldY)
+                        {
+                            minWorldY = worldY;
+                        }
+                        foundTile = true;
+                    }
+                }
+            }
+
+            if (foundTile)
+            {
+                structureObj.setWorldY(minWorldY);
+            }
+            else
+            {
+                structureObj.setWorldY(0.0f);
+            }
+
+            renderedObjects.add(structureObj);
+        }
+    }
+
+    // Add all agents to the rendered objects list
+    for (auto &agent : agents)
+    {
+        if (agent)
+        {
+            renderedObjects.add(ObjectRenderedByWorldPosition(agent.get()));
+        }
+    }
+
+    printf("LevelV1: Added %zu objects to rendered objects list\n", renderedObjects.getCount());
 }
 
 AnimatedDataCharacterNavMeshAgent *LevelV1::addAgent(std::unique_ptr<AnimatedDataCharacterNavMeshAgent> agent)
@@ -185,7 +241,10 @@ AnimatedDataCharacterNavMeshAgent *LevelV1::addAgent(std::unique_ptr<AnimatedDat
     v2 agentPos = agents.back()->getPosition();
     spatialGrid.insert(agentIndex, agentPos, 32.0f);
 
-    printf("LevelV1: Added agent (total: %zu)\n", agents.size());
+    // Add to rendered objects list
+    renderedObjects.add(ObjectRenderedByWorldPosition(agents.back().get()));
+
+    printf("LevelV1: Added agent (total: %zu, rendered objects: %zu)\n", agents.size(), renderedObjects.getCount());
 
     return agents.back().get();
 }
@@ -378,12 +437,47 @@ void LevelV1::renderLayers(const CFNativeCamera &camera, const DataFile &config,
     levelMap->renderAllLayers(camera, config, worldX, worldY);
 }
 
-void LevelV1::render(const CFNativeCamera &camera, const DataFile &config, float worldX, float worldY)
+void LevelV1::render(const CFNativeCamera &camera, const DataFile &config, AnimatedDataCharacter *player, float worldX, float worldY)
 {
-    // DEPRECATED: Use renderLayers, renderAgentActions, renderAgents separately for proper layering
+    // Render in proper layer order:
+    // 1. Level tiles that never change
     renderLayers(camera, config, worldX, worldY);
-    renderAgentActions(camera);
-    renderAgents(camera);
+
+    // 2. Action hitboxes (player and agents)
+    renderAgentActions(camera, player);
+
+    // 3. All objects sorted by world Y position (structures, agents, player)
+    renderedObjects.sort();
+
+    renderedObjects.forEach([&](ObjectRenderedByWorldPosition &obj)
+                            {
+        if (obj.getType() == 1) // NavMeshAgent
+        {
+            auto agent = obj.asNavMeshAgent();
+            if (agent && agent->getIsOnScreen())
+            {
+                v2 agentPos = agent->getPosition();
+                agent->render(agentPos);
+            }
+        }
+        else if (obj.getType() == 2) // PlayerCharacter
+        {
+            auto playerChar = obj.asPlayerCharacter();
+            if (playerChar)
+            {
+                v2 playerPos = playerChar->getPosition();
+                playerChar->render(playerPos);
+            }
+        }
+        else if (obj.getType() == 0) // StructureLayer
+        {
+            auto structure = obj.asStructureLayer();
+            if (structure && structure->getTMXLayer())
+            {
+                // Render the structure layer using the level map's renderSingleLayer method
+                levelMap->renderSingleLayer(structure->getTMXLayer(), camera, config, worldX, worldY);
+            }
+        } });
 }
 
 void LevelV1::debugPrint() const
@@ -473,7 +567,20 @@ bool LevelV1::checkAgentsInArea(const std::vector<CF_Aabb> &areas, CF_Aabb areas
 
 void LevelV1::setPlayer(const AnimatedDataCharacter *playerCharacter)
 {
+    // Remove old player from rendered objects list if it exists
+    if (player)
+    {
+        renderedObjects.remove(ObjectRenderedByWorldPosition(const_cast<AnimatedDataCharacter *>(player)));
+    }
+
     player = playerCharacter;
+
+    // Add new player to rendered objects list
+    if (player)
+    {
+        renderedObjects.add(ObjectRenderedByWorldPosition(const_cast<AnimatedDataCharacter *>(player)));
+        printf("LevelV1: Added player to rendered objects list (total: %zu)\n", renderedObjects.getCount());
+    }
 }
 
 std::vector<AnimatedDataCharacterNavMeshAgent *> LevelV1::get_entities_at(int tile_x, int tile_y) const

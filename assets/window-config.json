@@ -25,7 +25,7 @@
     "highlightAgents": false,
     "highlightSpatialGrid": false,
     "highlightPlayerNavmeshCollisionBox": false,
-    "highlightLayers": [],
+    "highlightLayers": ["structure 1"],
     "highlightLayerBorders": [],
     "highlightLayerOuterBorders": [],
     "ShowFPSMetrics": true,
