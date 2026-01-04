@@ -469,8 +469,8 @@ std::shared_ptr<NavMeshPath> NavMesh::generatePath(CF_V2 start, CF_V2 end)
     // Use the polygon centers as the actual start and end positions
     CF_V2 snapped_start = polygons[start_poly].center;
     CF_V2 snapped_end = polygons[end_poly].center;
-
-    // Generate the path using snapped positions
+    // TODO fix this from crashing
+    //  Generate the path using snapped positions
     if (findPath(*path, snapped_start, snapped_end))
     {
         // Assign ID and add to tracked paths
