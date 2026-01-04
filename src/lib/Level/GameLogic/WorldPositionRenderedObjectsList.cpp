@@ -24,6 +24,8 @@ ObjectRenderedByWorldPosition::ObjectRenderedByWorldPosition(AnimatedDataCharact
 
 void ObjectRenderedByWorldPosition::render(const CFNativeCamera &camera, const DataFile &config, AnimatedDataCharacter *player, float worldX, float worldY)
 {
+    // TODO fix FPS drops down to 30fps, log timing this takes and put breakpoint on log time
+
     switch (type)
     {
     case 0: // StructureLayer
