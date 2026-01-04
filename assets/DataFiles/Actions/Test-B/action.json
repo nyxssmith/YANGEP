@@ -1,8 +1,8 @@
 {
-  "name": "Test-A",
+  "name": "Test-B",
   "version": "1.0.0",
   "description": "A test action for demonstration purposes",
-  "warmup": 1000,
+  "warmup": 500,
   "cooldown": 3000,
-  "damage": 5.0
+  "damage": 1.0
 }

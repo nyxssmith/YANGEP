@@ -4,16 +4,17 @@
 #include "LevelV1.h"
 #include "../UI/ColorUtils.h"
 #include <cute.h>
+#include <unordered_set>
 
 // Constructor that takes a folder path and loads action.json from that folder
-Action::Action(const std::string &folderPath) : hasHitbox(false), hitbox(nullptr), hitboxSize(32.0f), hitboxDistance(0.0f), isActive(false), character(nullptr), warmup_timer(0.0f), cooldown_timer(0.0f), in_cooldown(false)
+Action::Action(const std::string &folderPath) : hasHitbox(false), hitbox(nullptr), hitboxSize(32.0f), hitboxDistance(0.0f), isActive(false), character(nullptr), warmup_timer(0.0f), cooldown_timer(0.0f), in_cooldown(false), damage(nullptr), hasDamage(false)
 {
     loadFromFolder(folderPath, hitboxSize, hitboxDistance);
 }
 
 // Constructor with custom hitbox size and distance
 Action::Action(const std::string &folderPath, float hitboxSize, float hitboxDistance)
-    : hasHitbox(false), hitbox(nullptr), hitboxSize(hitboxSize), hitboxDistance(hitboxDistance), isActive(false), character(nullptr), warmup_timer(0.0f), cooldown_timer(0.0f), in_cooldown(false)
+    : hasHitbox(false), hitbox(nullptr), hitboxSize(hitboxSize), hitboxDistance(hitboxDistance), isActive(false), character(nullptr), warmup_timer(0.0f), cooldown_timer(0.0f), in_cooldown(false), damage(nullptr), hasDamage(false)
 {
     loadFromFolder(folderPath, hitboxSize, hitboxDistance);
 }
@@ -25,6 +26,11 @@ Action::~Action()
     {
         delete hitbox;
         hitbox = nullptr;
+    }
+    if (damage)
+    {
+        delete damage;
+        damage = nullptr;
     }
 }
 
@@ -40,12 +46,19 @@ Action::Action(const Action &other)
       character(other.character),
       warmup_timer(other.warmup_timer),
       cooldown_timer(other.cooldown_timer),
-      in_cooldown(other.in_cooldown)
+      in_cooldown(other.in_cooldown),
+      damage(nullptr),
+      hasDamage(other.hasDamage)
 {
     // Deep copy the hitbox if it exists
     if (other.hitbox && hasHitbox)
     {
         hitbox = HitBox::createHitBoxFromJson(hitboxData, hitboxSize, hitboxDistance);
+    }
+    // Deep copy the damage if it exists
+    if (other.damage && hasDamage)
+    {
+        damage = new Damage(*other.damage);
     }
 }
 
@@ -64,6 +77,13 @@ Action &Action::operator=(const Action &other)
             hitbox = nullptr;
         }
 
+        // Clean up existing damage
+        if (damage)
+        {
+            delete damage;
+            damage = nullptr;
+        }
+
         // Copy members
         hitboxData = other.hitboxData;
         hasHitbox = other.hasHitbox;
@@ -74,11 +94,18 @@ Action &Action::operator=(const Action &other)
         warmup_timer = other.warmup_timer;
         cooldown_timer = other.cooldown_timer;
         in_cooldown = other.in_cooldown;
+        hasDamage = other.hasDamage;
 
         // Deep copy the hitbox if it exists
         if (other.hitbox && hasHitbox)
         {
             hitbox = HitBox::createHitBoxFromJson(hitboxData, hitboxSize, hitboxDistance);
+        }
+
+        // Deep copy the damage if it exists
+        if (other.damage && hasDamage)
+        {
+            damage = new Damage(*other.damage);
         }
     }
     return *this;
@@ -108,6 +135,20 @@ bool Action::loadFromFolder(const std::string &folderPath, float hitboxSize, flo
 
     // Load the JSON file using the base class method
     bool actionLoaded = load(actionJsonPath);
+
+    // Load damage if present in action.json
+    if (actionLoaded && contains("damage") && (*this)["damage"].is_number())
+    {
+        float damageValue = (*this)["damage"].get<float>();
+        damage = new Damage(damageValue);
+        hasDamage = true;
+        printf("Action: Loaded damage value: %.2f\n", damageValue);
+    }
+    else
+    {
+        hasDamage = false;
+        damage = nullptr;
+    }
 
     // Try to load hitbox.json if it exists
     std::string hitboxJsonPath = normalizedPath + "hitbox.json";
@@ -230,6 +271,10 @@ void Action::update(float dt)
         if (warmup_timer >= warmupMs / 1000.0f)
         {
             printf("Action: Warmup complete (%.3f ms)\n", warmupMs);
+
+            // Do damage when warmup completes
+            doDamage();
+
             warmup_timer = 0.0f;
             in_cooldown = true;
 
@@ -286,4 +331,62 @@ void Action::setCharacter(AnimatedDataCharacter *character)
 AnimatedDataCharacter *Action::getCharacter() const
 {
     return character;
+}
+
+bool Action::hasDamageData() const
+{
+    return hasDamage;
+}
+
+Damage *Action::getDamage() const
+{
+    return damage;
+}
+
+void Action::doDamage()
+{
+    // Only do damage if we have damage data
+    if (!hasDamage || !damage)
+    {
+        return;
+    }
+
+    // Get all characters in the hitbox
+    std::vector<AnimatedDataCharacter *> charactersInHitboxList = getCharactersInHitbox();
+
+    // Use a set to prevent duplicates
+    std::unordered_set<AnimatedDataCharacter *> uniqueCharacters(
+        charactersInHitboxList.begin(),
+        charactersInHitboxList.end());
+
+    // Call OnHit for each unique character
+    for (AnimatedDataCharacter *hitCharacter : uniqueCharacters)
+    {
+        if (hitCharacter)
+        {
+            hitCharacter->OnHit(character, *damage);
+        }
+    }
+}
+
+std::vector<AnimatedDataCharacter *> Action::getCharactersInHitbox() const
+{
+    std::vector<AnimatedDataCharacter *> charactersInHitbox;
+
+    // Check if we have a character
+    if (!character)
+    {
+        return charactersInHitbox;
+    }
+
+    // Get the level from the character
+    LevelV1 *level = character->getLevel();
+    if (!level)
+    {
+        return charactersInHitbox;
+    }
+
+    // Ask the level for all characters in this action's hitbox
+    // Exclude the character performing the action
+    return level->getCharactersInActionHitbox(this, character);
 }

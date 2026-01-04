@@ -189,6 +189,14 @@ public:
     bool isCharacterInActionHitbox(const AnimatedDataCharacter *character, CF_Aabb characterBox) const;
 
     /**
+     * Get all characters that are inside an action's hitbox
+     * @param action The action whose hitbox to check
+     * @param excludeCharacter Character to exclude from results (usually the one performing the action)
+     * @return Vector of characters inside the action's hitbox
+     */
+    std::vector<AnimatedDataCharacter *> getCharactersInActionHitbox(const Action *action, const AnimatedDataCharacter *excludeCharacter = nullptr) const;
+
+    /**
      * Set the player character reference for hitbox checking
      * @param player Pointer to the player character
      */

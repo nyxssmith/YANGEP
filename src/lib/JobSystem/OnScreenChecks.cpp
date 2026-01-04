@@ -38,7 +38,7 @@ namespace OnScreenChecks
         JobSystem::submitJob(
             []()
             {
-                printf("OnScreenChecks: Worker loop started\n");
+                // printf("OnScreenChecks: Worker loop started\n");
 
                 while (!s_shutdownRequested.load())
                 {
@@ -106,19 +106,19 @@ namespace OnScreenChecks
                     }
                 }
 
-                printf("OnScreenChecks: Worker loop exited\n");
+                // printf("OnScreenChecks: Worker loop exited\n");
             },
             "OnScreenChecksLoop",
             "onscreenchecks");
 
         // Kick the job to start it running
         JobSystem::kick();
-        printf("OnScreenChecks: Worker job submitted and kicked\n");
+        // printf("OnScreenChecks: Worker job submitted and kicked\n");
     }
 
     void requestShutdown()
     {
-        printf("OnScreenChecks: Shutdown requested\n");
+        // printf("OnScreenChecks: Shutdown requested\n");
         s_shutdownRequested = true;
     }
 
@@ -129,7 +129,7 @@ namespace OnScreenChecks
         s_camera = nullptr;
         s_level = nullptr;
         s_shutdownRequested = false;
-        printf("OnScreenChecks: Shutdown complete\n");
+        // printf("OnScreenChecks: Shutdown complete\n");
     }
 
     Coordinator *getCoordinator()

@@ -31,7 +31,7 @@ void WanderNewPositionState::initFromJson()
         if (defaults["tiles_radius"].is_number())
         {
             tiles_radius = defaults["tiles_radius"].get<int>();
-            printf("WanderNewPositionState: Loaded tiles_radius: %d\n", tiles_radius);
+            // printf("WanderNewPositionState: Loaded tiles_radius: %d\n", tiles_radius);
         }
     }
 }
@@ -76,12 +76,12 @@ std::shared_ptr<NavMeshPath> WanderNewPositionState::GetNewPath(NavMesh &navmesh
     // If we found a valid point, generate a path to it using the navmesh
     if (foundValidPoint)
     {
-        printf("WanderNewPositionState: Generated path to (%.2f, %.2f)\n", targetPosition.x, targetPosition.y);
+        // printf("WanderNewPositionState: Generated path to (%.2f, %.2f)\n", targetPosition.x, targetPosition.y);
         return navmesh.generatePath(currentPosition, targetPosition);
     }
 
     // Return an empty/invalid path
-    printf("WanderNewPositionState: Failed to find valid wander position\n");
+    // printf("WanderNewPositionState: Failed to find valid wander position\n");
     return std::make_shared<NavMeshPath>();
 }
 
