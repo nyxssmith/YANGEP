@@ -136,6 +136,7 @@ add_executable(
 	src/lib/Character/StateMachines/States/MoveToPositionState.cpp
 	src/lib/Combat/HitBox.cpp
 	src/lib/Combat/Action.cpp
+	src/lib/Combat/Damage.cpp
 	src/lib/JobSystem/JobSystem.cpp
 	src/lib/JobSystem/OnScreenChecks.cpp
 	src/lib/Effects/RedFlashEffect.cpp
@@ -227,6 +228,7 @@ add_executable(${PROJECT_NAME}_tests
     src/lib/Character/AnimatedDataCharacter.cpp
     src/lib/Combat/HitBox.cpp
     src/lib/Combat/Action.cpp
+    src/lib/Combat/Damage.cpp
     src/lib/Character/AnimatedDataCharacterNavMeshAgent.cpp
     src/lib/Character/AnimatedDataCharacterNavMeshPlayer.cpp
     src/lib/Character/Coordinator/Coordinator.cpp

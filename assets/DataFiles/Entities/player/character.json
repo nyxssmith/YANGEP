@@ -2,7 +2,7 @@
   "name": "player",
   "hitbox_size": 32,
   "hitbox_distance": 0,
-  "innate_actions": ["Test-A"],
+  "innate_actions": ["Test-B"],
   "layers": [
     {
       "filename": "BODY_male.png",

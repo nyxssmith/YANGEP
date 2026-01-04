@@ -5,6 +5,9 @@
 #include "DataFile.h"
 #include <vector>
 
+// Forward declaration
+class AnimatedDataCharacter;
+
 enum class HitboxShape
 {
     SQUARE,

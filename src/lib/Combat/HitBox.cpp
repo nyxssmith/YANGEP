@@ -1,6 +1,7 @@
 #include "HitBox.h"
 #include "SpriteAnimationLoader.h"
 #include "LevelV1.h"
+#include "AnimatedDataCharacter.h"
 #include "../UI/HighlightTile.h"
 #include <cstdio>
 
@@ -301,9 +302,8 @@ v2 HitBox::rotateCoordinate(int x, int y, Direction direction)
         return cf_v2((float)x, (float)y);
 
     case Direction::UP:
-        // Rotate 90 degrees counter-clockwise
-        // Right's y-axis becomes Up's x-axis, Right's x-axis becomes Up's y-axis
-        return cf_v2((float)y, (float)x);
+        // Rotate 90 degrees counter-clockwise, reflected left/right
+        return cf_v2((float)-y, (float)x);
 
     case Direction::LEFT:
         // Rotate 180 degrees
@@ -311,9 +311,8 @@ v2 HitBox::rotateCoordinate(int x, int y, Direction direction)
         return cf_v2((float)-x, (float)-y);
 
     case Direction::DOWN:
-        // Rotate 90 degrees clockwise
-        // Right's y-axis becomes Down's -x-axis, Right's x-axis becomes Down's -y-axis
-        return cf_v2((float)-y, (float)-x);
+        // Rotate 90 degrees clockwise, reflected left/right
+        return cf_v2((float)y, (float)-x);
     }
 
     return cf_v2((float)x, (float)y);

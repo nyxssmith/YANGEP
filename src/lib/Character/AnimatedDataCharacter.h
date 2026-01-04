@@ -7,6 +7,7 @@
 #include "HitBox.h"
 #include "Action.h"
 #include "IVisualEffect.h"
+#include "Damage.h"
 #include <memory>
 #include <vector>
 #include <deque>
@@ -97,8 +98,10 @@ public:
     Action *getActionPointerA() const;
     Action *getActionPointerB() const;
 
+    // Hit handling
+    void OnHit(AnimatedDataCharacter *character, Damage damage);
     // Active ghost-trail (if any), nullptr otherwise
-    IGhostTrailEffect* getActiveGhostTrailEffect() const;
+    IGhostTrailEffect *getActiveGhostTrailEffect() const;
 
 private:
     // The animation loader
@@ -167,7 +170,6 @@ private:
 
     // Allow renderer to access frame rendering helpers
     friend class GhostTrailRenderer;
-
 };
 
 #endif // ANIMATED_DATA_CHARACTER_H

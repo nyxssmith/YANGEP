@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../FileHandling/DataFile.h"
+#include "Damage.h"
 #include <string>
 #include <cute.h>
 
@@ -23,6 +24,10 @@ private:
     float warmup_timer;
     float cooldown_timer;
     bool in_cooldown;
+
+    // Damage
+    Damage *damage;
+    bool hasDamage;
 
 public:
     Action() = default;
@@ -55,4 +60,12 @@ public:
     // Character association
     void setCharacter(AnimatedDataCharacter *character);
     AnimatedDataCharacter *getCharacter() const;
+
+    // Damage
+    bool hasDamageData() const;
+    Damage *getDamage() const;
+    void doDamage();
+
+    // Get characters currently in this action's hitbox
+    std::vector<AnimatedDataCharacter *> getCharactersInHitbox() const;
 };

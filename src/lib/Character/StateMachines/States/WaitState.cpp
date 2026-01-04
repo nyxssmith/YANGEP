@@ -22,7 +22,7 @@ void WaitState::initFromJson()
         if (defaults["ms"].is_number())
         {
             wait_ms = defaults["ms"].get<float>();
-            printf("WaitState: Loaded wait time of %.2f ms\n", wait_ms);
+            // printf("WaitState: Loaded wait time of %.2f ms\n", wait_ms);
         }
     }
 }
@@ -42,7 +42,7 @@ void WaitState::update(float dt)
     // Check if wait is complete
     if (elapsedTimeMs >= wait_ms)
     {
-        printf("WaitState: Wait of %.2f ms complete (elapsed: %.2f ms)\n", wait_ms, elapsedTimeMs);
+        // printf("WaitState: Wait of %.2f ms complete (elapsed: %.2f ms)\n", wait_ms, elapsedTimeMs);
         setIsRunning(false);
     }
 }
@@ -66,5 +66,5 @@ void WaitState::reset()
 {
     // Reset the elapsed time counter
     elapsedTimeMs = 0.0f;
-    printf("WaitState: Reset - waiting for %.2f ms\n", wait_ms);
+    // printf("WaitState: Reset - waiting for %.2f ms\n", wait_ms);
 }
