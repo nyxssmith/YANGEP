@@ -642,12 +642,8 @@ int main(int argc, char *argv[])
 		// Trigger dissolve effect on the player with 'X'
 		if (cf_key_just_pressed(CF_KEY_X))
 		{
-			printf("Starting dissolve effect\n");
 			// flashes unused, duration ~1.0s, edgeWidth ~0.06
-			playerCharacter.triggerEffect("dissolve", 1, 1.0f, 0.06f, [&, startWorldX, startWorldY]() {
-				// playerCharacter.queueTeleport(cf_v2(startWorldX, startWorldY));
-				printf("Dissolve effect completed, teleporting to (%.1f, %.1f)\n", startWorldX, startWorldY);
-			});
+			playerCharacter.triggerEffect("dissolve", 1, 1.0f, 0.06f);
 		}
 		// Toggle trail ghost effect on the player with 'H'
 		if (cf_key_just_pressed(CF_KEY_H))

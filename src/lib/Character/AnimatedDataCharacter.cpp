@@ -10,7 +10,6 @@
 #include "EffectFactory.h"
 #include "../Effects/IGhostTrailEffect.h"
 #include "../Effects/GhostTrailRenderer.h"
-#include "../Effects/ShaderRegistry.h"
 #include <cute_draw.h>
 
 using namespace Cute;
@@ -351,13 +350,6 @@ void AnimatedDataCharacter::update(float dt, v2 moveVector)
     position.x += moveVector.x * dt;
     position.y += moveVector.y * dt;
 
-    // Apply any queued teleport after movement to ensure final position sticks.
-    if (pendingTeleport)
-    {
-        position = teleportTarget;
-        pendingTeleport = false;
-    }
-
     // Update animation
     updateAnimation(dt);
 }
@@ -665,11 +657,6 @@ void AnimatedDataCharacter::setPosition(v2 newPosition)
     position = newPosition;
 }
 
-void AnimatedDataCharacter::queueTeleport(v2 target)
-{
-    teleportTarget = target;
-    pendingTeleport = true;
-}
 Direction AnimatedDataCharacter::getCurrentDirection() const
 {
     return currentDirection;
@@ -947,7 +934,9 @@ Action *AnimatedDataCharacter::getActionPointerB() const
 void AnimatedDataCharacter::OnHit(AnimatedDataCharacter *character, Damage damage)
 {
     // Trigger red flash effect when hit
-    triggerEffect("red", 3, 1.0f, 0.80f);
+    triggerEffect("red", 3, 1.0f, 0.80f, [this]() {
+        this->setStageOfLife(StageOfLife::Dead);
+    });
 
     // Print debug message
     printf("AnimatedDataCharacter: Hit by character with damage value: %.2f\n", damage.value);

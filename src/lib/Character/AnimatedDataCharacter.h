@@ -65,8 +65,6 @@ public:
 
     // Set current position
     void setPosition(v2 newPosition);
-    // Teleport at a safe point in the frame (applied at end of update)
-    void queueTeleport(v2 target);
 
     // Get current direction
     Direction getCurrentDirection() const;
@@ -145,8 +143,6 @@ private:
 
     // Position for rendering
     v2 position;
-    bool pendingTeleport = false;
-    v2 teleportTarget = v2(0, 0);
 
     // Movement tracking for animation switching
     bool wasMoving;
