@@ -65,6 +65,7 @@ private:
 
     // Check if a future position would be on walkable area
     bool wouldBeOnWalkableArea(v2 futurePosition) const;
+
 };
 
 #endif // ANIMATED_DATA_CHARACTER_NAVMESH_PLAYER_H

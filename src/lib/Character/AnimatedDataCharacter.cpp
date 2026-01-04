@@ -7,6 +7,7 @@
 #include "LevelV1.h"
 #include "HitBox.h"
 #include "../UI/ColorUtils.h"
+#include "EffectFactory.h"
 
 using namespace Cute;
 
@@ -259,6 +260,24 @@ void AnimatedDataCharacter::update(float dt, v2 moveVector)
     if (!initialized)
         return;
 
+    // Update visual effects
+    if (!effectQueue.empty())
+    {
+        auto &front = effectQueue.front();
+        if (front)
+        {
+            front->update(dt);
+            if (!front->isActive())
+            {
+                effectQueue.pop_front();
+            }
+        }
+        else
+        {
+            effectQueue.pop_front();
+        }
+    }
+
     // Don't allow movement if doing an action in warmup phase
     // Allow movement during cooldown
     if (isDoingAction && activeAction && !activeAction->getInCooldown())
@@ -435,7 +454,9 @@ void AnimatedDataCharacter::render()
     if (!initialized)
         return;
 
+    beginFrontEffect();
     renderCurrentFrame();
+    endFrontEffect();
     // Note: Action hitboxes are now rendered by LevelV1::renderAgentActions()
     // Only render character's default hitbox here
     if (!isDoingAction)
@@ -448,7 +469,9 @@ void AnimatedDataCharacter::render(v2 renderPosition)
     if (!initialized)
         return;
 
+    beginFrontEffect();
     renderCurrentFrameAt(renderPosition);
+    endFrontEffect();
     // Note: Action hitboxes are now rendered by LevelV1::renderAgentActions()
     // Only render character's default hitbox here
     if (!isDoingAction)
@@ -492,6 +515,7 @@ void AnimatedDataCharacter::renderCurrentFrame()
         // Fallback to legacy single sprite
         cf_draw_sprite(&currentAnimFrame->sprite);
     }
+
 }
 
 // Render the current animation frame at a specific position
@@ -659,6 +683,31 @@ Action *AnimatedDataCharacter::getActiveAction() const
     return activeAction;
 }
 
+void AnimatedDataCharacter::triggerEffect(const std::string &name, int flashes, float totalDuration, float maxIntensity)
+{
+    auto effect = EffectFactory::makeEffect(name);
+    if (effect)
+    {
+        effect->trigger(flashes, totalDuration, maxIntensity);
+        effectQueue.push_back(std::move(effect));
+    }
+}
+
+void AnimatedDataCharacter::beginFrontEffect()
+{
+    if (!effectQueue.empty() && effectQueue.front())
+    {
+        effectQueue.front()->beginDraw();
+    }
+}
+
+void AnimatedDataCharacter::endFrontEffect()
+{
+    if (!effectQueue.empty() && effectQueue.front())
+    {
+        effectQueue.front()->endDraw();
+    }
+}
 void AnimatedDataCharacter::renderActionHitbox()
 {
     // Only render if doing an action and have an active action

@@ -76,6 +76,11 @@ HitBox *HitBox::createHitBox(HitboxShape shape, float hitboxSize, float hitboxDi
             hitBox->boundingBoxByDirection[direction] = HitBox::buildBoundingBox(hitBox->boxesByDirection[direction], direction);
         }
         break;
+    case HitboxShape::CUSTOM:
+        // CUSTOM shapes are built via createHitBoxFromJson. Leave empty here by design.
+        break;
+    default:
+        break;
     }
     return hitBox;
 }

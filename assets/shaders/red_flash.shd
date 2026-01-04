@@ -1,0 +1,12 @@
+layout (set = 3, binding = 1) uniform shd_uniforms {
+	float intensity;
+};
+
+vec4 shader(vec4 color, vec2 pos, vec2 screen_uv, vec4 params)
+{
+	float t = clamp(intensity, 0.0, 1.0);
+	vec3 red = vec3(1.0, 0.0, 0.0);
+	vec3 mixed = mix(color.rgb, red, t);
+	return vec4(mixed, color.a);
+}
+
