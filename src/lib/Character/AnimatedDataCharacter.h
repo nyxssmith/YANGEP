@@ -15,6 +15,14 @@
 
 using namespace Cute;
 
+// Stage of life enum
+enum class StageOfLife
+{
+    Alive,
+    Dying,
+    Dead
+};
+
 // Forward declaration
 class LevelV1;
 class HitBox;
@@ -103,6 +111,10 @@ public:
     // Active ghost-trail (if any), nullptr otherwise
     IGhostTrailEffect *getActiveGhostTrailEffect() const;
 
+    // Stage of life management
+    void setStageOfLife(StageOfLife stage);
+    StageOfLife getStageOfLife() const;
+
 private:
     // The animation loader
     SpriteAnimationLoader loader;
@@ -139,6 +151,9 @@ private:
     // Movement tracking for animation switching
     bool wasMoving;
     bool isDoingAction;
+
+    // Stage of life
+    StageOfLife stageOfLife;
 
     // Hitbox state
     bool hitboxDebugActive;
