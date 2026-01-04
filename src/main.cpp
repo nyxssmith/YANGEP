@@ -65,8 +65,7 @@ int main(int argc, char *argv[])
 	// Set shader directory for runtime-compiled draw shaders
 	cf_shader_directory("/assets/shaders");
 	// Register and compile shaders at boot
-	ShaderRegistry::registerAndLoad("red", "red_flash.shd");
-	ShaderRegistry::registerAndLoad("green", "green_flash.shd");
+	ShaderRegistry::registerAndLoadAll();
 
 	// Load window configuration again using VFS for viewport and debug windows
 	DataFile windowConfig("/assets/window-config.json");

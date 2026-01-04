@@ -27,4 +27,10 @@ void ShaderRegistry::clear()
 	s_shaders.clear();
 }
 
+void ShaderRegistry::registerAndLoadAll()
+{
+	registerAndLoad("red", "red_flash.shd");
+	registerAndLoad("green", "green_flash.shd");
+}
+
 

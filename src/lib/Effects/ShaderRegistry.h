@@ -13,6 +13,7 @@ public:
 	static void registerAndLoad(const std::string& name, const char* filename);
 	static CF_Shader get(const std::string& name);
 	static void clear();
+	static void registerAndLoadAll();
 
 private:
 	static std::unordered_map<std::string, CF_Shader> s_shaders;

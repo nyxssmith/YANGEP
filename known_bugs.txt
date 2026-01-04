@@ -8,3 +8,4 @@ todolist inside of combat dir needs addressing
 state machine debug window doesnt know the names of any states
 Navmesh generate path called from many workers at same time not async safe        paths.push_back(path);
     malloc(): unaligned tcache chunk detected
+Hitbox does not rotate, try making an L shape, for left/right facing boxes
