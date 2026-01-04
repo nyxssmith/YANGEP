@@ -2,11 +2,11 @@
 #define RED_FLASH_EFFECT_H
 
 #include <cute.h>
-#include "IVisualEffect.h"
+#include "VisualEffectBase.h"
 
 using namespace Cute;
 
-class RedFlashEffect : public IVisualEffect
+class RedFlashEffect : public VisualEffectBase
 {
 public:
 	RedFlashEffect(CF_Shader shader);

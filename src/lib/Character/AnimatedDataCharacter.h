@@ -11,8 +11,17 @@
 #include <memory>
 #include <vector>
 #include <deque>
+#include <functional>
 
 using namespace Cute;
+
+// Stage of life enum
+enum class StageOfLife
+{
+    Alive,
+    Dying,
+    Dead
+};
 
 // Forward declaration
 class LevelV1;
@@ -42,6 +51,8 @@ public:
 
     // Visual FX: trigger an effect by name (replaces current effect)
     void triggerEffect(const std::string &name, int flashes = 3, float totalDuration = 2.0f, float maxIntensity = 0.85f);
+    // Visual FX: trigger with completion callback
+    void triggerEffect(const std::string &name, int flashes, float totalDuration, float maxIntensity, std::function<void()> onComplete);
 
     // deprecated
     void handleInput();
@@ -98,6 +109,10 @@ public:
     // Active ghost-trail (if any), nullptr otherwise
     IGhostTrailEffect *getActiveGhostTrailEffect() const;
 
+    // Stage of life management
+    void setStageOfLife(StageOfLife stage);
+    StageOfLife getStageOfLife() const;
+
 private:
     // The animation loader
     SpriteAnimationLoader loader;
@@ -132,6 +147,9 @@ private:
     // Movement tracking for animation switching
     bool wasMoving;
     bool isDoingAction;
+
+    // Stage of life
+    StageOfLife stageOfLife;
 
     // Hitbox state
     bool hitboxDebugActive;

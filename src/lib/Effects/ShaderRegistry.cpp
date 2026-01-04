@@ -32,6 +32,7 @@ void ShaderRegistry::registerAndLoadAll()
 	registerAndLoad("red", "red_flash.shd");
 	registerAndLoad("green", "green_flash.shd");
 	registerAndLoad("trail", "trail_smear.shd");
+	registerAndLoad("dissolve", "dissolve.shd");
 }
 
 

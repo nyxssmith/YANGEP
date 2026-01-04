@@ -2,11 +2,11 @@
 #define GREEN_FLASH_EFFECT_H
 
 #include <cute.h>
-#include "IVisualEffect.h"
+#include "VisualEffectBase.h"
 
 using namespace Cute;
 
-class GreenFlashEffect : public IVisualEffect
+class GreenFlashEffect : public VisualEffectBase
 {
 public:
 	GreenFlashEffect(CF_Shader shader);

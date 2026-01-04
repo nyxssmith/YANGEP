@@ -2,6 +2,7 @@
 #include "RedFlashEffect.h"
 #include "GreenFlashEffect.h"
 #include "TrailGhostEffect.h"
+#include "DissolveEffect.h"
 #include "ShaderRegistry.h"
 
 std::unique_ptr<IVisualEffect> EffectFactory::makeEffect(const std::string& name)
@@ -17,6 +18,10 @@ std::unique_ptr<IVisualEffect> EffectFactory::makeEffect(const std::string& name
 	if (name == "trail")
 	{
 		return std::unique_ptr<IVisualEffect>(new TrailGhostEffect(ShaderRegistry::get("trail")));
+	}
+	if (name == "dissolve")
+	{
+		return std::unique_ptr<IVisualEffect>(new DissolveEffect(ShaderRegistry::get("dissolve")));
 	}
 	return nullptr;
 }

@@ -10,7 +10,6 @@
 #include "EffectFactory.h"
 #include "../Effects/IGhostTrailEffect.h"
 #include "../Effects/GhostTrailRenderer.h"
-#include "../Effects/ShaderRegistry.h"
 #include <cute_draw.h>
 
 using namespace Cute;
@@ -55,7 +54,7 @@ AnimatedDataCharacter::AnimatedDataCharacter()
     : initialized(false), demoTime(0.0f), directionChangeTime(0.0f), animationChangeTime(0.0f),
       currentAnimation("idle"), currentDirection(Direction::DOWN), currentFrame(0), frameTimer(0.0f),
       position(v2(0, 0)), wasMoving(false), isDoingAction(false), hitboxDebugActive(false), hitboxSize(32.0f), hitboxDistance(0.0f),
-      hitboxShape(HitboxShape::SQUARE), level(nullptr), actionPointerA(0), actionPointerB(0), activeAction(nullptr)
+      hitboxShape(HitboxShape::SQUARE), level(nullptr), actionPointerA(0), actionPointerB(0), activeAction(nullptr), stageOfLife(StageOfLife::Alive)
 {
     // Initialize input state
     for (int i = 0; i < 4; i++)
@@ -272,7 +271,7 @@ void AnimatedDataCharacter::update(float dt, v2 moveVector)
         {
             front->update(dt);
             // If the effect supports ghost trails, feed it the current position.
-            if (auto ghost = dynamic_cast<IGhostTrailEffect*>(front.get()))
+            if (auto ghost = dynamic_cast<IGhostTrailEffect *>(front.get()))
             {
                 ghost->updateSubjectPosition(position);
             }
@@ -286,6 +285,9 @@ void AnimatedDataCharacter::update(float dt, v2 moveVector)
             effectQueue.pop_front();
         }
     }
+    // Don't update if Dying or Dead
+    if (stageOfLife == StageOfLife::Dying || stageOfLife == StageOfLife::Dead)
+        return;
 
     // Don't allow movement if doing an action in warmup phase
     // Allow movement during cooldown
@@ -463,6 +465,10 @@ void AnimatedDataCharacter::render()
     if (!initialized)
         return;
 
+    // Don't render if Dead
+    if (stageOfLife == StageOfLife::Dead)
+        return;
+
     // Draw ghost trail instances behind the character if active.
     GhostTrailRenderer::renderGhostsForCharacter(*this);
 
@@ -480,6 +486,10 @@ void AnimatedDataCharacter::render()
 void AnimatedDataCharacter::render(v2 renderPosition)
 {
     if (!initialized)
+        return;
+
+    // Don't render if Dead
+    if (stageOfLife == StageOfLife::Dead)
         return;
 
     // Draw ghost trail instances at their recorded world positions
@@ -703,15 +713,14 @@ Action *AnimatedDataCharacter::getActiveAction() const
     return activeAction;
 }
 
-IGhostTrailEffect* AnimatedDataCharacter::getActiveGhostTrailEffect() const
+IGhostTrailEffect *AnimatedDataCharacter::getActiveGhostTrailEffect() const
 {
     if (!effectQueue.empty() && effectQueue.front())
     {
-        return dynamic_cast<IGhostTrailEffect*>(effectQueue.front().get());
+        return dynamic_cast<IGhostTrailEffect *>(effectQueue.front().get());
     }
     return nullptr;
 }
-
 
 void AnimatedDataCharacter::triggerEffect(const std::string &name, int flashes, float totalDuration, float maxIntensity)
 {
@@ -721,6 +730,17 @@ void AnimatedDataCharacter::triggerEffect(const std::string &name, int flashes, 
         effect->trigger(flashes, totalDuration, maxIntensity);
         effectQueue.push_back(std::move(effect));
     }
+}
+
+void AnimatedDataCharacter::triggerEffect(const std::string &name, int flashes, float totalDuration, float maxIntensity, std::function<void()> onComplete)
+{
+	auto effect = EffectFactory::makeEffect(name);
+	if (effect)
+	{
+		effect->setOnComplete(std::move(onComplete));
+		effect->trigger(flashes, totalDuration, maxIntensity);
+		effectQueue.push_back(std::move(effect));
+	}
 }
 
 void AnimatedDataCharacter::beginFrontEffect()
@@ -914,9 +934,27 @@ Action *AnimatedDataCharacter::getActionPointerB() const
 void AnimatedDataCharacter::OnHit(AnimatedDataCharacter *character, Damage damage)
 {
     // Trigger red flash effect when hit
-    triggerEffect("red", 3, 1.0f, 0.80f);
+    triggerEffect("red", 3, 1.0f, 0.80f, [this]() {
+        this->setStageOfLife(StageOfLife::Dead);
+    });
 
     // Print debug message
     printf("AnimatedDataCharacter: Hit by character with damage value: %.2f\n", damage.value);
     // TODO call damage.DoDamage(this);
+    // Implement health system, reactions, etc.
+
+    // For demo purposes, set stage of life to Dying
+    setStageOfLife(StageOfLife::Dying);
+}
+
+// Set stage of life
+void AnimatedDataCharacter::setStageOfLife(StageOfLife stage)
+{
+    stageOfLife = stage;
+}
+
+// Get stage of life
+StageOfLife AnimatedDataCharacter::getStageOfLife() const
+{
+    return stageOfLife;
 }

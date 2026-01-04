@@ -377,11 +377,23 @@ void LevelV1::updateAgents(float dt)
 
     // TODO this!!!!!!
     // all of this is assuming agents are on screen, todo cull based on camera and do different for offscreen agents
+
+    // Track indices of dead agents to remove
+    std::vector<size_t> agentsToRemove;
+
     // Update agents with move vectors (using results from background jobs)
-    for (auto &agent : agents)
+    for (size_t i = 0; i < agents.size(); ++i)
     {
+        auto &agent = agents[i];
         if (agent)
         {
+            // Check if agent is dead and mark for removal
+            if (agent->getStageOfLife() == StageOfLife::Dead)
+            {
+                agentsToRemove.push_back(i);
+                continue;
+            }
+
             // Always use the last computed background move vector
             // This allows agents to keep moving while their next job is being processed
             v2 moveVector = agent->getBackgroundMoveVector();
@@ -393,12 +405,40 @@ void LevelV1::updateAgents(float dt)
     // Update spatial grid with new positions
     updateSpatialGrid();
 
+    // Remove dead agents before starting background jobs
+    if (agentsToRemove.size() > 0)
+    {
+        // Remove in reverse order to maintain correct indices
+        for (auto it = agentsToRemove.rbegin(); it != agentsToRemove.rend(); ++it)
+        {
+            size_t index = *it;
+            if (index < agents.size())
+            {
+                // Remove from rendered objects list
+                renderedObjects.remove(ObjectRenderedByWorldPosition(agents[index].get()));
+
+                // Remove from agents list
+                agents.erase(agents.begin() + index);
+                printf("LevelV1: Removed dead agent at index %zu\n", index);
+            }
+        }
+
+        // Rebuild spatial grid after removal
+        rebuildSpatialGrid();
+    }
+
     // trigger background updates for all agents
     // these will finish on their own and update the agent as needed
     for (auto &agent : agents)
     {
         if (agent)
         {
+            // Don't start background job for dying agents
+            if (agent->getStageOfLife() == StageOfLife::Dying)
+            {
+                continue;
+            }
+
             // Try to start a background job for this agent
             agent->backgroundUpdate(dt, true); // TODO change to false if offscreen
         }

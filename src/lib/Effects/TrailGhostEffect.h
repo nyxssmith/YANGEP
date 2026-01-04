@@ -1,11 +1,11 @@
 #ifndef TRAIL_GHOST_EFFECT_H
 #define TRAIL_GHOST_EFFECT_H
 
-#include "IVisualEffect.h"
+#include "VisualEffectBase.h"
 #include "IGhostTrailEffect.h"
 #include <deque>
 
-class TrailGhostEffect : public IVisualEffect, public IGhostTrailEffect
+class TrailGhostEffect : public VisualEffectBase, public IGhostTrailEffect
 {
 public:
 	explicit TrailGhostEffect(CF_Shader ghostShader);

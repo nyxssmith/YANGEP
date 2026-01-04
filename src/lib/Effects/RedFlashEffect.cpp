@@ -27,7 +27,7 @@ void RedFlashEffect::update(float dt)
 	m_elapsed += dt;
 	if (m_elapsed >= m_totalDuration) {
 		m_active = false;
-		m_elapsed = 0.0f;
+		invokeOnCompleteOnce();
 	}
 }
 
