@@ -20,7 +20,8 @@ struct StructureLayer;
 class ObjectRenderedByWorldPosition
 {
 private:
-    int type; // 0 = StructureLayer, 1 = NavMeshAgent, 2 = PlayerCharacter
+    int type;     // 0 = StructureLayer, 1 = NavMeshAgent, 2 = PlayerCharacter
+    float worldY; // World Y position for depth sorting
 
     // Storage for the different types (only one will be valid based on type)
     StructureLayer *structureLayer;
@@ -63,6 +64,16 @@ public:
      * Get as PlayerCharacter (only valid if type == 2)
      */
     AnimatedDataCharacter *asPlayerCharacter() const { return playerCharacter; }
+
+    /**
+     * Get the world Y position for depth sorting
+     */
+    float getWorldY() const { return worldY; }
+
+    /**
+     * Set the world Y position for depth sorting
+     */
+    void setWorldY(float y) { worldY = y; }
 
     /**
      * Render the object using the appropriate render method based on type
@@ -138,6 +149,12 @@ public:
      * Clear all objects from the list
      */
     void clear();
+
+    /**
+     * Print debug information about all objects in the list
+     * Shows world coordinates for all objects and tiles
+     */
+    void debugPrint() const;
 
     /**
      * Iterate through all objects in the list and call a function on each

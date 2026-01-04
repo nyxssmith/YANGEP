@@ -8,17 +8,17 @@
 
 // ObjectRenderedByWorldPosition implementation
 ObjectRenderedByWorldPosition::ObjectRenderedByWorldPosition(StructureLayer *layer)
-    : type(0), structureLayer(layer), navMeshAgent(nullptr), playerCharacter(nullptr)
+    : type(0), worldY(0.0f), structureLayer(layer), navMeshAgent(nullptr), playerCharacter(nullptr)
 {
 }
 
 ObjectRenderedByWorldPosition::ObjectRenderedByWorldPosition(AnimatedDataCharacterNavMeshAgent *agent)
-    : type(1), structureLayer(nullptr), navMeshAgent(agent), playerCharacter(nullptr)
+    : type(1), worldY(0.0f), structureLayer(nullptr), navMeshAgent(agent), playerCharacter(nullptr)
 {
 }
 
 ObjectRenderedByWorldPosition::ObjectRenderedByWorldPosition(AnimatedDataCharacter *player)
-    : type(2), structureLayer(nullptr), navMeshAgent(nullptr), playerCharacter(player)
+    : type(2), worldY(0.0f), structureLayer(nullptr), navMeshAgent(nullptr), playerCharacter(player)
 {
 }
 
@@ -150,8 +150,251 @@ bool WorldPositionRenderedObjectsList::remove(const ObjectRenderedByWorldPositio
 
 void WorldPositionRenderedObjectsList::sort()
 {
-    // TODO: Implement sorting by world Y position
-    // For now, this is a placeholder
+    // Calculate worldY for each object
+    Node *current = head;
+    int tileWidth = 32;  // TODO: Get actual tile width from somewhere
+    int tileHeight = 32; // TODO: Get actual tile height from somewhere
+
+    while (current)
+    {
+        ObjectRenderedByWorldPosition &obj = current->object;
+
+        switch (obj.getType())
+        {
+        case 0: // StructureLayer
+        {
+            StructureLayer *structure = obj.asStructureLayer();
+            if (structure)
+            {
+                // Find minimum world Y position across all tiles
+                float minWorldY = 999999.0f;
+                bool foundTile = false;
+
+                for (int y = 0; y < structure->height; y++)
+                {
+                    for (int x = 0; x < structure->width; x++)
+                    {
+                        int gid = structure->getTileGID(x, y);
+                        if (gid != 0) // Non-empty tile
+                        {
+                            // Convert tile coordinates to world coordinates
+                            float worldY = ((structure->height - 1 - y) * tileHeight);
+                            if (worldY < minWorldY)
+                            {
+                                minWorldY = worldY;
+                            }
+                            foundTile = true;
+                        }
+                    }
+                }
+
+                if (foundTile)
+                {
+                    // WorldY = (min of all tile worldY positions) - (tile_height/2)
+                    obj.setWorldY(minWorldY);
+                }
+                else
+                {
+                    obj.setWorldY(0.0f);
+                }
+            }
+            break;
+        }
+
+        case 1: // NavMeshAgent
+        {
+            AnimatedDataCharacterNavMeshAgent *agent = obj.asNavMeshAgent();
+            if (agent)
+            {
+                v2 pos = agent->getPosition();
+                // WorldY = agent's worldY - (tile_height/2)
+                obj.setWorldY(pos.y - (tileHeight / 2.0f));
+            }
+            break;
+        }
+
+        case 2: // PlayerCharacter
+        {
+            AnimatedDataCharacter *player = obj.asPlayerCharacter();
+            if (player)
+            {
+                v2 pos = player->getPosition();
+                // WorldY = player's worldY - (tile_height/2)
+                obj.setWorldY(pos.y - (tileHeight / 2.0f));
+            }
+            break;
+        }
+        }
+
+        current = current->next;
+    }
+
+    // Now perform actual sorting using insertion sort
+    // (works well for linked lists and nearly-sorted data)
+    if (!head || !head->next)
+    {
+        return; // Already sorted (0 or 1 element)
+    }
+
+    Node *sorted = nullptr;
+    current = head;
+
+    while (current)
+    {
+        Node *next = current->next;
+
+        // Insert current node into sorted list
+        if (!sorted || sorted->object.getWorldY() <= current->object.getWorldY())
+        {
+            // Insert at beginning
+            current->next = sorted;
+            current->prev = nullptr;
+            if (sorted)
+            {
+                sorted->prev = current;
+            }
+            sorted = current;
+        }
+        else
+        {
+            // Find insertion point
+            Node *search = sorted;
+            while (search->next && search->next->object.getWorldY() > current->object.getWorldY())
+            {
+                search = search->next;
+            }
+
+            // Insert after search
+            current->next = search->next;
+            current->prev = search;
+            if (search->next)
+            {
+                search->next->prev = current;
+            }
+            search->next = current;
+        }
+
+        current = next;
+    }
+
+    // Update head and tail
+    head = sorted;
+    tail = head;
+    while (tail && tail->next)
+    {
+        tail = tail->next;
+    }
+}
+
+void WorldPositionRenderedObjectsList::debugPrint() const
+{
+    printf("\n╔══════════════════════════════════════════════════════════════════════╗\n");
+    printf("║        World Position Rendered Objects List - Debug Output          ║\n");
+    printf("╠══════════════════════════════════════════════════════════════════════╣\n");
+    printf("║ Total Objects: %-53zu ║\n", count);
+    printf("╚══════════════════════════════════════════════════════════════════════╝\n\n");
+
+    int objectNum = 1;
+    Node *current = head;
+
+    while (current)
+    {
+        const ObjectRenderedByWorldPosition &obj = current->object;
+
+        printf("┌─ Object #%d ", objectNum++);
+        for (int i = 0; i < 60; i++)
+            printf("─");
+        printf("\n");
+
+        switch (obj.getType())
+        {
+        case 0: // StructureLayer
+        {
+            StructureLayer *structure = obj.asStructureLayer();
+            if (structure)
+            {
+                printf("│ Type: StructureLayer\n");
+                printf("│ Name: %s\n", structure->name.c_str());
+                printf("│ Dimensions: %d x %d tiles\n", structure->width, structure->height);
+                printf("│ Lowest World Y: %d\n", structure->lowestWorldYCoordinate);
+                printf("│\n");
+                printf("│ Tile Coordinates (World Space):\n");
+
+                int tileCount = 0;
+                int tileWidth = 32;  // TODO: Get actual tile width from somewhere
+                int tileHeight = 32; // TODO: Get actual tile height from somewhere
+
+                for (int y = 0; y < structure->height; y++)
+                {
+                    for (int x = 0; x < structure->width; x++)
+                    {
+                        int gid = structure->getTileGID(x, y);
+                        if (gid != 0) // Non-empty tile
+                        {
+                            // Convert tile coordinates to world coordinates
+                            float worldX = x * tileWidth;
+                            float worldY = ((structure->height - 1 - y) * tileHeight);
+
+                            if (tileCount > 0 && tileCount % 3 == 0)
+                                printf("\n");
+
+                            printf("│   [%3d,%3d] → (%.1f, %.1f)  ", x, y, worldX, worldY);
+                            tileCount++;
+                        }
+                    }
+                }
+
+                if (tileCount > 0)
+                    printf("\n");
+
+                printf("│ Total Tiles: %d\n", tileCount);
+            }
+            break;
+        }
+
+        case 1: // NavMeshAgent
+        {
+            AnimatedDataCharacterNavMeshAgent *agent = obj.asNavMeshAgent();
+            if (agent)
+            {
+                v2 pos = agent->getPosition();
+                printf("│ Type: NavMeshAgent\n");
+                printf("│ Position: (%.2f, %.2f)\n", pos.x, pos.y);
+                printf("│ On Screen: %s\n", agent->getIsOnScreen() ? "Yes" : "No");
+                printf("│ Current Polygon: %d\n", agent->getCurrentPolygon());
+            }
+            break;
+        }
+
+        case 2: // PlayerCharacter
+        {
+            AnimatedDataCharacter *player = obj.asPlayerCharacter();
+            if (player)
+            {
+                v2 pos = player->getPosition();
+                printf("│ Type: PlayerCharacter\n");
+                printf("│ Position: (%.2f, %.2f)\n", pos.x, pos.y);
+                printf("│ Current Direction: %d\n", player->getCurrentDirection());
+            }
+            break;
+        }
+
+        default:
+            printf("│ Type: Unknown (%d)\n", obj.getType());
+            break;
+        }
+
+        printf("└");
+        for (int i = 0; i < 70; i++)
+            printf("─");
+        printf("\n\n");
+
+        current = current->next;
+    }
+
+    printf("═════════════════════════════════════════════════════════════════════════\n");
+    printf("  End of World Position Rendered Objects List\n");
+    printf("═════════════════════════════════════════════════════════════════════════\n\n");
 }
 
 void WorldPositionRenderedObjectsList::clear()

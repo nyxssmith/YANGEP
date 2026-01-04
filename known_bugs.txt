@@ -1,5 +1,4 @@
 camera zoom and viewport desyncassets/Levels/test_one
-change render order based on height in world, not agents always on top
 nav paths are not cleaned up
 state library not singleton
 png loader not singleton
@@ -8,3 +7,4 @@ todolist inside of combat dir needs addressing
 state machine debug window doesnt know the names of any states
 Navmesh generate path called from many workers at same time not async safe        paths.push_back(path);
     malloc(): unaligned tcache chunk detected
+render order based on hieght in world is costly and for structures not quite perfect
