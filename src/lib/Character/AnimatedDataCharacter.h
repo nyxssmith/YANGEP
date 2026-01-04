@@ -9,6 +9,7 @@
 #include "IVisualEffect.h"
 #include <memory>
 #include <vector>
+#include <deque>
 
 using namespace Cute;
 
