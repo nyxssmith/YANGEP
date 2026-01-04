@@ -6,6 +6,8 @@
 #include "DataFile.h"
 #include "HitBox.h"
 #include "Action.h"
+#include "IVisualEffect.h"
+#include <memory>
 #include <vector>
 
 using namespace Cute;
@@ -33,6 +35,9 @@ public:
 
     // Render the demo at a specific position
     void render(v2 renderPosition);
+
+    // Visual FX: trigger an effect by name (replaces current effect)
+    void triggerEffect(const std::string &name, int flashes = 3, float totalDuration = 2.0f, float maxIntensity = 0.85f);
 
     // deprecated
     void handleInput();
@@ -141,6 +146,11 @@ private:
     void renderCurrentFrameAt(v2 renderPosition);
     void renderDebugInfo();
     void renderHitbox();
+
+    // Visual effects
+    std::deque<std::unique_ptr<IVisualEffect>> effectQueue;
+    void beginFrontEffect();
+    void endFrontEffect();
 };
 
 #endif // ANIMATED_DATA_CHARACTER_H

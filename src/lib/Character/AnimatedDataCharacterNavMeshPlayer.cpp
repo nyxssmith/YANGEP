@@ -168,3 +168,4 @@ void AnimatedDataCharacterNavMeshPlayer::update(float dt, v2 moveVector)
         updateCurrentPolygon();
     }
 }
+

@@ -136,6 +136,10 @@ add_executable(
 	src/lib/Combat/Action.cpp
 	src/lib/JobSystem/JobSystem.cpp
 	src/lib/JobSystem/OnScreenChecks.cpp
+	src/lib/Effects/RedFlashEffect.cpp
+	src/lib/Effects/GreenFlashEffect.cpp
+	src/lib/Effects/EffectFactory.cpp
+	src/lib/Effects/ShaderRegistry.cpp
 	src/lib/UI/HighlightTile.cpp
 	src/lib/UI/ColorUtils.cpp
 )
@@ -152,6 +156,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Combat>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Debug>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/FileHandling>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Effects>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/JobSystem>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Level/FileHandling>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Level/GameLogic>
@@ -227,6 +232,10 @@ add_executable(${PROJECT_NAME}_tests
     src/lib/Character/StateMachines/States/WanderNewPositionState.cpp
     src/lib/Character/StateMachines/States/MoveToPositionState.cpp
     src/lib/JobSystem/JobSystem.cpp
+	src/lib/Effects/RedFlashEffect.cpp
+    src/lib/Effects/GreenFlashEffect.cpp
+    src/lib/Effects/EffectFactory.cpp
+    src/lib/Effects/ShaderRegistry.cpp
     src/lib/UI/HighlightTile.cpp
     src/lib/UI/ColorUtils.cpp
 )
@@ -243,6 +252,7 @@ target_include_directories(${PROJECT_NAME}_tests PUBLIC
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Combat>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Debug>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/FileHandling>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Effects>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/JobSystem>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Level/FileHandling>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Level/GameLogic>

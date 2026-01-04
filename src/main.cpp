@@ -21,6 +21,7 @@
 #include "NavMesh.h"
 #include "NavMeshPath.h"
 #include "AnimatedDataCharacterNavMeshPlayer.h"
+#include "ShaderRegistry.h"
 #include "HighlightTile.h"
 using namespace Cute;
 
@@ -60,6 +61,12 @@ int main(int argc, char *argv[])
 
 	// Set up VFS for reading and writing (must be done after make_app)
 	mount_content_directory_as("/assets");
+
+	// Set shader directory for runtime-compiled draw shaders
+	cf_shader_directory("/assets/shaders");
+	// Register and compile shaders at boot
+	ShaderRegistry::registerAndLoad("red", "red_flash.shd");
+	ShaderRegistry::registerAndLoad("green", "green_flash.shd");
 
 	// Load window configuration again using VFS for viewport and debug windows
 	DataFile windowConfig("/assets/window-config.json");
@@ -621,6 +628,17 @@ int main(int argc, char *argv[])
 		if (cf_key_just_pressed(CF_KEY_R))
 		{
 			cfCamera.reset();
+		}
+
+		// Trigger red flash effect on the player with 'F'
+		if (cf_key_just_pressed(CF_KEY_F))
+		{
+			playerCharacter.triggerEffect("red", 3, 2.0f, 0.85f);
+		}
+		// Trigger green flash effect on the player with 'G' (replace any current effect)
+		if (cf_key_just_pressed(CF_KEY_G))
+		{
+			playerCharacter.triggerEffect("green", 3, 2.0f, 0.85f);
 		}
 
 		if (fpsWindow)
