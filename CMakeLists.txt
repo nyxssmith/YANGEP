@@ -12,6 +12,11 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Must have at least C++20.
 set(CMAKE_CXX_STANDARD 20)
 
+# Make AppleClang treat c++11 narrowing as a warning instead of an error
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+	add_compile_options(-Wno-error=c++11-narrowing)
+endif()
+
 # Set default build type to Debug if not specified
 if(NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE Debug)
@@ -65,7 +70,7 @@ FetchContent_Declare(
 FetchContent_Declare(
 	pugixml
 	GIT_REPOSITORY https://github.com/zeux/pugixml.git
-	GIT_TAG v1.14
+	GIT_TAG v1.15
 	GIT_SHALLOW
 )
 
@@ -138,7 +143,7 @@ add_executable(
 )
 
 # Our source code will be in the `src` folder.
-target_include_directories(${PROJECT_NAME} PUBLIC 
+target_include_directories(${PROJECT_NAME} PUBLIC
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Camera>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Character>
@@ -231,7 +236,7 @@ add_executable(${PROJECT_NAME}_tests
 )
 
 target_link_libraries(${PROJECT_NAME}_tests gtest gtest_main cute spng_static nlohmann_json::nlohmann_json pugixml-static)
-target_include_directories(${PROJECT_NAME}_tests PUBLIC 
+target_include_directories(${PROJECT_NAME}_tests PUBLIC
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Camera>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Character>
