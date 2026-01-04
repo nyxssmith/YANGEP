@@ -81,6 +81,33 @@ void DebugCharacterInfoWindow::render()
 
     ImGui_Separator();
 
+    // Display and control Stage of Life
+    ImGui_Text("Stage of Life:");
+    ImGui_Indent();
+
+    // Get current stage of life
+    StageOfLife currentStage = m_character->getStageOfLife();
+
+    // Create combo box with stage options (null-separated string)
+    int currentStageIndex = static_cast<int>(currentStage);
+
+    if (ImGui_Combo("##StageOfLife", &currentStageIndex, "Alive\0Dying\0Dead\0"))
+    {
+        // User changed the selection, update the character's stage
+        StageOfLife newStage = static_cast<StageOfLife>(currentStageIndex);
+        m_character->setStageOfLife(newStage);
+
+        // Close window if character was set to Dead
+        if (newStage == StageOfLife::Dead)
+        {
+            m_show = false;
+        }
+    }
+
+    ImGui_Unindent();
+
+    ImGui_Separator();
+
     // Display state machine info if this is a NavMeshAgent
     AnimatedDataCharacterNavMeshAgent *agent = dynamic_cast<AnimatedDataCharacterNavMeshAgent *>(m_character);
     if (agent)
