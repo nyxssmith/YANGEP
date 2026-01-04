@@ -1,0 +1,46 @@
+layout (set = 3, binding = 1) uniform shd_uniforms {
+	float threshold;   // 0..1, increases over time
+	float edgeWidth;   // 0..0.2 typical
+	float time;        // seconds
+	vec3  edgeColor;   // rgb for edge burn (premult aware)
+};
+
+// Simple hash noise from position/screen coords.
+float hash(vec2 p) {
+	return fract(sin(dot(p, vec2(12.9898,78.233))) * 43758.5453);
+}
+
+float noise(vec2 p) {
+	// Cheap value noise via hashing 4 corners.
+	vec2 i = floor(p);
+	vec2 f = fract(p);
+	float a = hash(i);
+	float b = hash(i + vec2(1.0, 0.0));
+	float c = hash(i + vec2(0.0, 1.0));
+	float d = hash(i + vec2(1.0, 1.0));
+	vec2 u = f * f * (3.0 - 2.0 * f);
+	return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+}
+
+vec4 shader(vec4 color, vec2 pos, vec2 screen_uv, vec4 params)
+{
+	// Use screen_uv for stable 0..1 domain noise, animate over time.
+	float n = noise(screen_uv * 512.0 + vec2(time * 0.8, -time * 0.6));
+	float thr = clamp(threshold, 0.0, 1.0);
+	float ew = max(edgeWidth, 0.0001);
+
+	// Discard below threshold.
+	if (n < thr) {
+		return vec4(0.0);
+	}
+
+	// Edge band around the threshold.
+	float band = smoothstep(thr, thr + ew, n) * (1.0 - smoothstep(thr + ew, thr + 2.0 * ew, n));
+
+	// Premultiplied-safe edge burn: mix towards edgeColor * alpha.
+	vec3 premulEdge = edgeColor * color.a;
+	vec3 rgb = mix(color.rgb, premulEdge, clamp(band, 0.0, 1.0));
+	return vec4(rgb, color.a);
+}
+
+

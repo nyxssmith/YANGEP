@@ -41,6 +41,7 @@ void TrailGhostEffect::update(float dt)
 	if (m_elapsed >= m_totalDuration) {
 		m_active = false;
 		m_positions.clear();
+		invokeOnCompleteOnce();
 		return;
 	}
 	// Position sampling is performed via updateSubjectPosition, called externally.

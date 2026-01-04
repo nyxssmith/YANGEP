@@ -348,6 +348,13 @@ void AnimatedDataCharacter::update(float dt, v2 moveVector)
     position.x += moveVector.x * dt;
     position.y += moveVector.y * dt;
 
+    // Apply any queued teleport after movement to ensure final position sticks.
+    if (pendingTeleport)
+    {
+        position = teleportTarget;
+        pendingTeleport = false;
+    }
+
     // Update animation
     updateAnimation(dt);
 }
@@ -648,6 +655,11 @@ void AnimatedDataCharacter::setPosition(v2 newPosition)
     position = newPosition;
 }
 
+void AnimatedDataCharacter::queueTeleport(v2 target)
+{
+    teleportTarget = target;
+    pendingTeleport = true;
+}
 Direction AnimatedDataCharacter::getCurrentDirection() const
 {
     return currentDirection;
@@ -717,6 +729,17 @@ void AnimatedDataCharacter::triggerEffect(const std::string &name, int flashes, 
         effect->trigger(flashes, totalDuration, maxIntensity);
         effectQueue.push_back(std::move(effect));
     }
+}
+
+void AnimatedDataCharacter::triggerEffect(const std::string &name, int flashes, float totalDuration, float maxIntensity, std::function<void()> onComplete)
+{
+	auto effect = EffectFactory::makeEffect(name);
+	if (effect)
+	{
+		effect->setOnComplete(std::move(onComplete));
+		effect->trigger(flashes, totalDuration, maxIntensity);
+		effectQueue.push_back(std::move(effect));
+	}
 }
 
 void AnimatedDataCharacter::beginFrontEffect()

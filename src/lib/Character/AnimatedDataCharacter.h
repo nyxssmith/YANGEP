@@ -10,6 +10,7 @@
 #include <memory>
 #include <vector>
 #include <deque>
+#include <functional>
 
 using namespace Cute;
 
@@ -41,6 +42,8 @@ public:
 
     // Visual FX: trigger an effect by name (replaces current effect)
     void triggerEffect(const std::string &name, int flashes = 3, float totalDuration = 2.0f, float maxIntensity = 0.85f);
+    // Visual FX: trigger with completion callback
+    void triggerEffect(const std::string &name, int flashes, float totalDuration, float maxIntensity, std::function<void()> onComplete);
 
     // deprecated
     void handleInput();
@@ -53,6 +56,8 @@ public:
 
     // Set current position
     void setPosition(v2 newPosition);
+    // Teleport at a safe point in the frame (applied at end of update)
+    void queueTeleport(v2 target);
 
     // Get current direction
     Direction getCurrentDirection() const;
@@ -125,6 +130,8 @@ private:
 
     // Position for rendering
     v2 position;
+    bool pendingTeleport = false;
+    v2 teleportTarget = v2(0, 0);
 
     // Movement tracking for animation switching
     bool wasMoving;
