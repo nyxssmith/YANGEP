@@ -3,11 +3,12 @@
 #include <string>
 #include <memory>
 #include <vector>
-#include "tmx.h"
+#include "LevelMap.h"
 #include "NavMesh.h"
 #include "DataFile.h"
 #include "SpatialGrid.h"
 #include "AnimatedDataCharacterNavMeshAgent.h"
+#include "WorldPositionRenderedObjectsList.h"
 
 // Forward declarations
 class CFNativeCamera;
@@ -29,7 +30,7 @@ private:
     std::string levelName;
 
     // Core level components
-    std::unique_ptr<tmx> levelMap;
+    std::unique_ptr<LevelMap> levelMap;
     std::unique_ptr<NavMesh> navmesh;
 
     // Level data files
@@ -41,6 +42,9 @@ private:
 
     // Spatial partitioning grid for efficient queries
     SpatialGrid spatialGrid;
+
+    // List of all objects to render sorted by world Y position
+    WorldPositionRenderedObjectsList renderedObjects;
 
     // Player character reference for hitbox checking (non-owning)
     const AnimatedDataCharacter *player;
@@ -77,11 +81,11 @@ public:
     const std::string &getLevelName() const { return levelName; }
 
     /**
-     * Get the TMX level map
-     * @return Reference to the tmx object
+     * Get the level map
+     * @return Reference to the LevelMap object
      */
-    tmx &getLevelMap() { return *levelMap; }
-    const tmx &getLevelMap() const { return *levelMap; }
+    LevelMap &getLevelMap() { return *levelMap; }
+    const LevelMap &getLevelMap() const { return *levelMap; }
 
     /**
      * Get the NavMesh
@@ -229,13 +233,14 @@ public:
     void renderAgents(const CFNativeCamera &camera);
 
     /**
-     * Render all layers of the level map (DEPRECATED - use renderLayers, renderAgentActions, renderAgents separately)
+     * Render all layers of the level map, agents, actions, and player
      * @param camera Camera to use for rendering
      * @param config Configuration data file for layer highlighting
+     * @param player Optional player character to render
      * @param worldX World X offset
      * @param worldY World Y offset
      */
-    void render(const CFNativeCamera &camera, const DataFile &config, float worldX = 0.0f, float worldY = 0.0f);
+    void render(const CFNativeCamera &camera, const DataFile &config, AnimatedDataCharacter *player = nullptr, float worldX = 0.0f, float worldY = 0.0f);
 
     /**
      * Debug print level information

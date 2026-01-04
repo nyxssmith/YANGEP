@@ -107,7 +107,9 @@ add_executable(
 	src/lib/Debug/DebugStateWindow.cpp
 	src/lib/Level/FileHandling/tsx.cpp
 	src/lib/Level/FileHandling/tmx.cpp
+	src/lib/Level/GameLogic/LevelMap.cpp
 	src/lib/Level/GameLogic/LevelV1.cpp
+	src/lib/Level/GameLogic/WorldPositionRenderedObjectsList.cpp
 	src/lib/Level/GameLogic/NavMesh.cpp
 	src/lib/Level/GameLogic/NavMeshPoint.cpp
 	src/lib/Level/GameLogic/NavMeshPath.cpp
@@ -202,11 +204,13 @@ add_executable(${PROJECT_NAME}_tests
     src/lib/FileHandling/Utils.cpp
     src/lib/Level/FileHandling/tsx.cpp
     src/lib/Level/FileHandling/tmx.cpp
+    src/lib/Level/GameLogic/LevelMap.cpp
     src/lib/Level/GameLogic/NavMesh.cpp
     src/lib/Level/GameLogic/NavMeshPoint.cpp
     src/lib/Level/GameLogic/NavMeshPath.cpp
     src/lib/Level/GameLogic/SpatialGrid.cpp
     src/lib/Level/GameLogic/LevelV1.cpp
+    src/lib/Level/GameLogic/WorldPositionRenderedObjectsList.cpp
     src/lib/Character/AnimatedDataCharacter.cpp
     src/lib/Combat/HitBox.cpp
     src/lib/Combat/Action.cpp
