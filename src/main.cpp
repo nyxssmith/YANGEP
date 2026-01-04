@@ -639,6 +639,12 @@ int main(int argc, char *argv[])
 		{
 			playerCharacter.triggerEffect("green", 3, 2.0f, 0.85f);
 		}
+		// Toggle trail ghost effect on the player with 'H'
+		if (cf_key_just_pressed(CF_KEY_H))
+		{
+			// Parameters: ghosts, duration, base alpha
+			playerCharacter.triggerEffect("trail", 8, 1.5f, 0.8f);
+		}
 
 		if (fpsWindow)
 		{

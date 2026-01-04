@@ -224,11 +224,16 @@ CF_Sprite SpriteAnimationLoader::extractSpriteFrame(const std::string &png_path,
             int src_index = (src_y * ihdr.width + src_x) * 4; // 4 bytes per pixel (RGBA)
             int dst_index = y * frame_width + x;
 
-            // Copy RGBA data
-            frame_pixels[dst_index].colors.r = full_image[src_index + 0];
-            frame_pixels[dst_index].colors.g = full_image[src_index + 1];
-            frame_pixels[dst_index].colors.b = full_image[src_index + 2];
-            frame_pixels[dst_index].colors.a = full_image[src_index + 3];
+            // Copy RGBA data with premultiply-at-load (rgb *= a)
+            uint8_t r = full_image[src_index + 0];
+            uint8_t g = full_image[src_index + 1];
+            uint8_t b = full_image[src_index + 2];
+            uint8_t a = full_image[src_index + 3];
+            // Round to nearest: (x*a + 127)/255
+            frame_pixels[dst_index].colors.r = (uint8_t)((r * a + 127) / 255);
+            frame_pixels[dst_index].colors.g = (uint8_t)((g * a + 127) / 255);
+            frame_pixels[dst_index].colors.b = (uint8_t)((b * a + 127) / 255);
+            frame_pixels[dst_index].colors.a = a;
         }
     }
 
