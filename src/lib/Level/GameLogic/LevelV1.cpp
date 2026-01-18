@@ -501,6 +501,37 @@ void LevelV1::renderAgentActions(const CFNativeCamera &camera, const AnimatedDat
     }
 }
 
+void LevelV1::renderPlayerAvailableActions(const CFNativeCamera &camera, const AnimatedDataCharacter *player)
+{
+    if (!player)
+    {
+        printf("LevelV1 Warning: renderPlayerAvailableActions called with null player\n");
+        return;
+    }
+
+    // Get actions from pointer A and B slots
+    Action *actionA = player->getActionPointerA();
+    Action *actionB = player->getActionPointerB();
+
+    if (actionA)
+    {
+        printf("Player has action A: %s\n", actionA->contains("name") ? (*actionA)["name"].get<std::string>().c_str() : "unnamed");
+    }
+    else
+    {
+        printf("Player has no action A\n");
+    }
+
+    if (actionB)
+    {
+        printf("Player has action B: %s\n", actionB->contains("name") ? (*actionB)["name"].get<std::string>().c_str() : "unnamed");
+    }
+    else
+    {
+        printf("Player has no action B\n");
+    } 
+}
+
 void LevelV1::renderAgents(const CFNativeCamera &camera)
 {
     int renderedCount = 0;
@@ -565,6 +596,9 @@ void LevelV1::render(const CFNativeCamera &camera, const DataFile &config, Anima
 
     // 2. Action hitboxes (player and agents)
     renderAgentActions(camera, player);
+
+    // render player available actions
+    renderPlayerAvailableActions(camera, player);
 
     // 3. All objects sorted by world Y position (structures, agents, player)
     renderedObjects.sort();

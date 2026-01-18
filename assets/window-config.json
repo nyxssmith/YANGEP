@@ -28,10 +28,10 @@
     "highlightLayers": ["structure 1"],
     "highlightLayerBorders": [],
     "highlightLayerOuterBorders": [],
+    "highlightCharacterHitboxes": true,
     "ShowFPSMetrics": true,
     "ShowJobMetrics": false,
-    "ShowPlayerInfo": false,
-    "highlightCharacterHitboxes": true,
+    "ShowPlayerInfo": true,
     "clickToInspectCharacter": true
   }
 }

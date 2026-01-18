@@ -734,13 +734,13 @@ void AnimatedDataCharacter::triggerEffect(const std::string &name, int flashes, 
 
 void AnimatedDataCharacter::triggerEffect(const std::string &name, int flashes, float totalDuration, float maxIntensity, std::function<void()> onComplete)
 {
-	auto effect = EffectFactory::makeEffect(name);
-	if (effect)
-	{
-		effect->setOnComplete(std::move(onComplete));
-		effect->trigger(flashes, totalDuration, maxIntensity);
-		effectQueue.push_back(std::move(effect));
-	}
+    auto effect = EffectFactory::makeEffect(name);
+    if (effect)
+    {
+        effect->setOnComplete(std::move(onComplete));
+        effect->trigger(flashes, totalDuration, maxIntensity);
+        effectQueue.push_back(std::move(effect));
+    }
 }
 
 void AnimatedDataCharacter::beginFrontEffect()
@@ -855,6 +855,18 @@ bool AnimatedDataCharacter::addAction(const std::string &folderPath)
     newAction.setCharacter(this);
     // add to list
     actionsList.push_back(newAction);
+
+    // update pointer if len of list is 1 or 2
+    // update the action pointers accordingly
+    if (actionsList.size() == 1)
+    {
+        setActionPointerA(0);
+    }
+    else if (actionsList.size() == 2)
+    {
+        setActionPointerB(1);
+    }
+
     printf("AnimatedDataCharacter: Added action '%s' to actions list\n", actionName.c_str());
     return true;
 }
@@ -934,9 +946,8 @@ Action *AnimatedDataCharacter::getActionPointerB() const
 void AnimatedDataCharacter::OnHit(AnimatedDataCharacter *character, Damage damage)
 {
     // Trigger red flash effect when hit
-    triggerEffect("red", 3, 1.0f, 0.80f, [this]() {
-        this->setStageOfLife(StageOfLife::Dead);
-    });
+    triggerEffect("red", 3, 1.0f, 0.80f, [this]()
+                  { this->setStageOfLife(StageOfLife::Dead); });
 
     // Print debug message
     printf("AnimatedDataCharacter: Hit by character with damage value: %.2f\n", damage.value);
