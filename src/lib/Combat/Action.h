@@ -55,7 +55,7 @@ public:
     bool getInCooldown() const;
     void doAction();
     void update(float dt);
-    void renderHitbox(CF_Color color);
+    void renderHitbox(CF_Color color, float border_opacity = 0.9f, float fill_opacity = 0.4f);
 
     // Character association
     void setCharacter(AnimatedDataCharacter *character);

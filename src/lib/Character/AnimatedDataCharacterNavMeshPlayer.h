@@ -3,6 +3,7 @@
 
 #include "AnimatedDataCharacter.h"
 #include "NavMesh.h"
+#include "ABActions.h"
 
 using namespace Cute;
 
@@ -49,12 +50,30 @@ public:
     // Debug render the navmesh collision box
     void debugRenderNavMeshCollisionBox() const;
 
+    // ABActions management
+    void setABActions(ABActions *actions);
+    ABActions *getABActions() const;
+    void calculateABActions();
+
+    // Override action pointer setters to trigger recalculation
+    void setActionPointerA(size_t index);
+    void setActionPointerB(size_t index);
+
+    // Move action pointers up/down with wrapping
+    void MoveActionPointerAUp();
+    void MoveActionPointerADown();
+    void MoveActionPointerBUp();
+    void MoveActionPointerBDown();
+
 private:
     // The navmesh this player is on (non-owning pointer)
     NavMesh *navmesh;
 
     // Current polygon the player is in (-1 if not on mesh)
     int currentPolygon;
+
+    // ABActions (non-owning pointer)
+    ABActions *abActions;
 
     // Sprite dimensions for collision box positioning (set after init)
     float spriteWidth;
@@ -65,7 +84,6 @@ private:
 
     // Check if a future position would be on walkable area
     bool wouldBeOnWalkableArea(v2 futurePosition) const;
-
 };
 
 #endif // ANIMATED_DATA_CHARACTER_NAVMESH_PLAYER_H

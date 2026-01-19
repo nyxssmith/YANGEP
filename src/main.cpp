@@ -584,14 +584,60 @@ int main(int argc, char *argv[])
 		// Handle playerCharacter animation input (1/2 for idle/walk)
 		// playerCharacter.handleInput();
 
-		// Handle spacebar to trigger action A
-		if (cf_key_just_pressed(CF_KEY_SPACE))
+		// Check if player has an active action and if it's in warmup
+		Action *activeAction = playerCharacter.getActiveAction();
+		bool playerInWarmup = false;
+		if (activeAction)
 		{
-			Action *actionA = playerCharacter.getActionPointerA();
-			if (actionA)
+			// Action is in warmup if it's active but not in cooldown
+			playerInWarmup = !activeAction->getInCooldown();
+		}
+
+		// Only allow action inputs if player is not in warmup
+		if (!playerInWarmup)
+		{
+			// Handle spacebar to trigger action A
+			if (cf_key_just_pressed(CF_KEY_SPACE))
 			{
-				actionA->doAction();
-				printf("Player triggered action A\n");
+				Action *actionA = playerCharacter.getActionPointerA();
+				if (actionA)
+				{
+					actionA->doAction();
+					printf("Player triggered action A\n");
+				}
+			}
+
+			// Handle B key to trigger action B
+			if (cf_key_just_pressed(CF_KEY_B))
+			{
+				Action *actionB = playerCharacter.getActionPointerB();
+				if (actionB)
+				{
+					actionB->doAction();
+					printf("Player triggered action B\n");
+				}
+			}
+		}
+		if (!playerCharacter.getIsDoingAction())
+		{
+			// Handle action pointer A navigation (I/O keys)
+			if (cf_key_just_pressed(CF_KEY_I))
+			{
+				playerCharacter.MoveActionPointerADown(); // Move towards index 0
+			}
+			if (cf_key_just_pressed(CF_KEY_O))
+			{
+				playerCharacter.MoveActionPointerAUp(); // Move towards end of list
+			}
+
+			// Handle action pointer B navigation (K/L keys)
+			if (cf_key_just_pressed(CF_KEY_K))
+			{
+				playerCharacter.MoveActionPointerBDown(); // Move towards index 0
+			}
+			if (cf_key_just_pressed(CF_KEY_L))
+			{
+				playerCharacter.MoveActionPointerBUp(); // Move towards end of list
 			}
 		}
 
@@ -791,6 +837,7 @@ int main(int argc, char *argv[])
 		// debug just highlight one tile
 		highlightTile(level, 0, 0, cf_make_color_rgb(255, 0, 0));
 		highlightTile(level, 10, 10, cf_make_color_rgb(255, 200, 0));
+		highlightTileHalves(level, 5, 5, cf_make_color_rgb(255, 200, 0), cf_make_color_rgb(0, 200, 255));
 
 		// Render player's navmesh collision box (if enabled)
 		if (debugHighlightPlayerNavmeshCollisionBox)

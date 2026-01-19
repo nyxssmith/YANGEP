@@ -297,9 +297,16 @@ void AnimatedDataCharacter::update(float dt, v2 moveVector)
     }
 
     // Update the active action if one exists
-    if (isDoingAction && activeAction)
+    if (isDoingAction)
     {
-        activeAction->update(dt);
+        // iterate through all actions and call update
+        for (auto &action : actionsList)
+        {
+            if (action.getIsActive())
+            {
+                action.update(dt);
+            }
+        }
     }
 
     demoTime += dt; // Calculate movement magnitude to determine if we're moving
@@ -694,12 +701,43 @@ void AnimatedDataCharacter::setDoingAction(bool doing)
     // Clear active action when no longer doing action
     if (!doing)
     {
-        activeAction = nullptr;
+        // check all other actions in case one got interrupted
+        // if any action is still active, set it as the active action instead
+        Action *stillActiveAction = nullptr;
+        for (auto &action : actionsList)
+        {
+            if (action.getIsActive())
+            {
+                stillActiveAction = &action;
+                break;
+            }
+        }
+
+        if (stillActiveAction)
+        {
+            setActiveAction(stillActiveAction);
+            isDoingAction = true; // Keep doing action since we found an active one
+        }
+        else
+        {
+            setActiveAction(nullptr);
+        }
     }
 }
 
 bool AnimatedDataCharacter::getIsDoingAction() const
 {
+    if (isDoingAction)
+    {
+        // if doing an action, check if not in cooldown
+        if (activeAction)
+        {
+            if (activeAction->getInCooldown())
+            {
+                return false;
+            }
+        }
+    }
     return isDoingAction;
 }
 
@@ -734,13 +772,13 @@ void AnimatedDataCharacter::triggerEffect(const std::string &name, int flashes, 
 
 void AnimatedDataCharacter::triggerEffect(const std::string &name, int flashes, float totalDuration, float maxIntensity, std::function<void()> onComplete)
 {
-	auto effect = EffectFactory::makeEffect(name);
-	if (effect)
-	{
-		effect->setOnComplete(std::move(onComplete));
-		effect->trigger(flashes, totalDuration, maxIntensity);
-		effectQueue.push_back(std::move(effect));
-	}
+    auto effect = EffectFactory::makeEffect(name);
+    if (effect)
+    {
+        effect->setOnComplete(std::move(onComplete));
+        effect->trigger(flashes, totalDuration, maxIntensity);
+        effectQueue.push_back(std::move(effect));
+    }
 }
 
 void AnimatedDataCharacter::beginFrontEffect()
@@ -855,6 +893,18 @@ bool AnimatedDataCharacter::addAction(const std::string &folderPath)
     newAction.setCharacter(this);
     // add to list
     actionsList.push_back(newAction);
+
+    // update pointer if len of list is 1 or 2
+    // update the action pointers accordingly
+    if (actionsList.size() == 1)
+    {
+        setActionPointerA(0);
+    }
+    else if (actionsList.size() == 2)
+    {
+        setActionPointerB(1);
+    }
+
     printf("AnimatedDataCharacter: Added action '%s' to actions list\n", actionName.c_str());
     return true;
 }
@@ -934,9 +984,8 @@ Action *AnimatedDataCharacter::getActionPointerB() const
 void AnimatedDataCharacter::OnHit(AnimatedDataCharacter *character, Damage damage)
 {
     // Trigger red flash effect when hit
-    triggerEffect("red", 3, 1.0f, 0.80f, [this]() {
-        this->setStageOfLife(StageOfLife::Dead);
-    });
+    triggerEffect("red", 3, 1.0f, 0.80f, [this]()
+                  { this->setStageOfLife(StageOfLife::Dead); });
 
     // Print debug message
     printf("AnimatedDataCharacter: Hit by character with damage value: %.2f\n", damage.value);

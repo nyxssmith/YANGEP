@@ -5,7 +5,7 @@ using namespace Cute;
 
 // Constructor
 AnimatedDataCharacterNavMeshPlayer::AnimatedDataCharacterNavMeshPlayer()
-    : AnimatedDataCharacter(), navmesh(nullptr), currentPolygon(-1), spriteWidth(64.0f), spriteHeight(64.0f)
+    : AnimatedDataCharacter(), navmesh(nullptr), currentPolygon(-1), spriteWidth(64.0f), spriteHeight(64.0f), abActions(nullptr)
 {
 }
 
@@ -185,4 +185,162 @@ void AnimatedDataCharacterNavMeshPlayer::update(float dt, v2 moveVector)
     {
         updateCurrentPolygon();
     }
+}
+
+// Set ABActions
+void AnimatedDataCharacterNavMeshPlayer::setABActions(ABActions *actions)
+{
+    abActions = actions;
+}
+
+// Get ABActions
+ABActions *AnimatedDataCharacterNavMeshPlayer::getABActions() const
+{
+    return abActions;
+}
+
+// Calculate ABActions (pass-through)
+void AnimatedDataCharacterNavMeshPlayer::calculateABActions()
+{
+    // remake ABActions class
+    abActions = new ABActions();
+    Action *actionA = getActionPointerA();
+    Action *actionB = getActionPointerB();
+    abActions->setActionA(actionA);
+    abActions->setActionB(actionB);
+    abActions->calculate();
+}
+
+// Override setActionPointerA to recalculate ABActions
+void AnimatedDataCharacterNavMeshPlayer::setActionPointerA(size_t index)
+{
+    AnimatedDataCharacter::setActionPointerA(index);
+    calculateABActions();
+}
+
+// Override setActionPointerB to recalculate ABActions
+void AnimatedDataCharacterNavMeshPlayer::setActionPointerB(size_t index)
+{
+    AnimatedDataCharacter::setActionPointerB(index);
+    calculateABActions();
+}
+
+// Move action pointer A up (increment with wrapping)
+void AnimatedDataCharacterNavMeshPlayer::MoveActionPointerAUp()
+{
+    const auto &actions = getActions();
+    if (actions.empty())
+        return;
+
+    Action *currentPointer = getActionPointerA();
+    if (!currentPointer)
+    {
+        setActionPointerA(0);
+        return;
+    }
+
+    // Find current index
+    size_t currentIndex = 0;
+    for (size_t i = 0; i < actions.size(); ++i)
+    {
+        if (&actions[i] == currentPointer)
+        {
+            currentIndex = i;
+            break;
+        }
+    }
+
+    // Increment with wrapping
+    size_t newIndex = (currentIndex + 1) % actions.size();
+    setActionPointerA(newIndex);
+}
+
+// Move action pointer A down (decrement with wrapping)
+void AnimatedDataCharacterNavMeshPlayer::MoveActionPointerADown()
+{
+    const auto &actions = getActions();
+    if (actions.empty())
+        return;
+
+    Action *currentPointer = getActionPointerA();
+    if (!currentPointer)
+    {
+        setActionPointerA(0);
+        return;
+    }
+
+    // Find current index
+    size_t currentIndex = 0;
+    for (size_t i = 0; i < actions.size(); ++i)
+    {
+        if (&actions[i] == currentPointer)
+        {
+            currentIndex = i;
+            break;
+        }
+    }
+
+    // Decrement with wrapping
+    size_t newIndex = (currentIndex == 0) ? actions.size() - 1 : currentIndex - 1;
+    setActionPointerA(newIndex);
+}
+
+// Move action pointer B up (increment with wrapping)
+void AnimatedDataCharacterNavMeshPlayer::MoveActionPointerBUp()
+{
+    const auto &actions = getActions();
+    if (actions.empty())
+        return;
+
+    Action *currentPointer = getActionPointerB();
+    if (!currentPointer)
+    {
+        setActionPointerB(0);
+        return;
+    }
+
+    // Find current index
+    size_t currentIndex = 0;
+    for (size_t i = 0; i < actions.size(); ++i)
+    {
+        if (&actions[i] == currentPointer)
+        {
+            currentIndex = i;
+            break;
+        }
+    }
+
+    // Increment with wrapping
+    size_t newIndex = (currentIndex + 1) % actions.size();
+    setActionPointerB(newIndex);
+}
+
+// Move action pointer B down (decrement with wrapping)
+void AnimatedDataCharacterNavMeshPlayer::MoveActionPointerBDown()
+{
+    const auto &actions = getActions();
+    if (actions.empty())
+        return;
+
+    Action *currentPointer = getActionPointerB();
+    if (!currentPointer)
+    {
+        setActionPointerB(0);
+        return;
+    }
+
+    // Find current index
+    size_t currentIndex = 0;
+    for (size_t i = 0; i < actions.size(); ++i)
+    {
+        if (&actions[i] == currentPointer)
+        {
+            currentIndex = i;
+            break;
+        }
+    }
+
+    // Decrement with wrapping
+    size_t newIndex = (currentIndex == 0) ? actions.size() - 1 : currentIndex - 1;
+    setActionPointerB(newIndex);
 }
