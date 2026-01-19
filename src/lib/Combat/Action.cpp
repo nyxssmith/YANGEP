@@ -249,8 +249,11 @@ bool Action::getInCooldown() const
 
 void Action::doAction()
 {
-    // For now, just set the action to active
-    // Later this will include checks if the action can be performed
+    if (isActive)
+    {
+        printf("Action: Warning - Attempting to doAction while already active\n");
+        return;
+    }
     setActive(true);
 }
 
@@ -281,14 +284,15 @@ void Action::update(float dt)
             // Set cooldown timer (convert ms to seconds)
             float cooldownMs = contains("cooldown") ? (*this)["cooldown"].get<float>() : 0.0f;
             cooldown_timer = cooldownMs / 1000.0f;
+            // printf("Action: Entering cooldown phase (%.3f ms)\n", cooldownMs);
         }
     }
     // Handle cooldown phase
     else
     {
         cooldown_timer -= dt;
-
-        // Check if cooldown is complete
+        // printf("Action: Cooldown timer: %.3f seconds remaining\n", cooldown_timer);
+        //  Check if cooldown is complete
         if (cooldown_timer <= 0.0f)
         {
             // Reset everything
@@ -300,7 +304,7 @@ void Action::update(float dt)
     }
 }
 
-void Action::renderHitbox(CF_Color color)
+void Action::renderHitbox(CF_Color color, float border_opacity, float fill_opacity)
 {
     // Check if we have a hitbox and character to render
     if (!hasHitbox || !hitbox || !character)
@@ -320,7 +324,7 @@ void Action::renderHitbox(CF_Color color)
     Direction facingDirection = character->getCurrentDirection();
 
     // Call hitbox render with character info, level, and color
-    hitbox->render(characterPosition, facingDirection, *level, color);
+    hitbox->render(characterPosition, facingDirection, *level, color, border_opacity, fill_opacity);
 }
 
 void Action::setCharacter(AnimatedDataCharacter *character)

@@ -5,7 +5,7 @@ using namespace Cute;
 
 // Constructor
 AnimatedDataCharacterNavMeshPlayer::AnimatedDataCharacterNavMeshPlayer()
-    : AnimatedDataCharacter(), navmesh(nullptr), currentPolygon(-1), spriteWidth(64.0f), spriteHeight(64.0f)
+    : AnimatedDataCharacter(), navmesh(nullptr), currentPolygon(-1), spriteWidth(64.0f), spriteHeight(64.0f), abActions(nullptr)
 {
 }
 
@@ -185,4 +185,42 @@ void AnimatedDataCharacterNavMeshPlayer::update(float dt, v2 moveVector)
     {
         updateCurrentPolygon();
     }
+}
+
+// Set ABActions
+void AnimatedDataCharacterNavMeshPlayer::setABActions(ABActions *actions)
+{
+    abActions = actions;
+}
+
+// Get ABActions
+ABActions *AnimatedDataCharacterNavMeshPlayer::getABActions() const
+{
+    return abActions;
+}
+
+// Calculate ABActions (pass-through)
+void AnimatedDataCharacterNavMeshPlayer::calculateABActions()
+{
+    // remake ABActions class
+    abActions = new ABActions();
+    Action *actionA = getActionPointerA();
+    Action *actionB = getActionPointerB();
+    abActions->setActionA(actionA);
+    abActions->setActionB(actionB);
+    abActions->calculate();
+}
+
+// Override setActionPointerA to recalculate ABActions
+void AnimatedDataCharacterNavMeshPlayer::setActionPointerA(size_t index)
+{
+    AnimatedDataCharacter::setActionPointerA(index);
+    calculateABActions();
+}
+
+// Override setActionPointerB to recalculate ABActions
+void AnimatedDataCharacterNavMeshPlayer::setActionPointerB(size_t index)
+{
+    AnimatedDataCharacter::setActionPointerB(index);
+    calculateABActions();
 }

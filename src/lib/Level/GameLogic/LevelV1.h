@@ -235,6 +235,14 @@ public:
     void renderAgentActions(const CFNativeCamera &camera, const AnimatedDataCharacter *player = nullptr);
 
     /**
+     * Render available actions for the player character
+     * Highlights tiles where the player can perform actions from pointer A or B slots
+     * @param camera Camera to use for rendering
+     * @param player Player character to get available actions from
+     */
+    void renderPlayerAvailableActions(const CFNativeCamera &camera, const AnimatedDataCharacter *player);
+
+    /**
      * Render all agents in the level that are visible in the camera viewport
      * @param camera Camera to use for viewport culling
      */

@@ -770,6 +770,7 @@ int main(int argc, char *argv[])
 		// debug just highlight one tile
 		highlightTile(level, 0, 0, cf_make_color_rgb(255, 0, 0));
 		highlightTile(level, 10, 10, cf_make_color_rgb(255, 200, 0));
+		highlightTileHalves(level, 5, 5, cf_make_color_rgb(255, 200, 0), cf_make_color_rgb(0, 200, 255));
 
 		// Render player's navmesh collision box (if enabled)
 		if (debugHighlightPlayerNavmeshCollisionBox)

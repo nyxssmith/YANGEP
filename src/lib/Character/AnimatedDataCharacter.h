@@ -99,8 +99,8 @@ public:
     const std::vector<Action> &getActions() const;
 
     // Action pointer management
-    void setActionPointerA(size_t index);
-    void setActionPointerB(size_t index);
+    virtual void setActionPointerA(size_t index);
+    virtual void setActionPointerB(size_t index);
     Action *getActionPointerA() const;
     Action *getActionPointerB() const;
 

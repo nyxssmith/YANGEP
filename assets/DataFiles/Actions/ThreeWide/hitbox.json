@@ -1,0 +1,19 @@
+{
+  "tiles": [
+    {
+      "x": 1,
+      "y": 0,
+      "damage_modifier": 1.0
+    },
+    {
+      "x": 1,
+      "y": 1,
+      "damage_modifier": 1.0
+    },
+    {
+      "x": 1,
+      "y": -1,
+      "damage_modifier": 1.0
+    }
+  ]
+}
