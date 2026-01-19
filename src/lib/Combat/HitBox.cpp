@@ -361,7 +361,8 @@ std::vector<CF_Aabb> HitBox::buildFromTiles(const std::vector<HitboxTile> &tiles
 }
 
 // Render hitbox by highlighting the actual bounding boxes
-void HitBox::render(v2 characterPosition, Direction facingDirection, const LevelV1 &level, CF_Color color)
+void HitBox::render(v2 characterPosition, Direction facingDirection, const LevelV1 &level, CF_Color color,
+                    float border_opacity, float fill_opacity)
 {
     // Get hitbox boxes for the facing direction at character position
     std::vector<CF_Aabb> boxes = getBoxes(facingDirection, characterPosition);
@@ -369,6 +370,6 @@ void HitBox::render(v2 characterPosition, Direction facingDirection, const Level
     // Highlight each box directly (not snapped to grid)
     for (const auto &box : boxes)
     {
-        highlightArea(box, color, 0.9f, 0.4f);
+        highlightArea(box, color, border_opacity, fill_opacity);
     }
 }

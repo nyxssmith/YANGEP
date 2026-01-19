@@ -1,9 +1,13 @@
 #pragma once
 
 #include <cute.h>
+#include "SpriteAnimationLoader.h"
 
-// Forward declaration
+// Forward declarations
 class LevelV1;
+class HitBox;
+
+using namespace Cute;
 
 /**
  * Highlights an arbitrary rectangular area with a border and fill.
@@ -55,3 +59,21 @@ void highlightTile(const LevelV1 &level, int tile_x, int tile_y, CF_Color color,
 void highlightTileHalves(const LevelV1 &level, int tile_x, int tile_y,
                          CF_Color left_color, CF_Color right_color,
                          float border_opacity = 0.9f, float fill_opacity = 0.4f);
+
+/**
+ * Highlights two hitboxes with different colors, using split colors where they overlap.
+ *
+ * @param hitboxA The first hitbox
+ * @param positionA World position for hitboxA
+ * @param directionA Facing direction for hitboxA
+ * @param colorA Color for hitboxA
+ * @param hitboxB The second hitbox
+ * @param positionB World position for hitboxB
+ * @param directionB Facing direction for hitboxB
+ * @param colorB Color for hitboxB
+ * @param border_opacity The opacity of the border for all boxes
+ * @param fill_opacity The opacity of the fill for all boxes
+ */
+void highlightHitboxes(HitBox *hitboxA, v2 positionA, Direction directionA, CF_Color colorA,
+                       HitBox *hitboxB, v2 positionB, Direction directionB, CF_Color colorB,
+                       float border_opacity = 0.9f, float fill_opacity = 0.4f);

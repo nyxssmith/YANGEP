@@ -1,7 +1,9 @@
 #include "LevelV1.h"
 #include "CFNativeCamera.h"
 #include "JobSystem.h"
+#include "AnimatedDataCharacterNavMeshPlayer.h"
 #include "../UI/ColorUtils.h"
+#include "../UI/HighlightTile.h"
 #include <cstdio>
 
 // LevelV1 implementation
@@ -503,33 +505,50 @@ void LevelV1::renderAgentActions(const CFNativeCamera &camera, const AnimatedDat
 
 void LevelV1::renderPlayerAvailableActions(const CFNativeCamera &camera, const AnimatedDataCharacter *player)
 {
+    // TODO optimize this with pre-calc hitboxes and colors etc
+
     if (!player)
     {
         printf("LevelV1 Warning: renderPlayerAvailableActions called with null player\n");
         return;
     }
 
+    // Cast to the specific player type to access player-specific methods
+    const AnimatedDataCharacterNavMeshPlayer *navMeshPlayer = dynamic_cast<const AnimatedDataCharacterNavMeshPlayer *>(player);
+    if (!navMeshPlayer)
+    {
+        // Not a NavMeshPlayer, can't render available actions
+        return;
+    }
+
+    CF_Color greenColor = cf_make_color_rgb(0, 255, 0);
+    CF_Color blueColor = cf_make_color_rgb(0, 0, 255);
+    CF_Color greyColor = cf_make_color_rgb(150, 150, 150);
+    float border_opacity = 0.3f;
+    float fill_opacity = 0.1f;
     // Get actions from pointer A and B slots
-    Action *actionA = player->getActionPointerA();
-    Action *actionB = player->getActionPointerB();
+    Action *actionA = navMeshPlayer->getActionPointerA();
+    Action *actionB = navMeshPlayer->getActionPointerB();
+    // printf("LevelV1: Rendering player available actions: a_name='%s', b_name='%s'\n",
+    //        actionA ? actionA->contains("name") ? (*actionA)["name"].get<std::string>().c_str() : "unnamed" : "null",
+    //        actionB ? actionB->contains("name") ? (*actionB)["name"].get<std::string>().c_str() : "unnamed" : "null");
 
-    if (actionA)
+    // colors for a and b
+    CF_Color colorA = greenColor;
+    CF_Color colorB = blueColor;
+    // if action A is in cooldown, use grey
+    if (actionA && actionA->getInCooldown())
     {
-        printf("Player has action A: %s\n", actionA->contains("name") ? (*actionA)["name"].get<std::string>().c_str() : "unnamed");
+        colorA = greyColor;
     }
-    else
+    // if action B is in cooldown, use grey
+    if (actionB && actionB->getInCooldown())
     {
-        printf("Player has no action A\n");
+        colorB = greyColor;
     }
 
-    if (actionB)
-    {
-        printf("Player has action B: %s\n", actionB->contains("name") ? (*actionB)["name"].get<std::string>().c_str() : "unnamed");
-    }
-    else
-    {
-        printf("Player has no action B\n");
-    } 
+    // get abActions from player
+    navMeshPlayer->getABActions()->render(navMeshPlayer->getPosition(), navMeshPlayer->getCurrentDirection(), colorA, colorB, border_opacity, fill_opacity);
 }
 
 void LevelV1::renderAgents(const CFNativeCamera &camera)
@@ -597,9 +616,12 @@ void LevelV1::render(const CFNativeCamera &camera, const DataFile &config, Anima
     // 2. Action hitboxes (player and agents)
     renderAgentActions(camera, player);
 
+    // if player is not doing an action
     // render player available actions
-    renderPlayerAvailableActions(camera, player);
-
+    if (player && !player->getIsDoingAction())
+    {
+        renderPlayerAvailableActions(camera, player);
+    }
     // 3. All objects sorted by world Y position (structures, agents, player)
     renderedObjects.sort();
 

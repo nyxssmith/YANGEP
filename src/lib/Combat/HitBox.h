@@ -35,7 +35,8 @@ public:
     std::vector<CF_Aabb> getBoxes(Direction direction, v2 translation);
     CF_Aabb getBoundingBox(Direction direction, v2 translation);
     const std::vector<HitboxTile> &getTiles() const;
-    void render(v2 characterPosition, Direction facingDirection, const class LevelV1 &level, CF_Color color);
+    void render(v2 characterPosition, Direction facingDirection, const class LevelV1 &level, CF_Color color,
+                float border_opacity = 0.9f, float fill_opacity = 0.4f);
 
     std::map<Direction, std::vector<CF_Aabb>> boxesByDirection;
     std::map<Direction, CF_Aabb> boundingBoxByDirection;

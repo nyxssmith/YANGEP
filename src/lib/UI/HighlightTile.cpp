@@ -1,5 +1,6 @@
 #include "HighlightTile.h"
 #include "LevelV1.h"
+#include "HitBox.h"
 
 using namespace Cute;
 
@@ -143,4 +144,60 @@ void highlightTileHalves(const LevelV1 &level, int tile_x, int tile_y,
 
     // Use highlightAreaHalves to do the actual rendering
     highlightAreaHalves(tile_bounds, left_color, right_color, border_opacity, fill_opacity);
+}
+
+void highlightHitboxes(HitBox *hitboxA, v2 positionA, Direction directionA, CF_Color colorA,
+                       HitBox *hitboxB, v2 positionB, Direction directionB, CF_Color colorB,
+                       float border_opacity, float fill_opacity)
+{
+    if (!hitboxA || !hitboxB)
+    {
+        return;
+    }
+
+    // Get boxes from both hitboxes
+    std::vector<CF_Aabb> boxesA = hitboxA->getBoxes(directionA, positionA);
+    std::vector<CF_Aabb> boxesB = hitboxB->getBoxes(directionB, positionB);
+
+    // Track which boxes from each hitbox have been rendered
+    std::vector<bool> boxARendered(boxesA.size(), false);
+    std::vector<bool> boxBRendered(boxesB.size(), false);
+
+    // First pass: Find and render overlapping boxes with halves
+    for (size_t i = 0; i < boxesA.size(); ++i)
+    {
+        for (size_t j = 0; j < boxesB.size(); ++j)
+        {
+            // Skip already rendered boxes from B
+            if (boxBRendered[j])
+                continue;
+
+            if (cf_overlaps(boxesA[i], boxesB[j]))
+            {
+                // Render the overlapping box with split colors
+                highlightAreaHalves(boxesA[i], colorA, colorB, border_opacity, fill_opacity);
+                boxARendered[i] = true;
+                boxBRendered[j] = true;
+                break; // Move to next box from A
+            }
+        }
+    }
+
+    // Second pass: Render non-overlapping boxes from A
+    for (size_t i = 0; i < boxesA.size(); ++i)
+    {
+        if (!boxARendered[i])
+        {
+            highlightArea(boxesA[i], colorA, border_opacity, fill_opacity);
+        }
+    }
+
+    // Third pass: Render non-overlapping boxes from B
+    for (size_t i = 0; i < boxesB.size(); ++i)
+    {
+        if (!boxBRendered[i])
+        {
+            highlightArea(boxesB[i], colorB, border_opacity, fill_opacity);
+        }
+    }
 }

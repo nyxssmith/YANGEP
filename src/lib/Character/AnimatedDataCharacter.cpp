@@ -700,6 +700,17 @@ void AnimatedDataCharacter::setDoingAction(bool doing)
 
 bool AnimatedDataCharacter::getIsDoingAction() const
 {
+    if (isDoingAction)
+    {
+        // if doing an action, check if not in cooldown
+        if (activeAction)
+        {
+            if (activeAction->getInCooldown())
+            {
+                return false;
+            }
+        }
+    }
     return isDoingAction;
 }
 
