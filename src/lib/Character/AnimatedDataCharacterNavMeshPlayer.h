@@ -59,6 +59,12 @@ public:
     void setActionPointerA(size_t index);
     void setActionPointerB(size_t index);
 
+    // Move action pointers up/down with wrapping
+    void MoveActionPointerAUp();
+    void MoveActionPointerADown();
+    void MoveActionPointerBUp();
+    void MoveActionPointerBDown();
+
 private:
     // The navmesh this player is on (non-owning pointer)
     NavMesh *navmesh;

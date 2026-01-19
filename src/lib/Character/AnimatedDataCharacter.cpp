@@ -297,9 +297,16 @@ void AnimatedDataCharacter::update(float dt, v2 moveVector)
     }
 
     // Update the active action if one exists
-    if (isDoingAction && activeAction)
+    if (isDoingAction)
     {
-        activeAction->update(dt);
+        // iterate through all actions and call update
+        for (auto &action : actionsList)
+        {
+            if (action.getIsActive())
+            {
+                action.update(dt);
+            }
+        }
     }
 
     demoTime += dt; // Calculate movement magnitude to determine if we're moving
@@ -694,7 +701,27 @@ void AnimatedDataCharacter::setDoingAction(bool doing)
     // Clear active action when no longer doing action
     if (!doing)
     {
-        activeAction = nullptr;
+        // check all other actions in case one got interrupted
+        // if any action is still active, set it as the active action instead
+        Action *stillActiveAction = nullptr;
+        for (auto &action : actionsList)
+        {
+            if (action.getIsActive())
+            {
+                stillActiveAction = &action;
+                break;
+            }
+        }
+
+        if (stillActiveAction)
+        {
+            setActiveAction(stillActiveAction);
+            isDoingAction = true; // Keep doing action since we found an active one
+        }
+        else
+        {
+            setActiveAction(nullptr);
+        }
     }
 }
 

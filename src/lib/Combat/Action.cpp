@@ -204,6 +204,7 @@ void Action::setActive(bool active)
     if (active && in_cooldown)
     {
         printf("Action: Warning - Attempting to activate action while in cooldown (%.3f seconds remaining)\n", cooldown_timer);
+        return;
     }
 
     isActive = active;
@@ -227,7 +228,7 @@ void Action::setActive(bool active)
         else
         {
             character->setDoingAction(false);
-            character->setActiveAction(nullptr);
+            // character->setActiveAction(nullptr);
         }
     }
 }
