@@ -68,4 +68,8 @@ public:
 
     // Get characters currently in this action's hitbox
     std::vector<AnimatedDataCharacter *> getCharactersInHitbox() const;
+
+    // Global cooldown support
+    float getGlobalCooldown() const;           // Get global_cooldown value from action.json (in ms, 0 if not set)
+    void applyCooldown(float cooldownSeconds); // Apply cooldown only if less than current cooldown
 };

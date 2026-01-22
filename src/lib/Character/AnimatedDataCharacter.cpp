@@ -296,16 +296,12 @@ void AnimatedDataCharacter::update(float dt, v2 moveVector)
         moveVector = v2(0, 0);
     }
 
-    // Update the active action if one exists
-    if (isDoingAction)
+    // Update all actions (even inactive ones need to tick down cooldowns from global cooldown)
+    for (auto &action : actionsList)
     {
-        // iterate through all actions and call update
-        for (auto &action : actionsList)
+        if (action.getIsActive())
         {
-            if (action.getIsActive())
-            {
-                action.update(dt);
-            }
+            action.update(dt);
         }
     }
 
@@ -978,6 +974,15 @@ Action *AnimatedDataCharacter::getActionPointerB() const
         return const_cast<Action *>(&actionsList[actionPointerB]);
     }
     return nullptr;
+}
+
+void AnimatedDataCharacter::applyGlobalCooldown(float globalCooldownSeconds)
+{
+    // Apply the global cooldown to all actions
+    for (auto &action : actionsList)
+    {
+        action.applyCooldown(globalCooldownSeconds);
+    }
 }
 
 // Handle hit from another character
