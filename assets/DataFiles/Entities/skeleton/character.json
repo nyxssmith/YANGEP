@@ -1,4 +1,5 @@
 {
   "name": "skeleton",
+  "innate_actions": ["OneTile"],
   "layers": [{ "filename": "BODY_skeleton.png", "tile_size": 64 }]
 }

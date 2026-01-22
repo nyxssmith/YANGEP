@@ -286,6 +286,15 @@ void Action::update(float dt)
             float cooldownMs = contains("cooldown") ? (*this)["cooldown"].get<float>() : 0.0f;
             cooldown_timer = cooldownMs / 1000.0f;
             // printf("Action: Entering cooldown phase (%.3f ms)\n", cooldownMs);
+
+            // Check if this action has a global cooldown and apply it to all actions
+            float globalCooldownMs = getGlobalCooldown();
+            if (globalCooldownMs > 0.0f && character)
+            {
+                float globalCooldownSeconds = globalCooldownMs / 1000.0f;
+                character->applyGlobalCooldown(globalCooldownSeconds);
+                printf("Action: Applied global cooldown (%.3f ms) to all actions\\n", globalCooldownMs);
+            }
         }
     }
     // Handle cooldown phase
@@ -394,4 +403,31 @@ std::vector<AnimatedDataCharacter *> Action::getCharactersInHitbox() const
     // Ask the level for all characters in this action's hitbox
     // Exclude the character performing the action
     return level->getCharactersInActionHitbox(this, character);
+}
+
+float Action::getGlobalCooldown() const
+{
+    // Return global_cooldown value in milliseconds, or 0 if not set
+    if (contains("global_cooldown") && (*this)["global_cooldown"].is_number())
+    {
+        return (*this)["global_cooldown"].get<float>();
+    }
+    return 0.0f;
+}
+
+void Action::applyCooldown(float cooldownSeconds)
+{
+    // Only apply if we're in cooldown and the new cooldown is less than current
+    if (in_cooldown && cooldownSeconds < cooldown_timer)
+    {
+        cooldown_timer = cooldownSeconds;
+    }
+    // If not in cooldown but cooldown > 0, start cooldown
+    else if (!in_cooldown && cooldownSeconds > 0.0f)
+    {
+        in_cooldown = true;
+        cooldown_timer = cooldownSeconds;
+        isActive = true;     // Activate the action so it gets updated and cooldown ticks down
+        warmup_timer = 0.0f; // Skip warmup phase since we're going straight to cooldown
+    }
 }

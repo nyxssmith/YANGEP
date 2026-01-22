@@ -29,9 +29,11 @@
     "highlightLayerBorders": [],
     "highlightLayerOuterBorders": [],
     "highlightCharacterHitboxes": true,
+    "highlightCoordinatorInfo": true,
     "ShowFPSMetrics": true,
     "ShowJobMetrics": false,
-    "ShowPlayerInfo": true,
+    "ShowPlayerInfo": false,
+    "ShowCoordinatorInfo": true,
     "clickToInspectCharacter": true
   }
 }

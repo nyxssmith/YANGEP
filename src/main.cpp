@@ -10,7 +10,9 @@
 #include "DebugJobWindow.h"
 #include "DebugPlayerInfoWindow.h"
 #include "DebugCharacterInfoWindow.h"
+#include "DebugCoordinatorWindow.h"
 #include "OnScreenChecks.h"
+#include "Coordinator.h"
 #include "Utils.h"
 #include "DataFile.h"
 #include "RealConfigFile.h"
@@ -96,6 +98,7 @@ int main(int argc, char *argv[])
 	bool debugHighlightAgents = false;					  // Default: don't highlight agents
 	bool debugHighlightCharacterHitboxes = false;		  // Default: don't show character hitboxes
 	bool debugHighlightSpatialGrid = false;				  // Default: don't show spatial grid
+	bool debugHighlightCoordinatorInfo = false;			  // Default: don't show coordinator info
 	bool debugHighlightPlayerNavmeshCollisionBox = false; // Default: don't show player navmesh collision box
 	bool clickToInspectCharacter = false;				  // Default: don't inspect character on click
 	if (windowConfig.contains("Debug"))
@@ -130,6 +133,11 @@ int main(int argc, char *argv[])
 		{
 			debugHighlightSpatialGrid = debug["highlightSpatialGrid"];
 			printf("Debug highlightSpatialGrid: %s\n", debugHighlightSpatialGrid ? "enabled" : "disabled");
+		}
+		if (debug.contains("highlightCoordinatorInfo"))
+		{
+			debugHighlightCoordinatorInfo = debug["highlightCoordinatorInfo"];
+			printf("Debug highlightCoordinatorInfo: %s\n", debugHighlightCoordinatorInfo ? "enabled" : "disabled");
 		}
 		if (debug.contains("highlightPlayerNavmeshCollisionBox"))
 		{
@@ -221,6 +229,10 @@ int main(int argc, char *argv[])
 	std::unique_ptr<DebugPlayerInfoWindow> playerInfoWindow;
 	bool ShowPlayerInfo = false;
 
+	// Coordinator debug window (created later after OnScreenChecks is initialized)
+	std::unique_ptr<DebugCoordinatorWindow> coordinatorWindow;
+	bool ShowCoordinatorInfo = false;
+
 	// Character info debug windows (created on click)
 	std::vector<std::unique_ptr<DebugCharacterInfoWindow>> characterInfoWindows;
 
@@ -256,6 +268,12 @@ int main(int argc, char *argv[])
 		{
 			ShowPlayerInfo = debug["ShowPlayerInfo"];
 			printf("Debug ShowPlayerInfo: %s\n", ShowPlayerInfo ? "enabled" : "disabled");
+		}
+
+		if (debug.contains("ShowCoordinatorInfo"))
+		{
+			ShowCoordinatorInfo = debug["ShowCoordinatorInfo"];
+			printf("Debug ShowCoordinatorInfo: %s\n", ShowCoordinatorInfo ? "enabled" : "disabled");
 		}
 	}
 
@@ -342,8 +360,18 @@ int main(int argc, char *argv[])
 	std::shared_ptr<NavMeshPath> navmeshPath = nullptr;
 
 	// Initialize and start on-screen checks worker
-	OnScreenChecks::initialize(&playerPosition, &cfCamera, &level);
+	OnScreenChecks::initialize(&playerPosition, &cfCamera, &level, &playerCharacter);
 	OnScreenChecks::start();
+
+	// Create coordinator debug window if enabled (now that OnScreenChecks is initialized)
+	if (ShowCoordinatorInfo)
+	{
+		coordinatorWindow = std::make_unique<DebugCoordinatorWindow>("Coordinator Info",
+																	 OnScreenChecks::getCoordinator(),
+																	 &playerCharacter,
+																	 level);
+		printf("Created Coordinator debug window\n");
+	}
 
 	// Main loop
 	printf("Skeleton Adventure Game:\n");
@@ -764,6 +792,21 @@ int main(int argc, char *argv[])
 			level.getSpatialGrid().debugRender(cfCamera);
 		}
 
+		// Render coordinator grid debug visualization (if enabled)
+		if (debugHighlightCoordinatorInfo)
+		{
+			// Update the coordinator's near-player grid based on player's tile position
+			// Use rounding to get the tile the player is centered in, not truncation
+			float tileWidth = static_cast<float>(level.getTileWidth());
+			float tileHeight = static_cast<float>(level.getTileHeight());
+			int playerTileX = static_cast<int>(std::round(playerPosition.x / tileWidth));
+			int playerTileY = static_cast<int>(std::round(playerPosition.y / tileHeight));
+			OnScreenChecks::getCoordinator()->updateNearPlayerGrid(playerTileX, playerTileY);
+
+			// Render the grid
+			OnScreenChecks::getCoordinator()->render();
+		}
+
 		// Render NavMesh points debug visualization (if enabled)
 		if (showNavMeshPoints && level.getNavMesh().getPointCount() > 0)
 		{
@@ -812,11 +855,6 @@ int main(int argc, char *argv[])
 
 			cf_draw_pop_color();
 		}
-
-		// debug just highlight one tile
-		highlightTile(level, 0, 0, cf_make_color_rgb(255, 0, 0));
-		highlightTile(level, 10, 10, cf_make_color_rgb(255, 200, 0));
-		highlightTileHalves(level, 5, 5, cf_make_color_rgb(255, 200, 0), cf_make_color_rgb(0, 200, 255));
 
 		// Render player's navmesh collision box (if enabled)
 		if (debugHighlightPlayerNavmeshCollisionBox)
@@ -894,6 +932,12 @@ int main(int argc, char *argv[])
 		if (playerInfoWindow)
 		{
 			playerInfoWindow->render();
+		}
+
+		// Render Coordinator info window if enabled
+		if (coordinatorWindow)
+		{
+			coordinatorWindow->render();
 		}
 
 		// Render all character info windows

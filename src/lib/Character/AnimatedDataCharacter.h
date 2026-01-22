@@ -104,6 +104,9 @@ public:
     Action *getActionPointerA() const;
     Action *getActionPointerB() const;
 
+    // Apply global cooldown to all actions
+    void applyGlobalCooldown(float globalCooldownSeconds);
+
     // Hit handling
     void OnHit(AnimatedDataCharacter *character, Damage damage);
     // Active ghost-trail (if any), nullptr otherwise
