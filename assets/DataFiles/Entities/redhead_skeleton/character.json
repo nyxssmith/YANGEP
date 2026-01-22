@@ -1,0 +1,11 @@
+{
+  "name": "redhead_skeleton",
+  "innate_actions": ["OneTile"],
+  "layers": [
+    { "filename": "BODY_skeleton.png", "tile_size": 64 },
+    {
+      "filename": "HEAD_hair_red.png",
+      "tile_size": 64
+    }
+  ]
+}
