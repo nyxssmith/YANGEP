@@ -125,27 +125,28 @@ void NearPlayerTileGrid::render(const LevelV1 &level) const
     {
         CF_Color color;
         float opacity;
+        float border_opacity = 0.2f;
 
         switch (tile.status)
         {
         case TileStatus::PlannedAction:
             // Dark pink for planned action
             color = cf_make_color_rgb(199, 21, 133); // Medium violet red
-            opacity = 0.4f;
+            opacity = 0.15f;
             break;
         case TileStatus::PlannedOccupiedByAgent:
             // Purple for planned agent position
             color = cf_make_color_rgb(128, 0, 128);
-            opacity = 0.4f;
+            opacity = 0.15f;
             break;
         case TileStatus::Empty:
         default:
             // Light pink with lower opacity for empty
             color = cf_make_color_rgb(255, 182, 193);
-            opacity = 0.2f;
+            opacity = 0.1f;
             break;
         }
 
-        highlightTile(level, tile.tileX, tile.tileY, color, 0.9f, opacity);
+        highlightTile(level, tile.tileX, tile.tileY, color, border_opacity, opacity);
     }
 }

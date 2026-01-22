@@ -41,6 +41,11 @@ void DebugCoordinatorWindow::render()
         ImGui_Separator();
     }
 
+    // Display timing information
+    double updateTimeMs = m_coordinator->getLastUpdateTimeMs();
+    ImGui_Text("Update Time: %.3f ms", updateTimeMs);
+    ImGui_Separator();
+
     // Display total agent count
     size_t agentCount = m_coordinator->getAgentCount();
     ImGui_Text("Coordinated Agents: %zu", agentCount);

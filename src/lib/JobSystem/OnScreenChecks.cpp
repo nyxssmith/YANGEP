@@ -98,6 +98,16 @@ namespace OnScreenChecks
                         bool wasOnScreen = agent->getIsOnScreen();
                         agent->setIsOnScreen(visible);
 
+                        // Remove dying agents from coordinator
+                        if (agent->getStageOfLife() == StageOfLife::Dying)
+                        {
+                            if (wasOnScreen)
+                            {
+                                s_coordinator.removeAgent(agent);
+                            }
+                            continue;
+                        }
+
                         // Update coordinator based on visibility change
                         if (visible && !wasOnScreen)
                         {

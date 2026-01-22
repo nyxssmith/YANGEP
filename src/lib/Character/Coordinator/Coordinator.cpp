@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 Coordinator::Coordinator()
-    : m_nearPlayerTileGrid(7), m_player(nullptr), m_level(nullptr), m_lastPlayerTileX(INT_MIN), m_lastPlayerTileY(INT_MIN), m_agentListChanged(false) // Default to 7x7 grid
+    : m_nearPlayerTileGrid(7), m_player(nullptr), m_level(nullptr), m_lastPlayerTileX(INT_MIN), m_lastPlayerTileY(INT_MIN), m_agentListChanged(false), m_lastUpdateTimeMs(0.0) // Default to 7x7 grid
 {
     printf("Coordinator: Initialized\n");
 }
@@ -61,6 +61,21 @@ void Coordinator::removeAgent(AnimatedDataCharacterNavMeshAgent *agent)
         return; // Agent not being coordinated
     }
 
+    // Clear any tiles in the near-player grid claimed by this agent
+    int halfSize = m_nearPlayerTileGrid.getGridSize() / 2;
+    for (int ny = -halfSize; ny <= halfSize; ++ny)
+    {
+        for (int nx = -halfSize; nx <= halfSize; ++nx)
+        {
+            NearPlayerTile *tile = m_nearPlayerTileGrid.getTileMutable(nx, ny);
+            if (tile && tile->agent == agent)
+            {
+                tile->status = TileStatus::Empty;
+                tile->agent = nullptr;
+            }
+        }
+    }
+
     // Remove from set
     m_agentSet.erase(it);
 
@@ -99,6 +114,8 @@ void Coordinator::clear()
 
 void Coordinator::update()
 {
+    auto startTime = std::chrono::high_resolution_clock::now();
+
     std::lock_guard<std::mutex> lock(m_mutex);
 
     if (!m_player || !m_level)
@@ -177,6 +194,10 @@ void Coordinator::update()
 
     // get shapes that can be made from actions
     //  route those to overlap player, and then go to next agent and route that etc
+
+    auto endTime = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> elapsed = endTime - startTime;
+    m_lastUpdateTimeMs = elapsed.count();
 }
 
 const NearPlayerTileGrid &Coordinator::getNearPlayerTileGrid() const
@@ -203,6 +224,11 @@ const AnimatedDataCharacter *Coordinator::getPlayer() const
 LevelV1 *Coordinator::getLevel() const
 {
     return m_level;
+}
+
+double Coordinator::getLastUpdateTimeMs() const
+{
+    return m_lastUpdateTimeMs;
 }
 
 void Coordinator::updateNearPlayerGrid(int playerTileX, int playerTileY)

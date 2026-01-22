@@ -3,6 +3,7 @@
 #include <vector>
 #include <mutex>
 #include <unordered_set>
+#include <chrono>
 #include <cute.h>
 #include "NearPlayerTileGrid.h"
 
@@ -63,6 +64,9 @@ public:
     // Get the level pointer
     LevelV1 *getLevel() const;
 
+    // Get the last update execution time in milliseconds
+    double getLastUpdateTimeMs() const;
+
     // Update the near-player grid based on player's current tile position
     // Thread-safe
     void updateNearPlayerGrid(int playerTileX, int playerTileY);
@@ -83,5 +87,6 @@ private:
     int m_lastPlayerTileX;                                              // Last known player tile X position
     int m_lastPlayerTileY;                                              // Last known player tile Y position
     bool m_agentListChanged;                                            // Flag to track if agents were added/removed
+    double m_lastUpdateTimeMs;                                          // Last update execution time in milliseconds
     mutable std::mutex m_mutex;                                         // Protects m_agents and m_agentSet
 };
