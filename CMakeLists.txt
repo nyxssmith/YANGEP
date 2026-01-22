@@ -246,6 +246,7 @@ add_executable(${PROJECT_NAME}_tests
     src/lib/Character/StateMachines/States/WanderNewPositionState.cpp
     src/lib/Character/StateMachines/States/MoveToPositionState.cpp
     src/lib/JobSystem/JobSystem.cpp
+    src/lib/JobSystem/OnScreenChecks.cpp
 	src/lib/Effects/RedFlashEffect.cpp
     src/lib/Effects/GreenFlashEffect.cpp
     src/lib/Effects/EffectFactory.cpp

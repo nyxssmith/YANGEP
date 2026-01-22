@@ -29,7 +29,7 @@
     "highlightLayerBorders": [],
     "highlightLayerOuterBorders": [],
     "highlightCharacterHitboxes": true,
-    "highlightCoordinatorInfo": true,
+    "highlightCoordinatorInfo": false,
     "ShowFPSMetrics": true,
     "ShowJobMetrics": false,
     "ShowPlayerInfo": false,

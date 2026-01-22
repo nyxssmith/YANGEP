@@ -1,6 +1,8 @@
 #include "LevelV1.h"
 #include "CFNativeCamera.h"
 #include "JobSystem.h"
+#include "OnScreenChecks.h"
+#include "Coordinator.h"
 #include "AnimatedDataCharacterNavMeshPlayer.h"
 #include "../UI/ColorUtils.h"
 #include "../UI/HighlightTile.h"
@@ -416,10 +418,28 @@ void LevelV1::updateAgents(float dt)
             size_t index = *it;
             if (index < agents.size())
             {
-                // Remove from rendered objects list
-                renderedObjects.remove(ObjectRenderedByWorldPosition(agents[index].get()));
+                auto *agentPtr = agents[index].get();
 
-                // Remove from agents list
+                // CRITICAL: Remove from coordinator BEFORE deleting
+                // This prevents background thread from accessing deleted memory
+                // Try to get coordinator and remove agent if available
+                try
+                {
+                    Coordinator *coordinator = OnScreenChecks::getCoordinator();
+                    if (coordinator)
+                    {
+                        coordinator->removeAgent(agentPtr);
+                    }
+                }
+                catch (...)
+                {
+                    // Coordinator not available (e.g., in tests), skip removal
+                }
+
+                // Remove from rendered objects list
+                renderedObjects.remove(ObjectRenderedByWorldPosition(agentPtr));
+
+                // Remove from agents list (this deletes the agent)
                 agents.erase(agents.begin() + index);
                 printf("LevelV1: Removed dead agent at index %zu\n", index);
             }

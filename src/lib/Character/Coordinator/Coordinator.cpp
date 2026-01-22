@@ -144,8 +144,10 @@ void Coordinator::update()
     m_lastPlayerTileY = currentPlayerTileY;
     m_agentListChanged = false; // Reset the flag
 
-    // Create a sorted list of agents by distance to player (closest first)
-    std::vector<std::pair<float, AnimatedDataCharacterNavMeshAgent *>> agentsByDistance;
+    // STEP 1: Copy all agent data we need while holding the lock
+    // This prevents race conditions with main thread deleting/modifying agents
+    std::vector<AgentProcessData> agentDataList;
+    agentDataList.reserve(m_agents.size());
 
     for (auto *agent : m_agents)
     {
@@ -154,42 +156,53 @@ void Coordinator::update()
             continue;
         }
 
-        v2 agentPosition = agent->getPosition();
-        float dx = agentPosition.x - playerPosition.x;
-        float dy = agentPosition.y - playerPosition.y;
-        float distSq = dx * dx + dy * dy;
+        AgentProcessData data;
+        data.agent = agent;
+        data.position = agent->getPosition();
+        data.hasValidAction = false;
 
-        agentsByDistance.push_back({distSq, agent});
-    }
+        // Calculate distance to player
+        float dx = data.position.x - playerPosition.x;
+        float dy = data.position.y - playerPosition.y;
+        data.distSq = dx * dx + dy * dy;
 
-    // Sort by distance (closest first)
-    std::sort(agentsByDistance.begin(), agentsByDistance.end(),
-              [](const auto &a, const auto &b)
-              { return a.first < b.first; });
-
-    // Process all agents in order of distance to player
-    for (const auto &[distSq, agent] : agentsByDistance)
-    {
+        // Try to copy hitbox tiles if action exists
         Action *actionA = agent->getActionPointerA();
         if (actionA)
         {
             HitBox *hitbox = actionA->getHitBox();
             if (hitbox)
             {
-                printf("Agent %p: ActionA %p has hitbox %p (dist: %.2f)\n",
-                       (void *)agent, (void *)actionA, (void *)hitbox, std::sqrt(distSq));
-                v2 agentPosition = agent->getPosition();
-                tryPlaceHitboxOnGrid(hitbox, agentPosition, actionA, agent);
-            }
-            else
-            {
-                printf("Agent %p: ActionA %p has no hitbox\n", (void *)agent, (void *)actionA);
+                // Make a deep copy of the tiles vector
+                const auto &tiles = hitbox->getTiles();
+                if (!tiles.empty())
+                {
+                    data.hitboxTiles = tiles; // Vector copy
+                    data.hasValidAction = true;
+                    printf("Agent %p: Copied %zu hitbox tiles (dist: %.2f)\n",
+                           (void *)agent, data.hitboxTiles.size(), std::sqrt(data.distSq));
+                }
             }
         }
-        else
+
+        agentDataList.push_back(data);
+    }
+
+    // STEP 2: Sort by distance (closest first)
+    std::sort(agentDataList.begin(), agentDataList.end(),
+              [](const AgentProcessData &a, const AgentProcessData &b)
+              { return a.distSq < b.distSq; });
+
+    // STEP 3: Process using copied data (no agent pointer dereferencing)
+    for (const auto &data : agentDataList)
+    {
+        if (!data.hasValidAction || data.hitboxTiles.empty())
         {
-            printf("Agent %p: No actionA\n", (void *)agent);
+            continue;
         }
+
+        // Process with copied tile data - no accessing agent internals
+        tryPlaceHitboxOnGrid(data.hitboxTiles, data.position, data.agent);
     }
 
     // get shapes that can be made from actions
@@ -261,16 +274,16 @@ void Coordinator::render() const
     m_nearPlayerTileGrid.render(*m_level);
 }
 
-bool Coordinator::tryPlaceHitboxOnGrid(HitBox *hitbox, v2 agentPosition, Action *action, AnimatedDataCharacterNavMeshAgent *agent)
+bool Coordinator::tryPlaceHitboxOnGrid(const std::vector<HitboxTile> &hitboxTiles, v2 agentPosition, AnimatedDataCharacterNavMeshAgent *agent)
 {
-    if (!hitbox || !action || !m_level || !agent)
+    // NOTE: This method must be called with m_mutex held (called from update())
+    // Uses copied tile data to avoid accessing potentially deleted agent/action/hitbox objects
+    if (!m_level || !agent || hitboxTiles.empty())
     {
         return false;
     }
 
-    // Get the tiles from the hitbox
-    const auto &hitboxTiles = hitbox->getTiles();
-    printf("tryPlaceHitboxOnGrid: Hitbox has %zu tiles\n", hitboxTiles.size());
+    printf("tryPlaceHitboxOnGrid: Processing %zu tiles for agent %p\n", hitboxTiles.size(), (void *)agent);
 
     // Get access to the grid
     NearPlayerTileGrid &grid = getNearPlayerTileGridMutable();
