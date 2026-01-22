@@ -12,6 +12,7 @@
 #include "DebugCharacterInfoWindow.h"
 #include "DebugCoordinatorWindow.h"
 #include "OnScreenChecks.h"
+#include "Coordinator.h"
 #include "Utils.h"
 #include "DataFile.h"
 #include "RealConfigFile.h"
@@ -97,6 +98,7 @@ int main(int argc, char *argv[])
 	bool debugHighlightAgents = false;					  // Default: don't highlight agents
 	bool debugHighlightCharacterHitboxes = false;		  // Default: don't show character hitboxes
 	bool debugHighlightSpatialGrid = false;				  // Default: don't show spatial grid
+	bool debugHighlightCoordinatorInfo = false;			  // Default: don't show coordinator info
 	bool debugHighlightPlayerNavmeshCollisionBox = false; // Default: don't show player navmesh collision box
 	bool clickToInspectCharacter = false;				  // Default: don't inspect character on click
 	if (windowConfig.contains("Debug"))
@@ -131,6 +133,11 @@ int main(int argc, char *argv[])
 		{
 			debugHighlightSpatialGrid = debug["highlightSpatialGrid"];
 			printf("Debug highlightSpatialGrid: %s\n", debugHighlightSpatialGrid ? "enabled" : "disabled");
+		}
+		if (debug.contains("highlightCoordinatorInfo"))
+		{
+			debugHighlightCoordinatorInfo = debug["highlightCoordinatorInfo"];
+			printf("Debug highlightCoordinatorInfo: %s\n", debugHighlightCoordinatorInfo ? "enabled" : "disabled");
 		}
 		if (debug.contains("highlightPlayerNavmeshCollisionBox"))
 		{
@@ -353,7 +360,7 @@ int main(int argc, char *argv[])
 	std::shared_ptr<NavMeshPath> navmeshPath = nullptr;
 
 	// Initialize and start on-screen checks worker
-	OnScreenChecks::initialize(&playerPosition, &cfCamera, &level);
+	OnScreenChecks::initialize(&playerPosition, &cfCamera, &level, &playerCharacter);
 	OnScreenChecks::start();
 
 	// Create coordinator debug window if enabled (now that OnScreenChecks is initialized)
@@ -783,6 +790,21 @@ int main(int argc, char *argv[])
 		if (debugHighlightSpatialGrid && level.getSpatialGrid().getOccupiedCellCount() > 0)
 		{
 			level.getSpatialGrid().debugRender(cfCamera);
+		}
+
+		// Render coordinator grid debug visualization (if enabled)
+		if (debugHighlightCoordinatorInfo)
+		{
+			// Update the coordinator's near-player grid based on player's tile position
+			// Use rounding to get the tile the player is centered in, not truncation
+			float tileWidth = static_cast<float>(level.getTileWidth());
+			float tileHeight = static_cast<float>(level.getTileHeight());
+			int playerTileX = static_cast<int>(std::round(playerPosition.x / tileWidth));
+			int playerTileY = static_cast<int>(std::round(playerPosition.y / tileHeight));
+			OnScreenChecks::getCoordinator()->updateNearPlayerGrid(playerTileX, playerTileY);
+
+			// Render the grid
+			OnScreenChecks::getCoordinator()->render();
 		}
 
 		// Render NavMesh points debug visualization (if enabled)

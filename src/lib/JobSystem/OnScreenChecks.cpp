@@ -22,12 +22,16 @@ namespace OnScreenChecks
     // Shutdown signal for the worker loop
     static std::atomic<bool> s_shutdownRequested{false};
 
-    void initialize(v2 *playerPosition, CFNativeCamera *camera, LevelV1 *level)
+    void initialize(v2 *playerPosition, CFNativeCamera *camera, LevelV1 *level, const AnimatedDataCharacter *player)
     {
         s_playerPosition = playerPosition;
         s_camera = camera;
         s_level = level;
         s_shutdownRequested = false;
+
+        // Initialize the coordinator with player and level pointers
+        s_coordinator.initialize(player, level);
+
         printf("OnScreenChecks: Initialized with player=%p, camera=%p, level=%p\n",
                (void *)playerPosition, (void *)camera, (void *)level);
     }
@@ -103,6 +107,7 @@ namespace OnScreenChecks
                         {
                             s_coordinator.removeAgent(agent);
                         }
+                        s_coordinator.update();
                     }
                 }
 

@@ -4,6 +4,11 @@
       "name": "redhead_skeleton",
       "position": { "x": 10, "y": 10 },
       "path": "/assets/DataFiles/Entities/redhead_skeleton"
+    },
+    {
+      "name": "skeleton",
+      "position": { "x": 14, "y": 13 },
+      "path": "/assets/DataFiles/Entities/skeleton"
     }
   ]
 }

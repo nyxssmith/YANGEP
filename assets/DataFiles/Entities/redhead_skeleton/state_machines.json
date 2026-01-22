@@ -15,5 +15,5 @@
     "print_5s",
     "wander"
   ],
-  "default_state_machine": "wander"
+  "default_state_machine": "idle"
 }

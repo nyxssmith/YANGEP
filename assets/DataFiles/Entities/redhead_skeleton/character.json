@@ -1,6 +1,6 @@
 {
   "name": "redhead_skeleton",
-  "innate_actions": ["OneTile"],
+  "innate_actions": ["TwoInFront"],
   "layers": [
     { "filename": "BODY_skeleton.png", "tile_size": 64 },
     {

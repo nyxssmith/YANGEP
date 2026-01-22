@@ -127,6 +127,7 @@ add_executable(
 	src/lib/Character/AnimatedDataCharacterNavMeshAgent.cpp
 	src/lib/Character/AnimatedDataCharacterNavMeshPlayer.cpp
 	src/lib/Character/Coordinator/Coordinator.cpp
+	src/lib/Character/Coordinator/NearPlayerTileGrid.cpp
 	src/lib/Character/StateMachines/State.cpp
 	src/lib/Character/StateMachines/StateMachine.cpp
 	src/lib/Character/StateMachines/StateMachineController.cpp
@@ -235,6 +236,7 @@ add_executable(${PROJECT_NAME}_tests
     src/lib/Character/AnimatedDataCharacterNavMeshAgent.cpp
     src/lib/Character/AnimatedDataCharacterNavMeshPlayer.cpp
     src/lib/Character/Coordinator/Coordinator.cpp
+    src/lib/Character/Coordinator/NearPlayerTileGrid.cpp
     src/lib/Character/StateMachines/State.cpp
     src/lib/Character/StateMachines/StateMachine.cpp
     src/lib/Character/StateMachines/StateMachineController.cpp
