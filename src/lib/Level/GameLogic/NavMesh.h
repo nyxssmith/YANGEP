@@ -3,6 +3,7 @@
 #include <vector>
 #include <memory>
 #include <string>
+#include <mutex>
 #include <cute.h>
 #include "NavMeshPoint.h"
 #include "NavMeshPath.h"
@@ -177,4 +178,7 @@ public:
     void debugRenderPolygons(const class CFNativeCamera &camera, CF_Color color = cf_color_white()) const;
     void debugRenderEdges(const class CFNativeCamera &camera, CF_Color color = cf_color_red()) const;
     void debugRenderPoints(const class CFNativeCamera &camera, CF_Color color = cf_make_color_rgb(255, 255, 0)) const;
+
+private:
+    mutable std::mutex m_pathfindingMutex; // Protects path generation and shared path list
 };

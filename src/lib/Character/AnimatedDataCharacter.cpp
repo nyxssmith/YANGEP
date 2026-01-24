@@ -470,7 +470,7 @@ void AnimatedDataCharacter::render()
         return;
 
     // Don't render if Dead
-    if (stageOfLife == StageOfLife::Dead)
+    if (stageOfLife == StageOfLife::Dying || stageOfLife == StageOfLife::Dead)
         return;
 
     // Draw ghost trail instances behind the character if active.
@@ -492,8 +492,8 @@ void AnimatedDataCharacter::render(v2 renderPosition)
     if (!initialized)
         return;
 
-    // Don't render if Dead
-    if (stageOfLife == StageOfLife::Dead)
+    // Don't render if Dead or dying
+    if (stageOfLife == StageOfLife::Dead || stageOfLife == StageOfLife::Dying)
         return;
 
     // Draw ghost trail instances at their recorded world positions
@@ -991,7 +991,7 @@ void AnimatedDataCharacter::OnHit(AnimatedDataCharacter *character, Damage damag
 {
     // Trigger red flash effect when hit
     triggerEffect("red", 3, 1.0f, 0.80f, [this]()
-                  { this->setStageOfLife(StageOfLife::Dead); });
+                  { this->setStageOfLife(StageOfLife::Dying); });
 
     // Print debug message
     printf("AnimatedDataCharacter: Hit by character with damage value: %.2f\n", damage.value);
@@ -999,12 +999,19 @@ void AnimatedDataCharacter::OnHit(AnimatedDataCharacter *character, Damage damag
     // Implement health system, reactions, etc.
 
     // For demo purposes, set stage of life to Dying
-    setStageOfLife(StageOfLife::Dying);
+    // setStageOfLife(StageOfLife::Dying);
 }
 
 // Set stage of life
 void AnimatedDataCharacter::setStageOfLife(StageOfLife stage)
 {
+    // If setting to Dead, ensure we were Dying first
+    if (stage == StageOfLife::Dead && stageOfLife != StageOfLife::Dying)
+    {
+        // todo handle this better
+        printf("AnimatedDataCharacter: WARNING: Setting stage to Dead without being Dying first (current stage: %d)\n", static_cast<int>(stageOfLife));
+    }
+
     stageOfLife = stage;
 }
 

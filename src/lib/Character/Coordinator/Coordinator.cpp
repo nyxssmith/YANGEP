@@ -112,9 +112,67 @@ void Coordinator::clear()
     m_agentSet.clear();
 }
 
+void Coordinator::cullDyingAgents()
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+
+    // Collect agents to remove
+    std::vector<AnimatedDataCharacterNavMeshAgent *> agentsToRemove;
+    for (auto *agent : m_agents)
+    {
+        if (agent && (agent->getStageOfLife() == StageOfLife::Dying || agent->getStageOfLife() == StageOfLife::Dead))
+        {
+            agentsToRemove.push_back(agent);
+        }
+    }
+
+    // Remove each dying/dead agent
+    for (auto *agent : agentsToRemove)
+    {
+        // Clear any tiles in the near-player grid claimed by this agent
+        int halfSize = m_nearPlayerTileGrid.getGridSize() / 2;
+        for (int ny = -halfSize; ny <= halfSize; ++ny)
+        {
+            for (int nx = -halfSize; nx <= halfSize; ++nx)
+            {
+                NearPlayerTile *tile = m_nearPlayerTileGrid.getTileMutable(nx, ny);
+                if (tile && tile->agent == agent)
+                {
+                    tile->status = TileStatus::Empty;
+                    tile->agent = nullptr;
+                }
+            }
+        }
+
+        // Remove from set
+        m_agentSet.erase(agent);
+
+        // Remove from vector
+        auto vecIt = std::find(m_agents.begin(), m_agents.end(), agent);
+        if (vecIt != m_agents.end())
+        {
+            // Swap with last element and pop
+            if (vecIt != m_agents.end() - 1)
+            {
+                std::swap(*vecIt, m_agents.back());
+            }
+            m_agents.pop_back();
+        }
+    }
+
+    if (!agentsToRemove.empty())
+    {
+        m_agentListChanged = true;
+        printf("Coordinator: Culled %zu dying/dead agents\n", agentsToRemove.size());
+    }
+}
+
 void Coordinator::update()
 {
     auto startTime = std::chrono::high_resolution_clock::now();
+
+    // Remove any dying or dead agents first (acquires its own lock)
+    cullDyingAgents();
 
     std::lock_guard<std::mutex> lock(m_mutex);
 
@@ -144,8 +202,10 @@ void Coordinator::update()
     m_lastPlayerTileY = currentPlayerTileY;
     m_agentListChanged = false; // Reset the flag
 
-    // Create a sorted list of agents by distance to player (closest first)
-    std::vector<std::pair<float, AnimatedDataCharacterNavMeshAgent *>> agentsByDistance;
+    // STEP 1: Copy all agent data we need while holding the lock
+    // This prevents race conditions with main thread deleting/modifying agents
+    std::vector<AgentProcessData> agentDataList;
+    agentDataList.reserve(m_agents.size());
 
     for (auto *agent : m_agents)
     {
@@ -153,43 +213,59 @@ void Coordinator::update()
         {
             continue;
         }
+        // skip dying agents
+        if (agent->getStageOfLife() == StageOfLife::Dying || agent->getStageOfLife() == StageOfLife::Dead)
+        {
+            continue;
+        }
 
-        v2 agentPosition = agent->getPosition();
-        float dx = agentPosition.x - playerPosition.x;
-        float dy = agentPosition.y - playerPosition.y;
-        float distSq = dx * dx + dy * dy;
+        AgentProcessData data;
+        data.agent = agent;
+        data.position = agent->getPosition();
+        data.hasValidAction = false;
 
-        agentsByDistance.push_back({distSq, agent});
-    }
+        // Calculate distance to player
+        float dx = data.position.x - playerPosition.x;
+        float dy = data.position.y - playerPosition.y;
+        data.distSq = dx * dx + dy * dy;
 
-    // Sort by distance (closest first)
-    std::sort(agentsByDistance.begin(), agentsByDistance.end(),
-              [](const auto &a, const auto &b)
-              { return a.first < b.first; });
-
-    // Process all agents in order of distance to player
-    for (const auto &[distSq, agent] : agentsByDistance)
-    {
+        // Try to copy hitbox tiles if action exists
         Action *actionA = agent->getActionPointerA();
         if (actionA)
         {
             HitBox *hitbox = actionA->getHitBox();
             if (hitbox)
             {
-                printf("Agent %p: ActionA %p has hitbox %p (dist: %.2f)\n",
-                       (void *)agent, (void *)actionA, (void *)hitbox, std::sqrt(distSq));
-                v2 agentPosition = agent->getPosition();
-                tryPlaceHitboxOnGrid(hitbox, agentPosition, actionA, agent);
-            }
-            else
-            {
-                printf("Agent %p: ActionA %p has no hitbox\n", (void *)agent, (void *)actionA);
+                // Make a deep copy of the tiles vector
+                const auto &tiles = hitbox->getTiles();
+                if (!tiles.empty())
+                {
+                    data.hitboxTiles = tiles; // Vector copy
+                    data.hasValidAction = true;
+                    // printf("Agent %p: Copied %zu hitbox tiles (dist: %.2f)\n",
+                    //        (void *)agent, data.hitboxTiles.size(), std::sqrt(data.distSq));
+                }
             }
         }
-        else
+
+        agentDataList.push_back(data);
+    }
+
+    // STEP 2: Sort by distance (closest first)
+    std::sort(agentDataList.begin(), agentDataList.end(),
+              [](const AgentProcessData &a, const AgentProcessData &b)
+              { return a.distSq < b.distSq; });
+
+    // STEP 3: Process using copied data (no agent pointer dereferencing)
+    for (const auto &data : agentDataList)
+    {
+        if (!data.hasValidAction || data.hitboxTiles.empty())
         {
-            printf("Agent %p: No actionA\n", (void *)agent);
+            continue;
         }
+
+        // Process with copied tile data - no accessing agent internals
+        tryPlaceHitboxOnGrid(data.hitboxTiles, data.position, data.agent);
     }
 
     // get shapes that can be made from actions
@@ -261,16 +337,16 @@ void Coordinator::render() const
     m_nearPlayerTileGrid.render(*m_level);
 }
 
-bool Coordinator::tryPlaceHitboxOnGrid(HitBox *hitbox, v2 agentPosition, Action *action, AnimatedDataCharacterNavMeshAgent *agent)
+bool Coordinator::tryPlaceHitboxOnGrid(const std::vector<HitboxTile> &hitboxTiles, v2 agentPosition, AnimatedDataCharacterNavMeshAgent *agent)
 {
-    if (!hitbox || !action || !m_level || !agent)
+    // NOTE: This method must be called with m_mutex held (called from update())
+    // Uses copied tile data to avoid accessing potentially deleted agent/action/hitbox objects
+    if (!m_level || !agent || hitboxTiles.empty())
     {
         return false;
     }
 
-    // Get the tiles from the hitbox
-    const auto &hitboxTiles = hitbox->getTiles();
-    printf("tryPlaceHitboxOnGrid: Hitbox has %zu tiles\n", hitboxTiles.size());
+    // printf("tryPlaceHitboxOnGrid: Processing %zu tiles for agent %p\n", hitboxTiles.size(), (void *)agent);
 
     // Get access to the grid
     NearPlayerTileGrid &grid = getNearPlayerTileGridMutable();
@@ -286,7 +362,7 @@ bool Coordinator::tryPlaceHitboxOnGrid(HitBox *hitbox, v2 agentPosition, Action 
             {
                 tile->status = TileStatus::Empty;
                 tile->agent = nullptr;
-                printf("  Cleared previous claim by agent at tile (%d, %d)\n", nx, ny);
+                // printf("  Cleared previous claim by agent at tile (%d, %d)\n", nx, ny);
             }
         }
     }
@@ -308,7 +384,7 @@ bool Coordinator::tryPlaceHitboxOnGrid(HitBox *hitbox, v2 agentPosition, Action 
 
     if (!hasEmptyTile)
     {
-        printf("tryPlaceHitboxOnGrid: No empty tiles in grid\n");
+        // printf("tryPlaceHitboxOnGrid: No empty tiles in grid\n");
         return false;
     }
 
@@ -468,15 +544,15 @@ bool Coordinator::tryPlaceHitboxOnGrid(HitBox *hitbox, v2 agentPosition, Action 
 
     if (!bestHitboxTile)
     {
-        printf("tryPlaceHitboxOnGrid: No valid agent position found to hit player\n");
+        // printf("tryPlaceHitboxOnGrid: No valid agent position found to hit player\n");
         return false;
     }
 
-    printf("  Best hitbox tile relative position: (%d, %d)\n", bestHitboxTile->x, bestHitboxTile->y);
-    printf("  Best direction: %d (0=Up, 1=Down, 2=Left, 3=Right)\n", (int)bestDirection);
-    printf("  Best target tile: (%d, %d), distance from player: %.2f\n", bestTargetX, bestTargetY, std::sqrt((float)(bestTargetX * bestTargetX + bestTargetY * bestTargetY)));
-    printf("  Agent current position: (%d, %d), best position: (%d, %d), distance: %.2f\n",
-           agentCurrentNearX, agentCurrentNearY, bestAgentX, bestAgentY, std::sqrt(bestAgentDistSq));
+    // printf("  Best hitbox tile relative position: (%d, %d)\n", bestHitboxTile->x, bestHitboxTile->y);
+    // printf("  Best direction: %d (0=Up, 1=Down, 2=Left, 3=Right)\n", (int)bestDirection);
+    // printf("  Best target tile: (%d, %d), distance from player: %.2f\n", bestTargetX, bestTargetY, std::sqrt((float)(bestTargetX * bestTargetX + bestTargetY * bestTargetY)));
+    // printf("  Agent current position: (%d, %d), best position: (%d, %d), distance: %.2f\n",
+    //        agentCurrentNearX, agentCurrentNearY, bestAgentX, bestAgentY, std::sqrt(bestAgentDistSq));
 
     // Mark ALL hitbox tiles as PlannedAction (rotated for the best direction)
     for (const auto &hitboxTile : hitboxTiles)
@@ -508,13 +584,13 @@ bool Coordinator::tryPlaceHitboxOnGrid(HitBox *hitbox, v2 agentPosition, Action 
         {
             actionTile->status = TileStatus::PlannedAction;
             actionTile->agent = agent;
-            printf("  Marked tile (%d, %d) as PlannedAction for agent %p\n", actionTileX, actionTileY, (void *)agent);
+            // printf("  Marked tile (%d, %d) as PlannedAction for agent %p\n", actionTileX, actionTileY, (void *)agent);
         }
     }
 
     int agentX = bestAgentX;
     int agentY = bestAgentY;
-    printf("  Agent should be at (%d, %d) to perform action\n", agentX, agentY);
+    // printf("  Agent should be at (%d, %d) to perform action\n", agentX, agentY);
 
     // Mark the agent's required tile as PlannedOccupiedByAgent
     NearPlayerTile *agentTile = grid.getTileMutable(agentX, agentY);
@@ -522,7 +598,7 @@ bool Coordinator::tryPlaceHitboxOnGrid(HitBox *hitbox, v2 agentPosition, Action 
     {
         agentTile->status = TileStatus::PlannedOccupiedByAgent;
         agentTile->agent = agent;
-        printf("  Marked tile (%d, %d) as PlannedOccupiedByAgent for agent %p\n", agentX, agentY, (void *)agent);
+        // printf("  Marked tile (%d, %d) as PlannedOccupiedByAgent for agent %p\n", agentX, agentY, (void *)agent);
     }
 
     return true;

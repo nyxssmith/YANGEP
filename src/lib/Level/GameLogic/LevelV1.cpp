@@ -1,6 +1,8 @@
 #include "LevelV1.h"
 #include "CFNativeCamera.h"
 #include "JobSystem.h"
+#include "OnScreenChecks.h"
+#include "Coordinator.h"
 #include "AnimatedDataCharacterNavMeshPlayer.h"
 #include "../UI/ColorUtils.h"
 #include "../UI/HighlightTile.h"
@@ -395,6 +397,11 @@ void LevelV1::updateAgents(float dt)
                 agentsToRemove.push_back(i);
                 continue;
             }
+            // skip dying agents for now
+            if (agent->getStageOfLife() == StageOfLife::Dying)
+            {
+                continue;
+            }
 
             // Always use the last computed background move vector
             // This allows agents to keep moving while their next job is being processed
@@ -416,10 +423,28 @@ void LevelV1::updateAgents(float dt)
             size_t index = *it;
             if (index < agents.size())
             {
-                // Remove from rendered objects list
-                renderedObjects.remove(ObjectRenderedByWorldPosition(agents[index].get()));
+                auto *agentPtr = agents[index].get();
 
-                // Remove from agents list
+                // CRITICAL: Remove from coordinator BEFORE deleting
+                // This prevents background thread from accessing deleted memory
+                // Try to get coordinator and remove agent if available
+                try
+                {
+                    Coordinator *coordinator = OnScreenChecks::getCoordinator();
+                    if (coordinator)
+                    {
+                        coordinator->removeAgent(agentPtr);
+                    }
+                }
+                catch (...)
+                {
+                    // Coordinator not available (e.g., in tests), skip removal
+                }
+
+                // Remove from rendered objects list
+                renderedObjects.remove(ObjectRenderedByWorldPosition(agentPtr));
+
+                // Remove from agents list (this deletes the agent)
                 agents.erase(agents.begin() + index);
                 printf("LevelV1: Removed dead agent at index %zu\n", index);
             }
@@ -450,6 +475,17 @@ void LevelV1::updateAgents(float dt)
     JobSystem::kick();
 }
 
+void LevelV1::cullDyingAgents()
+{
+    for (auto &agent : agents)
+    {
+        if (agent && agent->getStageOfLife() == StageOfLife::Dying)
+        {
+            agent->setStageOfLife(StageOfLife::Dead);
+        }
+    }
+}
+
 void LevelV1::renderAgentActions(const CFNativeCamera &camera, const AnimatedDataCharacter *player)
 {
     // Render player's action hitbox first if provided
@@ -478,6 +514,12 @@ void LevelV1::renderAgentActions(const CFNativeCamera &camera, const AnimatedDat
         auto &agent = agents[agentIndex];
         if (agent && agent->getIsOnScreen())
         {
+            // Skip dying agents
+            if (agent->getStageOfLife() == StageOfLife::Dying)
+            {
+                continue;
+            }
+
             // Render action hitbox if agent is doing an action
             // Don't render during cooldown phase
             if (agent->getIsDoingAction() && agent->getActiveAction() && !agent->getActiveAction()->getInCooldown())
@@ -632,6 +674,11 @@ void LevelV1::render(const CFNativeCamera &camera, const DataFile &config, Anima
             auto agent = obj.asNavMeshAgent();
             if (agent && agent->getIsOnScreen())
             {
+                //skip dying agents
+                if (agent->getStageOfLife() == StageOfLife::Dying)
+                {
+                    return;
+                }
                 v2 agentPos = agent->getPosition();
                 agent->render(agentPos);
             }

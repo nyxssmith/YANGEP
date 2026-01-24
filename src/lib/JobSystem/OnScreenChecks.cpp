@@ -117,8 +117,10 @@ namespace OnScreenChecks
                         {
                             s_coordinator.removeAgent(agent);
                         }
-                        s_coordinator.update();
                     }
+
+                    // Update coordinator once after processing all agents
+                    s_coordinator.update();
                 }
 
                 // printf("OnScreenChecks: Worker loop exited\n");

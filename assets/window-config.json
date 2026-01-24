@@ -3,8 +3,8 @@
   "window": {
     "width": 1280,
     "height": 720,
-    "viewportWidth": 820,
-    "viewportHeight": 560
+    "viewportWidth": 1280,
+    "viewportHeight": 720
   },
   "DebugWindows": [
     {
@@ -29,9 +29,9 @@
     "highlightLayerBorders": [],
     "highlightLayerOuterBorders": [],
     "highlightCharacterHitboxes": true,
-    "highlightCoordinatorInfo": true,
+    "highlightCoordinatorInfo": false,
     "ShowFPSMetrics": true,
-    "ShowJobMetrics": false,
+    "ShowJobMetrics": true,
     "ShowPlayerInfo": false,
     "ShowCoordinatorInfo": true,
     "clickToInspectCharacter": true

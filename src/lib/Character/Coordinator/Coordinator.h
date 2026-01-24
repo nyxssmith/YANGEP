@@ -6,6 +6,7 @@
 #include <chrono>
 #include <cute.h>
 #include "NearPlayerTileGrid.h"
+#include "HitBox.h" // For HitboxTile
 
 using namespace Cute;
 
@@ -15,6 +16,16 @@ class AnimatedDataCharacter;
 class LevelV1;
 class HitBox;
 class Action;
+
+// Structure to hold safe copies of agent data for processing
+struct AgentProcessData
+{
+    AnimatedDataCharacterNavMeshAgent *agent; // Pointer for identification only
+    v2 position;
+    std::vector<HitboxTile> hitboxTiles; // Copied tiles data
+    bool hasValidAction;
+    float distSq;
+};
 
 // Coordinator class manages on-screen agents that need coordination
 // Thread-safe for use with background workers
@@ -45,8 +56,13 @@ public:
     // Clear all agents from coordination
     void clear();
 
-    // Update all coordinated agents
+    // Remove all dying or dead agents from coordination
     // Thread-safe
+    void cullDyingAgents();
+
+    // Update all coordinated agents
+    // Thread-safe - acquires mutex and holds it during entire update
+    // Note: Agents should not be deleted by other threads during update
     void update();
 
     // Get the near-player tile grid
@@ -75,9 +91,9 @@ public:
     void render() const;
 
 private:
-    // Try to place a hitbox on the grid
+    // Try to place hitbox tiles on the grid using copied data
     // Returns true if placement was successful
-    bool tryPlaceHitboxOnGrid(HitBox *hitbox, v2 agentPosition, Action *action, AnimatedDataCharacterNavMeshAgent *agent);
+    bool tryPlaceHitboxOnGrid(const std::vector<HitboxTile> &hitboxTiles, v2 agentPosition, AnimatedDataCharacterNavMeshAgent *agent);
 
     std::vector<AnimatedDataCharacterNavMeshAgent *> m_agents;
     std::unordered_set<AnimatedDataCharacterNavMeshAgent *> m_agentSet; // For O(1) lookup

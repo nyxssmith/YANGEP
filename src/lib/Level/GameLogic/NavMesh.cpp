@@ -720,6 +720,9 @@ void NavMesh::clearPoints()
 // Generate a path from start position to end position
 std::shared_ptr<NavMeshPath> NavMesh::generatePath(CF_V2 start, CF_V2 end)
 {
+    // Thread-safe path generation - lock for entire operation
+    std::lock_guard<std::mutex> lock(m_pathfindingMutex);
+
     auto path = std::make_shared<NavMeshPath>();
 
     // Snap start and end positions to valid tile centers
@@ -757,6 +760,9 @@ std::shared_ptr<NavMeshPath> NavMesh::generatePath(CF_V2 start, CF_V2 end)
 // Generate a path from start position to a named point
 std::shared_ptr<NavMeshPath> NavMesh::generatePathToPoint(CF_V2 start, const std::string &point_name)
 {
+    // Thread-safe path generation
+    std::lock_guard<std::mutex> lock(m_pathfindingMutex);
+
     // Get the named point from the navmesh
     const NavMeshPoint *point = getPoint(point_name);
 
