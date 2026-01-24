@@ -151,6 +151,8 @@ add_executable(
 	src/lib/Effects/GhostTrailRenderer.cpp
 	src/lib/UI/HighlightTile.cpp
 	src/lib/UI/ColorUtils.cpp
+	src/lib/Items/Item.cpp
+	src/lib/Items/Inventory.cpp
 )
 
 # Our source code will be in the `src` folder.
@@ -170,6 +172,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Level/FileHandling>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Level/GameLogic>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/UI>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Items>
 )
 
 # Some basic information needed for CMake to generate your Info.plist file.
@@ -256,6 +259,8 @@ add_executable(${PROJECT_NAME}_tests
 	src/lib/Effects/GhostTrailRenderer.cpp
     src/lib/UI/HighlightTile.cpp
     src/lib/UI/ColorUtils.cpp
+    src/lib/Items/Item.cpp
+    src/lib/Items/Inventory.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}_tests gtest gtest_main cute spng_static nlohmann_json::nlohmann_json pugixml-static)

@@ -298,6 +298,12 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
+	// add debug items to the player
+	Item itemA("assets/DataFiles/Items/item-a.json");
+	Item itemB("assets/DataFiles/Items/item-b.json");
+	playerCharacter.getInventory().addItem(itemA);
+	playerCharacter.getInventory().addItem(itemB);
+
 	// Set player's initial position
 	playerCharacter.setPosition(playerPosition);
 

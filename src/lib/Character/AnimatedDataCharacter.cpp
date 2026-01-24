@@ -54,7 +54,8 @@ AnimatedDataCharacter::AnimatedDataCharacter()
     : initialized(false), demoTime(0.0f), directionChangeTime(0.0f), animationChangeTime(0.0f),
       currentAnimation("idle"), currentDirection(Direction::DOWN), currentFrame(0), frameTimer(0.0f),
       position(v2(0, 0)), wasMoving(false), isDoingAction(false), hitboxDebugActive(false), hitboxSize(32.0f), hitboxDistance(0.0f),
-      hitboxShape(HitboxShape::SQUARE), level(nullptr), actionPointerA(0), actionPointerB(0), activeAction(nullptr), stageOfLife(StageOfLife::Alive)
+      hitboxShape(HitboxShape::SQUARE), level(nullptr), actionPointerA(0), actionPointerB(0), activeAction(nullptr), stageOfLife(StageOfLife::Alive),
+      inventory(1)
 {
     // Initialize input state
     for (int i = 0; i < 4; i++)
@@ -1018,4 +1019,15 @@ void AnimatedDataCharacter::setStageOfLife(StageOfLife stage)
 StageOfLife AnimatedDataCharacter::getStageOfLife() const
 {
     return stageOfLife;
+}
+
+// Inventory access
+Inventory &AnimatedDataCharacter::getInventory()
+{
+    return inventory;
+}
+
+const Inventory &AnimatedDataCharacter::getInventory() const
+{
+    return inventory;
 }
