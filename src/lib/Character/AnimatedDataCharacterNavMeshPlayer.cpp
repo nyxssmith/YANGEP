@@ -7,6 +7,8 @@ using namespace Cute;
 AnimatedDataCharacterNavMeshPlayer::AnimatedDataCharacterNavMeshPlayer()
     : AnimatedDataCharacter(), navmesh(nullptr), currentPolygon(-1), spriteWidth(64.0f), spriteHeight(64.0f), abActions(nullptr)
 {
+    // Player has an inventory of size 4
+    inventory.changeSize(4);
 }
 
 // Destructor
