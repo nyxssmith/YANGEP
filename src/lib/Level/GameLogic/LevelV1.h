@@ -218,6 +218,12 @@ public:
     void updateAgents(float dt);
 
     /**
+     * Set all dying agents to dead state
+     * This will cause them to be removed on the next updateAgents call
+     */
+    void cullDyingAgents();
+
+    /**
      * Render all layers of the level map (tiles only)
      * @param camera Camera to use for rendering
      * @param config Configuration data file for layer highlighting

@@ -2,7 +2,7 @@
   "name": "player",
   "hitbox_size": 32,
   "hitbox_distance": 0,
-  "innate_actions": ["TwoInFront", "ThreeWide", "OneTile"],
+  "innate_actions": ["TwoInFront", "ThreeWide", "OneTile", "Cone7Out"],
   "layers": [
     {
       "filename": "BODY_male.png",

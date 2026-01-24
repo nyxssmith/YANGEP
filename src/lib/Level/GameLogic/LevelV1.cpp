@@ -397,6 +397,11 @@ void LevelV1::updateAgents(float dt)
                 agentsToRemove.push_back(i);
                 continue;
             }
+            // skip dying agents for now
+            if (agent->getStageOfLife() == StageOfLife::Dying)
+            {
+                continue;
+            }
 
             // Always use the last computed background move vector
             // This allows agents to keep moving while their next job is being processed
@@ -470,6 +475,17 @@ void LevelV1::updateAgents(float dt)
     JobSystem::kick();
 }
 
+void LevelV1::cullDyingAgents()
+{
+    for (auto &agent : agents)
+    {
+        if (agent && agent->getStageOfLife() == StageOfLife::Dying)
+        {
+            agent->setStageOfLife(StageOfLife::Dead);
+        }
+    }
+}
+
 void LevelV1::renderAgentActions(const CFNativeCamera &camera, const AnimatedDataCharacter *player)
 {
     // Render player's action hitbox first if provided
@@ -498,6 +514,12 @@ void LevelV1::renderAgentActions(const CFNativeCamera &camera, const AnimatedDat
         auto &agent = agents[agentIndex];
         if (agent && agent->getIsOnScreen())
         {
+            // Skip dying agents
+            if (agent->getStageOfLife() == StageOfLife::Dying)
+            {
+                continue;
+            }
+
             // Render action hitbox if agent is doing an action
             // Don't render during cooldown phase
             if (agent->getIsDoingAction() && agent->getActiveAction() && !agent->getActiveAction()->getInCooldown())
@@ -652,6 +674,11 @@ void LevelV1::render(const CFNativeCamera &camera, const DataFile &config, Anima
             auto agent = obj.asNavMeshAgent();
             if (agent && agent->getIsOnScreen())
             {
+                //skip dying agents
+                if (agent->getStageOfLife() == StageOfLife::Dying)
+                {
+                    return;
+                }
                 v2 agentPos = agent->getPosition();
                 agent->render(agentPos);
             }

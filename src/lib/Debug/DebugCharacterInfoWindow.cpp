@@ -109,81 +109,85 @@ void DebugCharacterInfoWindow::render()
     ImGui_Separator();
 
     // Display state machine info if this is a NavMeshAgent
-    AnimatedDataCharacterNavMeshAgent *agent = dynamic_cast<AnimatedDataCharacterNavMeshAgent *>(m_character);
-    if (agent)
+    if (m_character != nullptr)
     {
-        ImGui_Text("State Machine:");
-        ImGui_Indent();
-
-        StateMachineController *controller = agent->getStateMachineController();
-        if (controller)
+        // TODO crashes if character is destroyed while window is open
+        AnimatedDataCharacterNavMeshAgent *agent = dynamic_cast<AnimatedDataCharacterNavMeshAgent *>(m_character);
+        if (agent)
         {
-            const std::string &currentName = controller->getCurrentStateMachineName();
-            if (!currentName.empty())
+            ImGui_Text("State Machine:");
+            ImGui_Indent();
+
+            StateMachineController *controller = agent->getStateMachineController();
+            if (controller)
             {
-                ImGui_Text("Current: %s", currentName.c_str());
+                const std::string &currentName = controller->getCurrentStateMachineName();
+                if (!currentName.empty())
+                {
+                    ImGui_Text("Current: %s", currentName.c_str());
+                }
+                else
+                {
+                    ImGui_Text("Current: None");
+                }
+
+                const auto &machines = controller->getStateMachines();
+                ImGui_Text("Total Machines: %zu", machines.size());
+
+                // Show buttons for each state machine
+                ImGui_Separator();
+                ImGui_Text("State Machines:");
+                for (size_t i = 0; i < machines.size(); ++i)
+                {
+                    // machines is a vector of StateMachine objects, not pointers
+                    StateMachine *machine = const_cast<StateMachine *>(&machines[i]);
+
+                    const std::string &machineName = machine->getName();
+                    ImGui_Text("  %s", machineName.c_str());
+                    ImGui_SameLine();
+
+                    // Button to set this as the current state machine
+                    char setCurrentLabel[128];
+                    snprintf(setCurrentLabel, sizeof(setCurrentLabel), "Set Current##machine_%zu", i);
+                    if (ImGui_ButtonEx(setCurrentLabel, (ImVec2){0, 0}))
+                    {
+                        controller->setCurrentStateMachine(machineName);
+                    }
+                    ImGui_SameLine();
+
+                    // Button to open debug window for this state machine
+                    char buttonLabel[128];
+                    snprintf(buttonLabel, sizeof(buttonLabel), "Debug##machine_%zu", i);
+                    if (ImGui_ButtonEx(buttonLabel, (ImVec2){0, 0}))
+                    {
+                        // Check if we already have a window for this state machine
+                        bool found = false;
+                        for (auto &window : m_stateMachineWindows)
+                        {
+                            if (window->isTracking(machine))
+                            {
+                                found = true;
+                                break;
+                            }
+                        }
+
+                        // If not, create a new one
+                        if (!found)
+                        {
+                            std::string windowTitle = "State Machine: " + machineName;
+                            m_stateMachineWindows.push_back(
+                                std::make_unique<DebugStateMachineWindow>(windowTitle, machine));
+                        }
+                    }
+                }
             }
             else
             {
-                ImGui_Text("Current: None");
+                ImGui_Text("No controller");
             }
 
-            const auto &machines = controller->getStateMachines();
-            ImGui_Text("Total Machines: %zu", machines.size());
-
-            // Show buttons for each state machine
-            ImGui_Separator();
-            ImGui_Text("State Machines:");
-            for (size_t i = 0; i < machines.size(); ++i)
-            {
-                // machines is a vector of StateMachine objects, not pointers
-                StateMachine *machine = const_cast<StateMachine *>(&machines[i]);
-
-                const std::string &machineName = machine->getName();
-                ImGui_Text("  %s", machineName.c_str());
-                ImGui_SameLine();
-
-                // Button to set this as the current state machine
-                char setCurrentLabel[128];
-                snprintf(setCurrentLabel, sizeof(setCurrentLabel), "Set Current##machine_%zu", i);
-                if (ImGui_ButtonEx(setCurrentLabel, (ImVec2){0, 0}))
-                {
-                    controller->setCurrentStateMachine(machineName);
-                }
-                ImGui_SameLine();
-
-                // Button to open debug window for this state machine
-                char buttonLabel[128];
-                snprintf(buttonLabel, sizeof(buttonLabel), "Debug##machine_%zu", i);
-                if (ImGui_ButtonEx(buttonLabel, (ImVec2){0, 0}))
-                {
-                    // Check if we already have a window for this state machine
-                    bool found = false;
-                    for (auto &window : m_stateMachineWindows)
-                    {
-                        if (window->isTracking(machine))
-                        {
-                            found = true;
-                            break;
-                        }
-                    }
-
-                    // If not, create a new one
-                    if (!found)
-                    {
-                        std::string windowTitle = "State Machine: " + machineName;
-                        m_stateMachineWindows.push_back(
-                            std::make_unique<DebugStateMachineWindow>(windowTitle, machine));
-                    }
-                }
-            }
+            ImGui_Unindent();
         }
-        else
-        {
-            ImGui_Text("No controller");
-        }
-
-        ImGui_Unindent();
     }
 
     ImGui_End();

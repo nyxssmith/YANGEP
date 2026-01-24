@@ -56,6 +56,10 @@ public:
     // Clear all agents from coordination
     void clear();
 
+    // Remove all dying or dead agents from coordination
+    // Thread-safe
+    void cullDyingAgents();
+
     // Update all coordinated agents
     // Thread-safe - acquires mutex and holds it during entire update
     // Note: Agents should not be deleted by other threads during update

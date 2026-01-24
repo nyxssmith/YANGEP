@@ -112,9 +112,67 @@ void Coordinator::clear()
     m_agentSet.clear();
 }
 
+void Coordinator::cullDyingAgents()
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+
+    // Collect agents to remove
+    std::vector<AnimatedDataCharacterNavMeshAgent *> agentsToRemove;
+    for (auto *agent : m_agents)
+    {
+        if (agent && (agent->getStageOfLife() == StageOfLife::Dying || agent->getStageOfLife() == StageOfLife::Dead))
+        {
+            agentsToRemove.push_back(agent);
+        }
+    }
+
+    // Remove each dying/dead agent
+    for (auto *agent : agentsToRemove)
+    {
+        // Clear any tiles in the near-player grid claimed by this agent
+        int halfSize = m_nearPlayerTileGrid.getGridSize() / 2;
+        for (int ny = -halfSize; ny <= halfSize; ++ny)
+        {
+            for (int nx = -halfSize; nx <= halfSize; ++nx)
+            {
+                NearPlayerTile *tile = m_nearPlayerTileGrid.getTileMutable(nx, ny);
+                if (tile && tile->agent == agent)
+                {
+                    tile->status = TileStatus::Empty;
+                    tile->agent = nullptr;
+                }
+            }
+        }
+
+        // Remove from set
+        m_agentSet.erase(agent);
+
+        // Remove from vector
+        auto vecIt = std::find(m_agents.begin(), m_agents.end(), agent);
+        if (vecIt != m_agents.end())
+        {
+            // Swap with last element and pop
+            if (vecIt != m_agents.end() - 1)
+            {
+                std::swap(*vecIt, m_agents.back());
+            }
+            m_agents.pop_back();
+        }
+    }
+
+    if (!agentsToRemove.empty())
+    {
+        m_agentListChanged = true;
+        printf("Coordinator: Culled %zu dying/dead agents\n", agentsToRemove.size());
+    }
+}
+
 void Coordinator::update()
 {
     auto startTime = std::chrono::high_resolution_clock::now();
+
+    // Remove any dying or dead agents first (acquires its own lock)
+    cullDyingAgents();
 
     std::lock_guard<std::mutex> lock(m_mutex);
 
@@ -152,6 +210,11 @@ void Coordinator::update()
     for (auto *agent : m_agents)
     {
         if (!agent)
+        {
+            continue;
+        }
+        // skip dying agents
+        if (agent->getStageOfLife() == StageOfLife::Dying || agent->getStageOfLife() == StageOfLife::Dead)
         {
             continue;
         }

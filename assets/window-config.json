@@ -1,10 +1,10 @@
 {
   "schemaVersion": "1.0",
   "window": {
-    "width": 1920,
-    "height": 1080,
-    "viewportWidth": 1920,
-    "viewportHeight": 1080
+    "width": 1280,
+    "height": 720,
+    "viewportWidth": 1280,
+    "viewportHeight": 720
   },
   "DebugWindows": [
     {

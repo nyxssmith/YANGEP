@@ -955,6 +955,9 @@ int main(int argc, char *argv[])
 						   }),
 			characterInfoWindows.end());
 
+		// cull dying agents to dead, so they are removed next update loop
+		level.cullDyingAgents();
+
 		app_draw_onto_screen();
 	}
 
