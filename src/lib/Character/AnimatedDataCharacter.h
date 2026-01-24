@@ -8,6 +8,7 @@
 #include "Action.h"
 #include "IVisualEffect.h"
 #include "Damage.h"
+#include "../Items/Inventory.h"
 #include <memory>
 #include <vector>
 #include <deque>
@@ -115,6 +116,14 @@ public:
     // Stage of life management
     void setStageOfLife(StageOfLife stage);
     StageOfLife getStageOfLife() const;
+
+    // Inventory access
+    Inventory &getInventory();
+    const Inventory &getInventory() const;
+
+protected:
+    // Inventory - character's item inventory
+    Inventory inventory;
 
 private:
     // The animation loader
