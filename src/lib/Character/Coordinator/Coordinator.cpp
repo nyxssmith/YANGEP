@@ -179,8 +179,8 @@ void Coordinator::update()
                 {
                     data.hitboxTiles = tiles; // Vector copy
                     data.hasValidAction = true;
-                    printf("Agent %p: Copied %zu hitbox tiles (dist: %.2f)\n",
-                           (void *)agent, data.hitboxTiles.size(), std::sqrt(data.distSq));
+                    // printf("Agent %p: Copied %zu hitbox tiles (dist: %.2f)\n",
+                    //        (void *)agent, data.hitboxTiles.size(), std::sqrt(data.distSq));
                 }
             }
         }
@@ -283,7 +283,7 @@ bool Coordinator::tryPlaceHitboxOnGrid(const std::vector<HitboxTile> &hitboxTile
         return false;
     }
 
-    printf("tryPlaceHitboxOnGrid: Processing %zu tiles for agent %p\n", hitboxTiles.size(), (void *)agent);
+    // printf("tryPlaceHitboxOnGrid: Processing %zu tiles for agent %p\n", hitboxTiles.size(), (void *)agent);
 
     // Get access to the grid
     NearPlayerTileGrid &grid = getNearPlayerTileGridMutable();
@@ -299,7 +299,7 @@ bool Coordinator::tryPlaceHitboxOnGrid(const std::vector<HitboxTile> &hitboxTile
             {
                 tile->status = TileStatus::Empty;
                 tile->agent = nullptr;
-                printf("  Cleared previous claim by agent at tile (%d, %d)\n", nx, ny);
+                // printf("  Cleared previous claim by agent at tile (%d, %d)\n", nx, ny);
             }
         }
     }
@@ -321,7 +321,7 @@ bool Coordinator::tryPlaceHitboxOnGrid(const std::vector<HitboxTile> &hitboxTile
 
     if (!hasEmptyTile)
     {
-        printf("tryPlaceHitboxOnGrid: No empty tiles in grid\n");
+        // printf("tryPlaceHitboxOnGrid: No empty tiles in grid\n");
         return false;
     }
 
@@ -481,15 +481,15 @@ bool Coordinator::tryPlaceHitboxOnGrid(const std::vector<HitboxTile> &hitboxTile
 
     if (!bestHitboxTile)
     {
-        printf("tryPlaceHitboxOnGrid: No valid agent position found to hit player\n");
+        // printf("tryPlaceHitboxOnGrid: No valid agent position found to hit player\n");
         return false;
     }
 
-    printf("  Best hitbox tile relative position: (%d, %d)\n", bestHitboxTile->x, bestHitboxTile->y);
-    printf("  Best direction: %d (0=Up, 1=Down, 2=Left, 3=Right)\n", (int)bestDirection);
-    printf("  Best target tile: (%d, %d), distance from player: %.2f\n", bestTargetX, bestTargetY, std::sqrt((float)(bestTargetX * bestTargetX + bestTargetY * bestTargetY)));
-    printf("  Agent current position: (%d, %d), best position: (%d, %d), distance: %.2f\n",
-           agentCurrentNearX, agentCurrentNearY, bestAgentX, bestAgentY, std::sqrt(bestAgentDistSq));
+    // printf("  Best hitbox tile relative position: (%d, %d)\n", bestHitboxTile->x, bestHitboxTile->y);
+    // printf("  Best direction: %d (0=Up, 1=Down, 2=Left, 3=Right)\n", (int)bestDirection);
+    // printf("  Best target tile: (%d, %d), distance from player: %.2f\n", bestTargetX, bestTargetY, std::sqrt((float)(bestTargetX * bestTargetX + bestTargetY * bestTargetY)));
+    // printf("  Agent current position: (%d, %d), best position: (%d, %d), distance: %.2f\n",
+    //        agentCurrentNearX, agentCurrentNearY, bestAgentX, bestAgentY, std::sqrt(bestAgentDistSq));
 
     // Mark ALL hitbox tiles as PlannedAction (rotated for the best direction)
     for (const auto &hitboxTile : hitboxTiles)
@@ -521,13 +521,13 @@ bool Coordinator::tryPlaceHitboxOnGrid(const std::vector<HitboxTile> &hitboxTile
         {
             actionTile->status = TileStatus::PlannedAction;
             actionTile->agent = agent;
-            printf("  Marked tile (%d, %d) as PlannedAction for agent %p\n", actionTileX, actionTileY, (void *)agent);
+            // printf("  Marked tile (%d, %d) as PlannedAction for agent %p\n", actionTileX, actionTileY, (void *)agent);
         }
     }
 
     int agentX = bestAgentX;
     int agentY = bestAgentY;
-    printf("  Agent should be at (%d, %d) to perform action\n", agentX, agentY);
+    // printf("  Agent should be at (%d, %d) to perform action\n", agentX, agentY);
 
     // Mark the agent's required tile as PlannedOccupiedByAgent
     NearPlayerTile *agentTile = grid.getTileMutable(agentX, agentY);
@@ -535,7 +535,7 @@ bool Coordinator::tryPlaceHitboxOnGrid(const std::vector<HitboxTile> &hitboxTile
     {
         agentTile->status = TileStatus::PlannedOccupiedByAgent;
         agentTile->agent = agent;
-        printf("  Marked tile (%d, %d) as PlannedOccupiedByAgent for agent %p\n", agentX, agentY, (void *)agent);
+        // printf("  Marked tile (%d, %d) as PlannedOccupiedByAgent for agent %p\n", agentX, agentY, (void *)agent);
     }
 
     return true;
