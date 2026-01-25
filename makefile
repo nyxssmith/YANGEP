@@ -16,6 +16,14 @@ run: build
 	@echo "Running "
 	./scripts/run.sh
 
+run_action_editor: build
+	@echo "Removing build assets..."
+	./scripts/remove_build_assets.sh
+	@echo "Copying fresh assets..."
+	./scripts/copy_assets_to_build.sh
+	@echo "Running "
+	./scripts/action_editor.sh
+
 run_preserve_assets: build
 	@echo "Running with preserved assets..."
 	./scripts/run.sh

@@ -1,0 +1,39 @@
+{
+  "schemaVersion": "1.0",
+  "window": {
+    "width": 1280,
+    "height": 720,
+    "viewportWidth": 1280,
+    "viewportHeight": 720
+  },
+  "DebugWindows": [
+    {
+      "enabled": false,
+      "title": "Window Config Viewer",
+      "dataFilePath": "/assets/window-config.json"
+    },
+    {
+      "enabled": false,
+      "title": "Data File Viewer - Skeleton",
+      "dataFilePath": "/assets/DataFiles/Entities/skeleton/character.json"
+    }
+  ],
+  "Debug": {
+    "highlightViewport": false,
+    "highlightNavmesh": false,
+    "highlightNavMeshPaths": false,
+    "highlightAgents": false,
+    "highlightSpatialGrid": false,
+    "highlightPlayerNavmeshCollisionBox": false,
+    "highlightLayers": ["Ground"],
+    "highlightLayerBorders": [],
+    "highlightLayerOuterBorders": [],
+    "highlightCharacterHitboxes": false,
+    "highlightCoordinatorInfo": false,
+    "ShowFPSMetrics": true,
+    "ShowJobMetrics": false,
+    "ShowPlayerInfo": false,
+    "ShowCoordinatorInfo": false,
+    "clickToInspectCharacter": false
+  }
+}
