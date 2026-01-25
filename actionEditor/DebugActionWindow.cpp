@@ -1,5 +1,6 @@
 #include "DebugActionWindow.h"
-#include <dcimgui.h>
+#include <imgui.h>
+#include <cute.h>
 #include <stdio.h>
 #include <fstream>
 #include <filesystem>
@@ -87,16 +88,16 @@ void DebugActionWindow::render()
     if (!m_show)
         return;
 
-    ImGui_Begin(m_title.c_str(), &m_show, 0);
+    ImGui::Begin(m_title.c_str(), &m_show, 0);
 
     // Display and edit action name
     if (m_actionDataFile.contains("name"))
     {
         std::string actionName = m_actionDataFile["name"].get<std::string>();
-        ImGui_Text("Action Name:");
-        ImGui_InputText("##ActionName", m_renameBuffer, sizeof(m_renameBuffer), 0);
-        ImGui_SameLine();
-        if (ImGui_Button("Rename"))
+        ImGui::Text("Action Name:");
+        ImGui::InputText("##ActionName", m_renameBuffer, sizeof(m_renameBuffer), 0);
+        ImGui::SameLine();
+        if (ImGui::Button("Rename"))
         {
             std::string newName = m_renameBuffer;
             if (!newName.empty() && newName != actionName)
@@ -104,71 +105,71 @@ void DebugActionWindow::render()
                 renameAction(newName);
             }
         }
-        ImGui_Separator();
+        ImGui::Separator();
     }
 
     // Global Cooldown slider (0-10000ms / 0-10s)
-    ImGui_Text("Global Cooldown (ms)");
-    if (ImGui_SliderFloat("##GlobalCooldownSlider", &m_globalCooldown, 0.0f, 10000.0f))
+    ImGui::Text("Global Cooldown (ms)");
+    if (ImGui::SliderFloat("##GlobalCooldownSlider", &m_globalCooldown, 0.0f, 10000.0f))
     {
         syncTextFields();
     }
 
     // Global Cooldown text input (allows values beyond slider range)
-    if (ImGui_InputText("##GlobalCooldownInput", m_globalCooldownText, sizeof(m_globalCooldownText), 0))
+    if (ImGui::InputText("##GlobalCooldownInput", m_globalCooldownText, sizeof(m_globalCooldownText), 0))
     {
         m_globalCooldown = atof(m_globalCooldownText);
     }
 
-    ImGui_Spacing();
+    ImGui::Spacing();
 
     // Warmup slider (0-10000ms / 0-10s)
-    ImGui_Text("Warmup (ms)");
-    if (ImGui_SliderFloat("##WarmupSlider", &m_warmup, 0.0f, 10000.0f))
+    ImGui::Text("Warmup (ms)");
+    if (ImGui::SliderFloat("##WarmupSlider", &m_warmup, 0.0f, 10000.0f))
     {
         syncTextFields();
     }
 
     // Warmup text input
-    if (ImGui_InputText("##WarmupInput", m_warmupText, sizeof(m_warmupText), 0))
+    if (ImGui::InputText("##WarmupInput", m_warmupText, sizeof(m_warmupText), 0))
     {
         m_warmup = atof(m_warmupText);
     }
 
-    ImGui_Spacing();
+    ImGui::Spacing();
 
     // Cooldown slider (0-10000ms / 0-10s)
-    ImGui_Text("Cooldown (ms)");
-    if (ImGui_SliderFloat("##CooldownSlider", &m_cooldown, 0.0f, 10000.0f))
+    ImGui::Text("Cooldown (ms)");
+    if (ImGui::SliderFloat("##CooldownSlider", &m_cooldown, 0.0f, 10000.0f))
     {
         syncTextFields();
     }
 
     // Cooldown text input
-    if (ImGui_InputText("##CooldownInput", m_cooldownText, sizeof(m_cooldownText), 0))
+    if (ImGui::InputText("##CooldownInput", m_cooldownText, sizeof(m_cooldownText), 0))
     {
         m_cooldown = atof(m_cooldownText);
     }
 
-    ImGui_Spacing();
-    ImGui_Separator();
+    ImGui::Spacing();
+    ImGui::Separator();
 
     // Save button
-    if (ImGui_Button("Save"))
+    if (ImGui::Button("Save"))
     {
         saveValues();
     }
 
-    ImGui_SameLine();
+    ImGui::SameLine();
 
     // Reload button
-    if (ImGui_Button("Reload"))
+    if (ImGui::Button("Reload"))
     {
         loadValues();
         syncTextFields();
     }
 
-    ImGui_End();
+    ImGui::End();
 }
 
 bool DebugActionWindow::renameAction(const std::string &newName)

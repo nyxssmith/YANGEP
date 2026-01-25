@@ -1,6 +1,4 @@
 #pragma once
-#include <cute.h>
-#include <dcimgui.h>
 #include <string>
 
 class DebugWindow

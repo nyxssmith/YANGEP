@@ -2,6 +2,29 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Debug yangep (LLDB, macOS)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/yangep",
+            "cwd": "${workspaceFolder}/build",
+            "MIMode": "lldb",
+            "stopAtEntry": false,
+            "externalConsole": false,
+            "args": [],
+            "environment": [
+              { "name": "ASAN_OPTIONS", "value": "abort_on_error=1,fast_unwind_on_malloc=0,strict_string_checks=1,detect_leaks=1" }
+            ]
+        },
+        {
+            "name": "Open Core Dump (LLDB, macOS)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/yangep",
+            "cwd": "${workspaceFolder}/build",
+            "MIMode": "lldb",
+            "coreDumpPath": "/cores/core.yangep"   // set to actual core file
+        },
+        {
             "name": "Debug YANGEP (Linux)",
             "type": "cppdbg",
             "request": "launch",

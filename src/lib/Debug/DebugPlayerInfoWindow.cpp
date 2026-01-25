@@ -2,6 +2,7 @@
 #include "AnimatedDataCharacterNavMeshPlayer.h"
 #include "LevelV1.h"
 #include <cute.h>
+#include <imgui.h>
 
 DebugPlayerInfoWindow::DebugPlayerInfoWindow(const std::string &title,
                                              const AnimatedDataCharacterNavMeshPlayer &player,
@@ -14,7 +15,7 @@ void DebugPlayerInfoWindow::render()
 {
     if (m_show)
     {
-        ImGui_Begin(m_title.c_str(), &m_show, 0);
+        ImGui::Begin(m_title.c_str(), &m_show);
 
         // Get player world position
         CF_V2 worldPos = m_player.getPosition();
@@ -28,38 +29,38 @@ void DebugPlayerInfoWindow::render()
         float tileY = worldPos.y / static_cast<float>(tileHeight);
 
         // Display world coordinates
-        ImGui_Text("World Position:");
-        ImGui_Indent();
-        ImGui_Text("X: %.2f", worldPos.x);
-        ImGui_Text("Y: %.2f", worldPos.y);
-        ImGui_Unindent();
+        ImGui::Text("World Position:");
+        ImGui::Indent();
+        ImGui::Text("X: %.2f", worldPos.x);
+        ImGui::Text("Y: %.2f", worldPos.y);
+        ImGui::Unindent();
 
-        ImGui_Separator();
+        ImGui::Separator();
 
         // Display tile coordinates
-        ImGui_Text("Tile Position:");
-        ImGui_Indent();
-        ImGui_Text("X: %.2f (tile %d)", tileX, static_cast<int>(tileX));
-        ImGui_Text("Y: %.2f (tile %d)", tileY, static_cast<int>(tileY));
-        ImGui_Unindent();
+        ImGui::Text("Tile Position:");
+        ImGui::Indent();
+        ImGui::Text("X: %.2f (tile %d)", tileX, static_cast<int>(tileX));
+        ImGui::Text("Y: %.2f (tile %d)", tileY, static_cast<int>(tileY));
+        ImGui::Unindent();
 
-        ImGui_Separator();
+        ImGui::Separator();
 
         // Display additional navmesh info if available
         if (m_player.hasNavMesh())
         {
             int currentPoly = m_player.getCurrentPolygon();
-            ImGui_Text("NavMesh Info:");
-            ImGui_Indent();
-            ImGui_Text("On Walkable: %s", m_player.isOnWalkableArea() ? "Yes" : "No");
-            ImGui_Text("Current Polygon: %d", currentPoly);
-            ImGui_Unindent();
+            ImGui::Text("NavMesh Info:");
+            ImGui::Indent();
+            ImGui::Text("On Walkable: %s", m_player.isOnWalkableArea() ? "Yes" : "No");
+            ImGui::Text("Current Polygon: %d", currentPoly);
+            ImGui::Unindent();
         }
         else
         {
-            ImGui_TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "No NavMesh assigned");
+            ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "No NavMesh assigned");
         }
 
-        ImGui_End();
+        ImGui::End();
     }
 }

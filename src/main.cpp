@@ -27,6 +27,10 @@
 #include "AnimatedDataCharacterNavMeshPlayer.h"
 #include "ShaderRegistry.h"
 #include "HighlightTile.h"
+#include "AtlasLabelerWindow.h"
+#include "HudUI.h"
+#include "Inventory.h"
+#include "Item.h"
 using namespace Cute;
 
 int main(int argc, char *argv[])
@@ -190,6 +194,8 @@ int main(int argc, char *argv[])
 
 	// Create debug window list and populate from config
 	DebugWindowList debugWindows;
+	AtlasLabelerWindow atlasLabeler; // simple always-on tool window
+	bool atlas_labeler_open = false;
 
 	// Load debug windows from config
 	printf("Checking for DebugWindows in config...\n");
@@ -311,6 +317,13 @@ int main(int argc, char *argv[])
 				printf("Created Input info debug window\n");
 			}
 		}
+
+		if (debug.contains("ShowAtlasLabeler"))
+		{
+			// this allows us to map numbered rectangles to named items in the atlas JSON file.
+			atlas_labeler_open = debug["ShowAtlasLabeler"];
+			printf("Debug ShowAtlasLabeler: %s\n", atlas_labeler_open ? "enabled" : "disabled");
+		}
 	}
 
 	// Input recording setup
@@ -337,6 +350,7 @@ int main(int argc, char *argv[])
 
 	// Create playerCharacter player character
 	AnimatedDataCharacterNavMeshPlayer playerCharacter;
+	HudUI hud_ui;
 
 	// Starting position in tile coordinates (will be converted to world coordinates)
 	float startTileX = 5.0f;
@@ -361,6 +375,10 @@ int main(int argc, char *argv[])
 	Item itemB("assets/DataFiles/Items/item-b.json");
 	playerCharacter.getInventory().addItem(itemA);
 	playerCharacter.getInventory().addItem(itemB);
+	bool hud_inventory_open = false;
+
+	// HUD init (loads atlas/background)
+	hud_ui.initialize();
 
 	// Set player's initial position
 	playerCharacter.setPosition(playerPosition);
@@ -857,6 +875,11 @@ int main(int argc, char *argv[])
 			// Parameters: ghosts, duration, base alpha
 			playerCharacter.triggerEffect("trail", 8, 1.5f, 0.8f);
 		}
+		// Toggle sample inventory window
+		if (cf_key_just_pressed(CF_KEY_I))
+		{
+			hud_inventory_open = !hud_inventory_open;
+		}
 
 		if (fpsWindow)
 		{
@@ -887,6 +910,16 @@ int main(int argc, char *argv[])
 		}
 		// Render debug windows
 		debugWindows.renderAll();
+
+		if (atlas_labeler_open)
+		{
+			atlasLabeler.render();
+		}
+		// Render HUD UI overlays
+		std::vector<HudUI::Icon> hud_icons(5);
+		hud_ui.renderLeftColumn(hud_icons, 0.0f, 8.0f);
+		hud_ui.renderBottomRow(hud_icons, 0.0f, 8.0f);
+		hud_ui.renderInventoryWindow(&playerCharacter.getInventory(), &hud_inventory_open, 5, 64.0f, 6.0f);
 
 		if (fpsWindow)
 		{

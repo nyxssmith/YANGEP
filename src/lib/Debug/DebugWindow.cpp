@@ -1,4 +1,5 @@
 #include "DebugWindow.h"
+#include <imgui.h>
 #include <stdio.h>
 
 DebugWindow::DebugWindow(const std::string &title)
@@ -10,16 +11,16 @@ void DebugWindow::render()
 {
     if (m_show)
     {
-        ImGui_Begin(m_title.c_str(), &m_show, 0);
-        ImGui_Text("Debug Window: %s", m_title.c_str());
-        if (ImGui_ButtonEx("Press me!", (ImVec2){0, 0}))
+        ImGui::Begin(m_title.c_str(), &m_show);
+        ImGui::Text("Debug Window: %s", m_title.c_str());
+        if (ImGui::Button("Press me!"))
         {
             printf("Debug button clicked!\n");
         }
         static char buffer[256] = "Debug input...";
-        ImGui_InputTextEx("Debug Input", buffer, sizeof(buffer), 0, NULL, NULL);
+        ImGui::InputText("Debug Input", buffer, sizeof(buffer));
         static float debug_float = 0.0f;
-        ImGui_SliderFloatEx("Debug Float", &debug_float, 0, 10, "%.3f", 0);
-        ImGui_End();
+        ImGui::SliderFloat("Debug Float", &debug_float, 0, 10, "%.3f");
+        ImGui::End();
     }
 }

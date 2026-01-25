@@ -4,6 +4,7 @@
 #include "AnimatedDataCharacterNavMeshAgent.h"
 #include "LevelV1.h"
 #include <cute.h>
+#include <imgui.h>
 
 DebugCoordinatorWindow::DebugCoordinatorWindow(const std::string &title,
                                                Coordinator *coordinator,
@@ -20,7 +21,7 @@ void DebugCoordinatorWindow::render()
         return;
     }
 
-    ImGui_Begin(m_title.c_str(), &m_show, 0);
+    ImGui::Begin(m_title.c_str(), &m_show);
 
     // Get tile dimensions from level
     int tileWidth = m_level.getTileWidth();
@@ -33,23 +34,23 @@ void DebugCoordinatorWindow::render()
         float playerTileX = playerPos.x / static_cast<float>(tileWidth);
         float playerTileY = playerPos.y / static_cast<float>(tileHeight);
 
-        ImGui_Text("Player Tile Position:");
-        ImGui_Indent();
-        ImGui_Text("X: %.2f (tile %d)", playerTileX, static_cast<int>(playerTileX));
-        ImGui_Text("Y: %.2f (tile %d)", playerTileY, static_cast<int>(playerTileY));
-        ImGui_Unindent();
-        ImGui_Separator();
+        ImGui::Text("Player Tile Position:");
+        ImGui::Indent();
+        ImGui::Text("X: %.2f (tile %d)", playerTileX, static_cast<int>(playerTileX));
+        ImGui::Text("Y: %.2f (tile %d)", playerTileY, static_cast<int>(playerTileY));
+        ImGui::Unindent();
+        ImGui::Separator();
     }
 
     // Display timing information
     double updateTimeMs = m_coordinator->getLastUpdateTimeMs();
-    ImGui_Text("Update Time: %.3f ms", updateTimeMs);
-    ImGui_Separator();
+    ImGui::Text("Update Time: %.3f ms", updateTimeMs);
+    ImGui::Separator();
 
     // Display total agent count
     size_t agentCount = m_coordinator->getAgentCount();
-    ImGui_Text("Coordinated Agents: %zu", agentCount);
-    ImGui_Separator();
+    ImGui::Text("Coordinated Agents: %zu", agentCount);
+    ImGui::Separator();
 
     // Get all agents (returns a copy for thread safety)
     auto agents = m_coordinator->getAgents();
@@ -57,7 +58,7 @@ void DebugCoordinatorWindow::render()
     // Display agent tile positions
     if (agents.empty())
     {
-        ImGui_Text("No agents currently being coordinated");
+        ImGui::Text("No agents currently being coordinated");
     }
     else
     {
@@ -71,12 +72,12 @@ void DebugCoordinatorWindow::render()
                 float tileX = pos.x / static_cast<float>(tileWidth);
                 float tileY = pos.y / static_cast<float>(tileHeight);
 
-                ImGui_Text("Agent %zu: (%.2f, %.2f) - tile (%d, %d)",
+                ImGui::Text("Agent %zu: (%.2f, %.2f) - tile (%d, %d)",
                            i, tileX, tileY,
                            static_cast<int>(tileX), static_cast<int>(tileY));
             }
         }
     }
 
-    ImGui_End();
+    ImGui::End();
 }

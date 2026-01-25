@@ -94,6 +94,18 @@ FetchContent_MakeAvailable(cute nlohmann_json googletest pugixml libspng)
 # Enable testing
 enable_testing()
 
+# Atlas autocut tool
+add_executable(atlas_autocut
+	tools/atlas_autocut/atlas_autocut.cpp
+)
+target_link_libraries(atlas_autocut
+	spng_static
+	nlohmann_json::nlohmann_json
+)
+target_include_directories(atlas_autocut PUBLIC
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/tools/atlas_autocut>
+)
+
 # Source code for your game.
 add_executable(
 	${PROJECT_NAME}
@@ -150,6 +162,8 @@ add_executable(
 	src/lib/Effects/TrailGhostEffect.cpp
 	src/lib/Effects/DissolveEffect.cpp
 	src/lib/Effects/GhostTrailRenderer.cpp
+	src/lib/UI/AtlasLabelerWindow.cpp
+	src/lib/UI/HudUI.cpp
 	src/lib/UI/HighlightTile.cpp
 	src/lib/UI/ColorUtils.cpp
 	src/lib/Items/Item.cpp

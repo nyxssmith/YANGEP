@@ -1,6 +1,6 @@
 #include "DataFileDebugWindow.h"
 #include <stdio.h>
-#include <dcimgui.h>
+#include <imgui.h>
 #include <algorithm>
 
 DataFileDebugWindow::DataFileDebugWindow(const std::string &title, DataFile &dataFile)
@@ -58,7 +58,7 @@ void DataFileDebugWindow::renderTypeCombo(const char *label, JsonType *type)
     const char *typeNames[] = {"String", "Map", "List", "Float", "Boolean", "Integer"};
     int currentType = static_cast<int>(*type);
 
-    if (ImGui_ComboCharEx(label, &currentType, typeNames, 6, -1))
+    if (ImGui::Combo(label, &currentType, typeNames, 6))
     {
         *type = static_cast<JsonType>(currentType);
     }
@@ -368,29 +368,29 @@ void DataFileDebugWindow::render()
 {
     if (m_show)
     {
-        ImGui_Begin(m_title.c_str(), &m_show, 0);
+        ImGui::Begin(m_title.c_str(), &m_show);
 
         // Display path if available
         const std::string &path = m_dataFile.getpath();
         if (!path.empty())
         {
-            ImGui_Text("File: %s", path.c_str());
+            ImGui::Text("File: %s", path.c_str());
         }
         else
         {
-            ImGui_Text("File: <no file loaded>");
+            ImGui::Text("File: <no file loaded>");
         }
 
-        ImGui_Separator();
+        ImGui::Separator();
 
         // Control buttons
-        if (ImGui_ButtonEx("Add Root Item", (ImVec2){120, 0}))
+        if (ImGui::Button("Add Root Item"))
         {
             addDisplayLine("NewKey", "NewValue", JsonType::String, 0, "");
         }
 
-        ImGui_Separator();
-        ImGui_Text("JSON Structure:");
+        ImGui::Separator();
+        ImGui::Text("JSON Structure:");
 
         // Render all display lines with nesting support
         for (size_t i = 0; i < m_displayLines.size(); ++i)
@@ -408,53 +408,53 @@ void DataFileDebugWindow::render()
             // Add indentation
             for (int indent = 0; indent < line.indentLevel; ++indent)
             {
-                ImGui_IndentEx(20.0f);
+                ImGui::Indent(20.0f);
             }
 
             // Row number and expand/collapse for containers
             if (line.type == JsonType::Map || line.type == JsonType::List)
             {
-                if (ImGui_ButtonEx(line.isExpanded ? "-" : "+", (ImVec2){20, 0}))
+                if (ImGui::Button(line.isExpanded ? "-" : "+"))
                 {
                     line.isExpanded = !line.isExpanded;
                 }
-                ImGui_SameLineEx(0, 5);
+                ImGui::SameLine(0, 5);
             }
             else
             {
-                ImGui_IndentEx(25.0f);
+                ImGui::Indent(25.0f);
             }
 
             // Key input (limited width)
-            ImGui_PushItemWidth(150);
-            ImGui_InputTextEx(labelKey, line.key, sizeof(line.key), 0, NULL, NULL);
-            ImGui_PopItemWidth();
+            ImGui::PushItemWidth(150);
+            ImGui::InputText(labelKey, line.key, sizeof(line.key));
+            ImGui::PopItemWidth();
 
-            ImGui_SameLineEx(0, 10);
+            ImGui::SameLine(0, 10);
 
             // Type selection dropdown
-            ImGui_PushItemWidth(80);
+            ImGui::PushItemWidth(80);
             renderTypeCombo(labelType, &line.type);
-            ImGui_PopItemWidth();
+            ImGui::PopItemWidth();
 
-            ImGui_SameLineEx(0, 10);
+            ImGui::SameLine(0, 10);
 
             // Value input (conditional based on type)
-            ImGui_PushItemWidth(200);
+            ImGui::PushItemWidth(200);
             if (line.type == JsonType::Map)
             {
-                ImGui_InputTextEx(labelValue, line.value, sizeof(line.value), ImGuiInputTextFlags_ReadOnly, NULL, NULL);
+                ImGui::InputText(labelValue, line.value, sizeof(line.value), ImGuiInputTextFlags_ReadOnly);
                 strcpy(line.value, "{}");
             }
             else if (line.type == JsonType::List)
             {
-                ImGui_InputTextEx(labelValue, line.value, sizeof(line.value), ImGuiInputTextFlags_ReadOnly, NULL, NULL);
+                ImGui::InputText(labelValue, line.value, sizeof(line.value), ImGuiInputTextFlags_ReadOnly);
                 strcpy(line.value, "[]");
             }
             else if (line.type == JsonType::Boolean)
             {
                 bool boolValue = (strcmp(line.value, "true") == 0);
-                if (ImGui_Checkbox(labelValue, &boolValue))
+                if (ImGui::Checkbox(labelValue, &boolValue))
                 {
                     strcpy(line.value, boolValue ? "true" : "false");
                 }
@@ -462,16 +462,16 @@ void DataFileDebugWindow::render()
             else
             {
                 // Regular text input for String, Float, Integer
-                ImGui_InputTextEx(labelValue, line.value, sizeof(line.value), 0, NULL, NULL);
+                ImGui::InputText(labelValue, line.value, sizeof(line.value));
             }
-            ImGui_PopItemWidth();
+            ImGui::PopItemWidth();
 
-            ImGui_SameLineEx(0, 10);
+            ImGui::SameLine(0, 10);
 
             // Add child button for containers
             if (line.type == JsonType::Map || line.type == JsonType::List)
             {
-                if (ImGui_ButtonEx(labelAdd, (ImVec2){50, 0}))
+                if (ImGui::Button(labelAdd))
                 {
                     std::string currentPath = getJsonPath(line.parentPath, std::string(line.key));
 
@@ -508,11 +508,11 @@ void DataFileDebugWindow::render()
                     // Insert at the correct position
                     m_displayLines.insert(m_displayLines.begin() + insertIndex, newLine);
                 }
-                ImGui_SameLineEx(0, 5);
+                ImGui::SameLine(0, 5);
             }
 
             // Remove button
-            if (ImGui_ButtonEx(labelRemove, (ImVec2){60, 0}))
+            if (ImGui::Button(labelRemove))
             {
                 m_displayLines.erase(m_displayLines.begin() + i);
                 // Also remove any children
@@ -524,11 +524,11 @@ void DataFileDebugWindow::render()
                 // Reset indentation
                 for (int indent = 0; indent <= line.indentLevel; ++indent)
                 {
-                    ImGui_UnindentEx(20.0f);
+                    ImGui::Unindent(20.0f);
                 }
                 if (line.type != JsonType::Map && line.type != JsonType::List)
                 {
-                    ImGui_UnindentEx(25.0f);
+                    ImGui::Unindent(25.0f);
                 }
                 break; // Break to avoid iterator invalidation
             }
@@ -536,32 +536,32 @@ void DataFileDebugWindow::render()
             // Reset indentation for this line
             for (int indent = 0; indent < line.indentLevel; ++indent)
             {
-                ImGui_UnindentEx(20.0f);
+                ImGui::Unindent(20.0f);
             }
             if (line.type != JsonType::Map && line.type != JsonType::List)
             {
-                ImGui_UnindentEx(25.0f);
+                ImGui::Unindent(25.0f);
             }
         }
 
-        ImGui_Separator();
+        ImGui::Separator();
 
         // JSON synchronization controls
-        if (ImGui_ButtonEx("Update JSON from Fields", (ImVec2){150, 0}))
+        if (ImGui::Button("Update JSON from Fields"))
         {
             updateJsonFromLines();
         }
 
-        ImGui_SameLineEx(0, 10);
-        if (ImGui_ButtonEx("Refresh from JSON", (ImVec2){120, 0}))
+        ImGui::SameLine(0, 10);
+        if (ImGui::Button("Refresh from JSON"))
         {
             populateFromJson();
         }
 
-        ImGui_Separator();
+        ImGui::Separator();
 
         // Bottom controls
-        if (ImGui_ButtonEx("Save to File", (ImVec2){100, 0}))
+        if (ImGui::Button("Save to File"))
         {
             if (m_dataFile.save())
             {
@@ -573,8 +573,8 @@ void DataFileDebugWindow::render()
             }
         }
 
-        ImGui_SameLineEx(0, 10);
-        if (ImGui_ButtonEx("Reload from File", (ImVec2){120, 0}))
+        ImGui::SameLine(0, 10);
+        if (ImGui::Button("Reload from File"))
         {
             if (m_dataFile.load())
             {
@@ -587,6 +587,6 @@ void DataFileDebugWindow::render()
             }
         }
 
-        ImGui_End();
+        ImGui::End();
     }
 }

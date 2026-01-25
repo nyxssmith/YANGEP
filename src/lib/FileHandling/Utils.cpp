@@ -2,6 +2,7 @@
 #include "DataFile.h"
 #include <cute.h>
 #include <fstream>
+#include <cstring>
 // collection of utility functions
 
 // #include <cute_file_system.h>
@@ -11,7 +12,6 @@ void mount_content_directory_as(const char *dir)
 {
     CF_Path path = fs_get_base_directory();
     path.normalize();
-    // path.pop(1); // Pop out of build/ only, not build/debug/
     path += "/assets";
 
     // Mount the assets directory for reading
