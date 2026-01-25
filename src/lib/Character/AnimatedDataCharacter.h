@@ -70,6 +70,9 @@ public:
     // Get current direction
     Direction getCurrentDirection() const;
 
+    // Set current direction
+    void setDirection(Direction direction);
+
     // Set the level for agent queries
     void setLevel(LevelV1 *level);
 

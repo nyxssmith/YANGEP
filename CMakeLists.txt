@@ -200,14 +200,100 @@ target_link_libraries(${PROJECT_NAME}
 if (MSVC)
     set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY $<TARGET_FILE_DIR:${PROJECT_NAME}>)
     set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
-
-    # Also set working directory for animation demo
-    set_property(TARGET ${PROJECT_NAME}_animation_demo PROPERTY VS_DEBUGGER_WORKING_DIRECTORY $<TARGET_FILE_DIR:${PROJECT_NAME}_animation_demo>)
 endif()
 
+# Action Editor executable
+add_executable(
+	${PROJECT_NAME}_action_editor
+	actionEditor/main.cpp
+	actionEditor/DebugActionWindow.cpp
+	actionEditor/DebugActionsListWindow.cpp
+	src/lib/FileHandling/DataFile.cpp
+	src/lib/FileHandling/RealConfigFile.cpp
+	src/lib/FileHandling/Utils.cpp
+	src/lib/Debug/DebugWindow.cpp
+	src/lib/Debug/DataFileDebugWindow.cpp
+	src/lib/Debug/DebugWindowList.cpp
+	src/lib/Debug/DebugFPSWindow.cpp
+	src/lib/Debug/DebugJobWindow.cpp
+	src/lib/Debug/DebugPlayerInfoWindow.cpp
+	src/lib/Debug/DebugCharacterInfoWindow.cpp
+	src/lib/Debug/DebugCoordinatorWindow.cpp
+	src/lib/Debug/DebugStateMachineWindow.cpp
+	src/lib/Debug/DebugStateWindow.cpp
+	src/lib/Level/FileHandling/tsx.cpp
+	src/lib/Level/FileHandling/tmx.cpp
+	src/lib/Level/GameLogic/LevelMap.cpp
+	src/lib/Level/GameLogic/LevelV1.cpp
+	src/lib/Level/GameLogic/WorldPositionRenderedObjectsList.cpp
+	src/lib/Level/GameLogic/NavMesh.cpp
+	src/lib/Level/GameLogic/NavMeshPoint.cpp
+	src/lib/Level/GameLogic/NavMeshPath.cpp
+	src/lib/Level/GameLogic/SpatialGrid.cpp
+	src/lib/Camera/CFNativeCamera.cpp
+	src/lib/Camera/Camera.cpp
+	src/lib/Character/FileHandling/SpriteAnimationLoader.cpp
+	src/lib/Character/AnimatedDataCharacter.cpp
+	src/lib/Character/AnimatedDataCharacterNavMeshAgent.cpp
+	src/lib/Character/AnimatedDataCharacterNavMeshPlayer.cpp
+	src/lib/Character/Coordinator/Coordinator.cpp
+	src/lib/Character/Coordinator/NearPlayerTileGrid.cpp
+	src/lib/Character/StateMachines/State.cpp
+	src/lib/Character/StateMachines/StateMachine.cpp
+	src/lib/Character/StateMachines/StateMachineController.cpp
+	src/lib/Character/StateMachines/StateLibrary.cpp
+	src/lib/Character/StateMachines/States/WaitState.cpp
+	src/lib/Character/StateMachines/States/PrintState.cpp
+	src/lib/Character/StateMachines/States/WanderNewPositionState.cpp
+	src/lib/Character/StateMachines/States/MoveToPositionState.cpp
+	src/lib/Combat/HitBox.cpp
+	src/lib/Combat/Action.cpp
+	src/lib/Combat/Damage.cpp
+	src/lib/Combat/ABActions.cpp
+	src/lib/JobSystem/JobSystem.cpp
+	src/lib/JobSystem/OnScreenChecks.cpp
+	src/lib/Effects/RedFlashEffect.cpp
+	src/lib/Effects/GreenFlashEffect.cpp
+	src/lib/Effects/EffectFactory.cpp
+	src/lib/Effects/ShaderRegistry.cpp
+	src/lib/Effects/TrailGhostEffect.cpp
+	src/lib/Effects/DissolveEffect.cpp
+	src/lib/Effects/GhostTrailRenderer.cpp
+	src/lib/UI/HighlightTile.cpp
+	src/lib/UI/ColorUtils.cpp
+	src/lib/Items/Item.cpp
+	src/lib/Items/Inventory.cpp
+)
 
+target_include_directories(${PROJECT_NAME}_action_editor PUBLIC
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Camera>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Character>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Character/Behavior>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Character/Coordinator>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Character/FileHandling>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Character/StateMachines>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Combat>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Debug>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/FileHandling>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Effects>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/JobSystem>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Level/FileHandling>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Level/GameLogic>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/UI>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Items>
+)
 
+target_link_libraries(${PROJECT_NAME}_action_editor
+	cute
+	nlohmann_json::nlohmann_json
+	pugixml
+	spng_static
+)
 
+if (MSVC)
+	set_property(TARGET ${PROJECT_NAME}_action_editor PROPERTY VS_DEBUGGER_WORKING_DIRECTORY $<TARGET_FILE_DIR:${PROJECT_NAME}_action_editor>)
+endif()
 
 # Test executable
 add_executable(${PROJECT_NAME}_tests
