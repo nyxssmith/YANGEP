@@ -77,6 +77,7 @@ int main(int argc, char *argv[])
 	// Read viewport dimensions from config (defaults to window size)
 	float viewportWidth = (float)windowWidth;
 	float viewportHeight = (float)windowHeight;
+	float viewportZoom = 1.0f;			 // Default zoom level
 	bool debugHighlightViewport = false; // Default: don't highlight viewport
 
 	if (windowConfig.contains("window"))
@@ -91,6 +92,11 @@ int main(int argc, char *argv[])
 		else
 		{
 			printf("No viewport size in config, using window size: %.0fx%.0f\n", viewportWidth, viewportHeight);
+		}
+		if (window.contains("viewportZoom"))
+		{
+			viewportZoom = window["viewportZoom"];
+			printf("Loaded viewport zoom: %.2f\n", viewportZoom);
 		}
 	}
 
@@ -379,8 +385,8 @@ int main(int argc, char *argv[])
 		printf("Created Player info debug window\n");
 	}
 
-	// Create CF-native camera with explicit viewport dimensions from config
-	CFNativeCamera cfCamera(cf_v2(0.0f, 0.0f), 1.0f, viewportWidth, viewportHeight);
+	// Create CF-native camera with explicit viewport dimensions and zoom from config
+	CFNativeCamera cfCamera(cf_v2(0.0f, 0.0f), viewportZoom, viewportWidth, viewportHeight);
 
 	// Set up camera with basic settings
 	cfCamera.setZoomRange(0.25f, 4.0f); // Allow 1/4x to 4x zoom
@@ -388,7 +394,9 @@ int main(int argc, char *argv[])
 	// Make camera follow the player
 	cfCamera.setTarget(&playerPosition);
 	cfCamera.setFollowSpeed(3.0f);
-	cfCamera.setFollowDeadzone(cf_v2(50.0f, 50.0f)); // 50px deadzone
+	// Scale deadzone with zoom to maintain consistent feel (base 50px at 1.0 zoom)
+	float deadzoneSize = 50.0f / viewportZoom;
+	cfCamera.setFollowDeadzone(cf_v2(deadzoneSize, deadzoneSize));
 
 	// get height and width of window for where to draw debug info
 	int window_width = cf_app_get_width();

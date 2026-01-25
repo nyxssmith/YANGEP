@@ -3,8 +3,9 @@
   "window": {
     "width": 1280,
     "height": 800,
-    "viewportWidth": 1300,
-    "viewportHeight": 900
+    "viewportWidth": 1480,
+    "viewportHeight": 1000,
+    "viewportZoom": 1.7
   },
   "DebugWindows": [
     {
@@ -31,7 +32,7 @@
     "highlightCharacterHitboxes": false,
     "highlightCoordinatorInfo": false,
     "ShowFPSMetrics": true,
-    "ShowJobMetrics": false,
+    "ShowJobMetrics": true,
     "ShowPlayerInfo": false,
     "ShowCoordinatorInfo": false,
     "ShowInputInfo": false,
