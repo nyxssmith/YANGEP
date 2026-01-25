@@ -398,10 +398,11 @@ v2 CFNativeCamera::lerp(v2 a, v2 b, float t) const
 
 CF_Aabb CFNativeCamera::getViewBounds() const
 {
-    // Always use actual window dimensions for view bounds calculation
-    // The viewport settings are for rendering setup, not for determining what's visible
-    float screen_width = (float)cf_app_get_width();
-    float screen_height = (float)cf_app_get_height();
+    // Use viewport dimensions (which may be scaled from window size)
+    // This ensures view bounds match what's actually being rendered
+    v2 viewport_size = getViewportSize();
+    float screen_width = viewport_size.x;
+    float screen_height = viewport_size.y;
 
     // Calculate world-space dimensions based on zoom
     // At zoom=1.0, screen size = world size

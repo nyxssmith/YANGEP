@@ -3,9 +3,8 @@
   "window": {
     "width": 1280,
     "height": 720,
-    "viewportWidth": 1280,
-    "viewportHeight": 720,
-    "viewportZoom": 1.0
+    "viewportZoom": 1.0,
+    "viewportScale": 1.5
   },
   "DebugWindows": [
     {

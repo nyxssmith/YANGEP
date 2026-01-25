@@ -83,7 +83,18 @@ int main(int argc, char *argv[])
 	if (windowConfig.contains("window"))
 	{
 		auto &window = windowConfig["window"];
-		if (window.contains("viewportWidth") && window.contains("viewportHeight"))
+
+		// Check for viewportScale first - if present, multiply window dimensions
+		if (window.contains("viewportScale"))
+		{
+			float viewportScale = window["viewportScale"];
+			viewportWidth = (float)windowWidth * viewportScale;
+			viewportHeight = (float)windowHeight * viewportScale;
+			printf("Using viewport scale %.2f: viewport=%.0fx%.0f (window=%dx%d)\n",
+				   viewportScale, viewportWidth, viewportHeight, windowWidth, windowHeight);
+		}
+		// Otherwise, check for explicit viewport dimensions
+		else if (window.contains("viewportWidth") && window.contains("viewportHeight"))
 		{
 			viewportWidth = window["viewportWidth"];
 			viewportHeight = window["viewportHeight"];
@@ -93,6 +104,7 @@ int main(int argc, char *argv[])
 		{
 			printf("No viewport size in config, using window size: %.0fx%.0f\n", viewportWidth, viewportHeight);
 		}
+
 		if (window.contains("viewportZoom"))
 		{
 			viewportZoom = window["viewportZoom"];
