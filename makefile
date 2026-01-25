@@ -29,6 +29,10 @@ run_preserve_assets: build
 	./scripts/run.sh
 
 steamdeck: build
+	@echo "Removing build assets..."
+	./scripts/remove_build_assets.sh
+	@echo "Copying fresh assets..."
+	./scripts/copy_assets_to_build.sh
 	@echo "Copying to Steam Deck..."
 	./scripts/scp_steamdeck.sh
 	

@@ -34,6 +34,8 @@
     "ShowJobMetrics": false,
     "ShowPlayerInfo": false,
     "ShowCoordinatorInfo": false,
+    "ShowInputInfo": false,
+    "RecordInputInfo": false,
     "clickToInspectCharacter": false
   }
 }
