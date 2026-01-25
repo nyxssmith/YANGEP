@@ -164,11 +164,15 @@ void HudUI::renderLeftColumn(const std::vector<Icon>& icons, float iconSize, flo
 	const float total_h = count * size + (count - 1) * padding;
 
 	ImGui::SetNextWindowPos(ImVec2(margin, margin));
-	ImGui::SetNextWindowSize(ImVec2(size + 8.0f, total_h + 8.0f));
+	ImGui::SetNextWindowSize(ImVec2(size, total_h));
 	ImGui::SetNextWindowBgAlpha(0.0f);
 	ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
 	                         ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
-	                         ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoDecoration;
+	                         ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoDecoration |
+	                         ImGuiWindowFlags_NoScrollWithMouse;
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 0.0f));
+	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
 	ImGui::Begin("HUD_LeftColumn", nullptr, flags);
 
 	if (has_rect && s_assets().atlas_tex) {
@@ -191,6 +195,7 @@ void HudUI::renderLeftColumn(const std::vector<Icon>& icons, float iconSize, flo
 	}
 
 	ImGui::End();
+	ImGui::PopStyleVar(3);
 }
 
 void HudUI::renderBottomRow(const std::vector<Icon>& icons, float iconSize, float padding)
@@ -207,11 +212,14 @@ void HudUI::renderBottomRow(const std::vector<Icon>& icons, float iconSize, floa
 	ImVec2 display = ImGui::GetIO().DisplaySize;
 
 	ImGui::SetNextWindowPos(ImVec2((display.x - total_w) * 0.5f, display.y - size - margin));
-	ImGui::SetNextWindowSize(ImVec2(total_w + 8.0f, size + 8.0f));
+	ImGui::SetNextWindowSize(ImVec2(total_w, size));
 	ImGui::SetNextWindowBgAlpha(0.0f);
 	ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
 	                         ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
-	                         ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoDecoration;
+	                         ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoDecoration |
+	                         ImGuiWindowFlags_NoScrollWithMouse;
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 0.0f));
 	ImGui::Begin("HUD_BottomRow", nullptr, flags);
 
 	if (has_rect && s_assets().atlas_tex) {
@@ -234,6 +242,7 @@ void HudUI::renderBottomRow(const std::vector<Icon>& icons, float iconSize, floa
 	}
 
 	ImGui::End();
+	ImGui::PopStyleVar(2);
 }
 
 void HudUI::renderInventoryWindow(const Inventory* inventory, bool* open, int cols, float slotSize, float slotPad)
@@ -247,7 +256,7 @@ void HudUI::renderInventoryWindow(const Inventory* inventory, bool* open, int co
 	ImGui::SetNextWindowSize(window_size, ImGuiCond_Always);
 	ImGui::SetNextWindowBgAlpha(0.0f);
 	ImGuiWindowFlags flags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse |
-	                         ImGuiWindowFlags_NoSavedSettings;
+	                         ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoTitleBar;
 	ImGui::Begin("Inventory", open, flags);
 
 	// Background texture (paper)

@@ -1,5 +1,5 @@
 #include "DebugActionsListWindow.h"
-#include <dcimgui.h>
+#include <imgui.h>
 #include <stdio.h>
 #include <cute.h>
 #include <filesystem>
@@ -54,16 +54,16 @@ void DebugActionsListWindow::render()
     if (!m_show)
         return;
 
-    ImGui_Begin(m_title.c_str(), &m_show, 0);
+    ImGui::Begin(m_title.c_str(), &m_show, 0);
 
-    ImGui_Text("Actions in DataFiles/Actions:");
-    ImGui_Separator();
+    ImGui::Text("Actions in DataFiles/Actions:");
+    ImGui::Separator();
 
     // Create new action section
-    ImGui_Text("Create New Action:");
-    ImGui_InputText("##NewActionName", m_newActionNameBuffer, sizeof(m_newActionNameBuffer), 0);
-    ImGui_SameLine();
-    if (ImGui_Button("Create"))
+    ImGui::Text("Create New Action:");
+    ImGui::InputText("##NewActionName", m_newActionNameBuffer, sizeof(m_newActionNameBuffer), 0);
+    ImGui::SameLine();
+    if (ImGui::Button("Create"))
     {
         std::string actionName = m_newActionNameBuffer;
         if (!actionName.empty())
@@ -81,26 +81,26 @@ void DebugActionsListWindow::render()
         }
     }
 
-    ImGui_Separator();
+    ImGui::Separator();
 
     // Refresh button
-    if (ImGui_Button("Refresh List"))
+    if (ImGui::Button("Refresh List"))
     {
         refreshActionsList();
     }
 
-    ImGui_Separator();
+    ImGui::Separator();
 
     // List all action folders with edit buttons
     for (const auto &folderName : m_actionFolders)
     {
-        ImGui_Text("%s", folderName.c_str());
-        ImGui_SameLine();
+        ImGui::Text("%s", folderName.c_str());
+        ImGui::SameLine();
 
         // Create unique button ID
         std::string buttonLabel = "Edit##" + folderName;
 
-        if (ImGui_Button(buttonLabel.c_str()))
+        if (ImGui::Button(buttonLabel.c_str()))
         {
             // Close existing action window if any
             m_actionWindowRef.reset();
@@ -115,10 +115,10 @@ void DebugActionsListWindow::render()
 
     if (m_actionFolders.empty())
     {
-        ImGui_Text("No actions found. Click 'Refresh List' to update.");
+        ImGui::Text("No actions found. Click 'Refresh List' to update.");
     }
 
-    ImGui_End();
+    ImGui::End();
 }
 
 bool DebugActionsListWindow::createNewAction(const std::string &actionName)

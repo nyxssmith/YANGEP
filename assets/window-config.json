@@ -36,6 +36,7 @@
     "ShowCoordinatorInfo": false,
     "ShowInputInfo": false,
     "RecordInputInfo": false,
-    "clickToInspectCharacter": true
+    "clickToInspectCharacter": true,
+    "ShowAtlasLabeler": false
   }
 }
