@@ -250,7 +250,7 @@ bool AnimatedDataCharacter::init(const std::string &folderPath)
 
     // Set initial state
     currentAnimation = "idle";
-    currentDirection = Direction::DOWN;
+    setDirection(Direction::DOWN);
     currentFrame = 0;
     frameTimer = 0.0f;
 
@@ -317,12 +317,12 @@ void AnimatedDataCharacter::update(float dt, v2 moveVector)
         if (cf_abs(moveVector.x) > cf_abs(moveVector.y))
         {
             // Horizontal movement is dominant
-            currentDirection = (moveVector.x > 0) ? Direction::RIGHT : Direction::LEFT;
+            setDirection((moveVector.x > 0) ? Direction::RIGHT : Direction::LEFT);
         }
         else
         {
             // Vertical movement is dominant
-            currentDirection = (moveVector.y > 0) ? Direction::UP : Direction::DOWN;
+            setDirection((moveVector.y > 0) ? Direction::UP : Direction::DOWN);
         }
     }
 
@@ -444,7 +444,7 @@ void AnimatedDataCharacter::cycleDirection()
 {
     int currentDir = static_cast<int>(currentDirection);
     currentDir = (currentDir + 1) % 4;
-    currentDirection = static_cast<Direction>(currentDir);
+    setDirection(static_cast<Direction>(currentDir));
 }
 
 // Cycle through animations
@@ -664,6 +664,11 @@ void AnimatedDataCharacter::setPosition(v2 newPosition)
 Direction AnimatedDataCharacter::getCurrentDirection() const
 {
     return currentDirection;
+}
+
+void AnimatedDataCharacter::setDirection(Direction direction)
+{
+    currentDirection = direction;
 }
 
 void AnimatedDataCharacter::setLevel(LevelV1 *levelPtr)

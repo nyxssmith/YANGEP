@@ -2,9 +2,9 @@
   "schemaVersion": "1.0",
   "window": {
     "width": 1280,
-    "height": 720,
-    "viewportZoom": 1.0,
-    "viewportScale": 1.5
+    "height": 800,
+    "viewportZoom": 1.7,
+    "viewportScale": 1.3
   },
   "DebugWindows": [
     {
@@ -19,7 +19,7 @@
     }
   ],
   "Debug": {
-    "highlightViewport": true,
+    "highlightViewport": false,
     "highlightNavmesh": false,
     "highlightNavMeshPaths": false,
     "highlightAgents": false,
@@ -28,7 +28,7 @@
     "highlightLayers": ["structure 1"],
     "highlightLayerBorders": [],
     "highlightLayerOuterBorders": [],
-    "highlightCharacterHitboxes": true,
+    "highlightCharacterHitboxes": false,
     "highlightCoordinatorInfo": false,
     "ShowFPSMetrics": true,
     "ShowJobMetrics": true,
@@ -36,6 +36,6 @@
     "ShowCoordinatorInfo": false,
     "ShowInputInfo": false,
     "RecordInputInfo": false,
-    "clickToInspectCharacter": true
+    "clickToInspectCharacter": false
   }
 }

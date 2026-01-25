@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <cstdlib>
 #include <memory>
+#include <fstream>
 #include <dcimgui.h>
 #include "DebugWindow.h"
 #include "DataFileDebugWindow.h"
@@ -11,6 +12,7 @@
 #include "DebugPlayerInfoWindow.h"
 #include "DebugCharacterInfoWindow.h"
 #include "DebugCoordinatorWindow.h"
+#include "DebugInputInfoWindow.h"
 #include "OnScreenChecks.h"
 #include "Coordinator.h"
 #include "Utils.h"
@@ -79,12 +81,24 @@ int main(int argc, char *argv[])
 	// Read viewport dimensions from config (defaults to window size)
 	float viewportWidth = (float)windowWidth;
 	float viewportHeight = (float)windowHeight;
+	float viewportZoom = 1.0f;			 // Default zoom level
 	bool debugHighlightViewport = false; // Default: don't highlight viewport
 
 	if (windowConfig.contains("window"))
 	{
 		auto &window = windowConfig["window"];
-		if (window.contains("viewportWidth") && window.contains("viewportHeight"))
+
+		// Check for viewportScale first - if present, multiply window dimensions
+		if (window.contains("viewportScale"))
+		{
+			float viewportScale = window["viewportScale"];
+			viewportWidth = (float)windowWidth * viewportScale;
+			viewportHeight = (float)windowHeight * viewportScale;
+			printf("Using viewport scale %.2f: viewport=%.0fx%.0f (window=%dx%d)\n",
+				   viewportScale, viewportWidth, viewportHeight, windowWidth, windowHeight);
+		}
+		// Otherwise, check for explicit viewport dimensions
+		else if (window.contains("viewportWidth") && window.contains("viewportHeight"))
 		{
 			viewportWidth = window["viewportWidth"];
 			viewportHeight = window["viewportHeight"];
@@ -93,6 +107,12 @@ int main(int argc, char *argv[])
 		else
 		{
 			printf("No viewport size in config, using window size: %.0fx%.0f\n", viewportWidth, viewportHeight);
+		}
+
+		if (window.contains("viewportZoom"))
+		{
+			viewportZoom = window["viewportZoom"];
+			printf("Loaded viewport zoom: %.2f\n", viewportZoom);
 		}
 	}
 
@@ -238,6 +258,10 @@ int main(int argc, char *argv[])
 	std::unique_ptr<DebugCoordinatorWindow> coordinatorWindow;
 	bool ShowCoordinatorInfo = false;
 
+	// Input info debug window
+	std::unique_ptr<DebugInputInfoWindow> inputInfoWindow;
+	bool ShowInputInfo = false;
+
 	// Character info debug windows (created on click)
 	std::vector<std::unique_ptr<DebugCharacterInfoWindow>> characterInfoWindows;
 
@@ -279,6 +303,40 @@ int main(int argc, char *argv[])
 		{
 			ShowCoordinatorInfo = debug["ShowCoordinatorInfo"];
 			printf("Debug ShowCoordinatorInfo: %s\n", ShowCoordinatorInfo ? "enabled" : "disabled");
+		}
+
+		if (debug.contains("ShowInputInfo"))
+		{
+			ShowInputInfo = debug["ShowInputInfo"];
+			printf("Debug ShowInputInfo: %s\n", ShowInputInfo ? "enabled" : "disabled");
+
+			if (ShowInputInfo)
+			{
+				inputInfoWindow = std::make_unique<DebugInputInfoWindow>("Input Info");
+				printf("Created Input info debug window\n");
+			}
+		}
+	}
+
+	// Input recording setup
+	bool recordInputInfo = false;
+	std::ofstream inputLogFile;
+	if (windowConfig.contains("Debug") && windowConfig["Debug"].contains("RecordInputInfo"))
+	{
+		recordInputInfo = windowConfig["Debug"]["RecordInputInfo"];
+		if (recordInputInfo)
+		{
+			inputLogFile.open("input_log.txt", std::ios::out | std::ios::trunc);
+			if (inputLogFile.is_open())
+			{
+				printf("Input recording enabled - logging to input_log.txt\n");
+				inputLogFile << "Frame,DeltaTime,KeyW,KeyS,KeyA,KeyD,JoyCount,StickX,StickY,StickMag,MoveVecX,MoveVecY,MoveMag,Source\n";
+			}
+			else
+			{
+				printf("Warning: Failed to open input_log.txt for writing\n");
+				recordInputInfo = false;
+			}
 		}
 	}
 
@@ -362,8 +420,8 @@ int main(int argc, char *argv[])
 		printf("Created Player info debug window\n");
 	}
 
-	// Create CF-native camera with explicit viewport dimensions from config
-	CFNativeCamera cfCamera(cf_v2(0.0f, 0.0f), 1.0f, viewportWidth, viewportHeight);
+	// Create CF-native camera with explicit viewport dimensions and zoom from config
+	CFNativeCamera cfCamera(cf_v2(0.0f, 0.0f), viewportZoom, viewportWidth, viewportHeight);
 
 	// Set up camera with basic settings
 	cfCamera.setZoomRange(0.25f, 4.0f); // Allow 1/4x to 4x zoom
@@ -371,7 +429,9 @@ int main(int argc, char *argv[])
 	// Make camera follow the player
 	cfCamera.setTarget(&playerPosition);
 	cfCamera.setFollowSpeed(3.0f);
-	cfCamera.setFollowDeadzone(cf_v2(50.0f, 50.0f)); // 50px deadzone
+	// Scale deadzone with zoom to maintain consistent feel (base 50px at 1.0 zoom)
+	float deadzoneSize = 50.0f / viewportZoom;
+	cfCamera.setFollowDeadzone(cf_v2(deadzoneSize, deadzoneSize));
 
 	// get height and width of window for where to draw debug info
 	int window_width = cf_app_get_width();
@@ -537,7 +597,7 @@ int main(int argc, char *argv[])
 			}
 		}
 
-		// Player movement (WASD) - only one direction at a time, most recent key takes priority
+		// Player movement (WASD + Controller) - only one direction at a time, most recent key takes priority
 		float dt = CF_DELTA_TIME;
 		float playerSpeed = 200.0f; // pixels per second
 
@@ -617,6 +677,57 @@ int main(int argc, char *argv[])
 			break; // right
 		}
 
+		// Controller input - Left stick movement (overrides keyboard if stick is moved)
+		bool usingController = false;
+		float leftStickX = 0.0f;
+		float leftStickY = 0.0f;
+		float stickMagnitude = 0.0f;
+
+		if (cf_joypad_count() > 0)
+		{
+			const float deadzone = 0.2f; // Ignore small stick movements
+
+			// Get raw stick values and normalize them
+			// CF returns raw values in range -32768 to 32767, we need -1.0 to 1.0
+			float rawStickX = cf_joypad_axis(0, CF_JOYPAD_AXIS_LEFTX);
+			float rawStickY = cf_joypad_axis(0, CF_JOYPAD_AXIS_LEFTY);
+
+			// Normalize to -1.0 to 1.0 range
+			leftStickX = rawStickX / 32767.0f;
+			leftStickY = rawStickY / 32767.0f;
+
+			// Check if stick is outside deadzone
+			stickMagnitude = sqrtf(leftStickX * leftStickX + leftStickY * leftStickY);
+			if (stickMagnitude > deadzone)
+			{
+				// Use stick input directly for movement
+				// Y-axis is inverted on controllers (positive = down), so negate it
+				moveVector.x = leftStickX * playerSpeed;
+				moveVector.y = -leftStickY * playerSpeed; // Negate Y to fix inversion
+				usingController = true;
+			}
+		}
+
+		// Record input info if enabled
+		if (recordInputInfo && inputLogFile.is_open())
+		{
+			static int frameNumber = 0;
+			float moveMagnitude = sqrtf(moveVector.x * moveVector.x + moveVector.y * moveVector.y);
+
+			bool keyW = cf_key_down(CF_KEY_W) || cf_key_down(CF_KEY_UP);
+			bool keyS = cf_key_down(CF_KEY_S) || cf_key_down(CF_KEY_DOWN);
+			bool keyA = cf_key_down(CF_KEY_A) || cf_key_down(CF_KEY_LEFT);
+			bool keyD = cf_key_down(CF_KEY_D) || cf_key_down(CF_KEY_RIGHT);
+
+			inputLogFile << frameNumber++ << ","
+						 << dt << ","
+						 << keyW << "," << keyS << "," << keyA << "," << keyD << ","
+						 << cf_joypad_count() << ","
+						 << leftStickX << "," << leftStickY << "," << stickMagnitude << ","
+						 << moveVector.x << "," << moveVector.y << "," << moveMagnitude << ","
+						 << (usingController ? "Controller" : "Keyboard") << "\n";
+		}
+
 		// Handle playerCharacter animation input (1/2 for idle/walk)
 		// playerCharacter.handleInput();
 
@@ -632,8 +743,9 @@ int main(int argc, char *argv[])
 		// Only allow action inputs if player is not in warmup
 		if (!playerInWarmup)
 		{
-			// Handle spacebar to trigger action A
-			if (cf_key_just_pressed(CF_KEY_SPACE))
+			// Handle spacebar or controller A button to trigger action A
+			if (cf_key_just_pressed(CF_KEY_SPACE) ||
+				(cf_joypad_count() > 0 && cf_joypad_button_just_pressed(0, CF_JOYPAD_BUTTON_A)))
 			{
 				Action *actionA = playerCharacter.getActionPointerA();
 				if (actionA)
@@ -643,8 +755,9 @@ int main(int argc, char *argv[])
 				}
 			}
 
-			// Handle B key to trigger action B
-			if (cf_key_just_pressed(CF_KEY_B))
+			// Handle B key or controller B button to trigger action B
+			if (cf_key_just_pressed(CF_KEY_B) ||
+				(cf_joypad_count() > 0 && cf_joypad_button_just_pressed(0, CF_JOYPAD_BUTTON_B)))
 			{
 				Action *actionB = playerCharacter.getActionPointerB();
 				if (actionB)
@@ -656,25 +769,38 @@ int main(int argc, char *argv[])
 		}
 		if (!playerCharacter.getIsDoingAction())
 		{
-			// Handle action pointer A navigation (I/O keys)
-			if (cf_key_just_pressed(CF_KEY_I))
+			// Track trigger states for edge detection
+			static bool leftTriggerWasPressed = false;
+			static bool rightTriggerWasPressed = false;
+
+			bool leftTriggerPressed = (cf_joypad_count() > 0 && cf_joypad_axis(0, CF_JOYPAD_AXIS_TRIGGERLEFT) > 0.5f);
+			bool rightTriggerPressed = (cf_joypad_count() > 0 && cf_joypad_axis(0, CF_JOYPAD_AXIS_TRIGGERRIGHT) > 0.5f);
+
+			// Handle action pointer A navigation (I/O keys or left/right bumpers)
+			if (cf_key_just_pressed(CF_KEY_I) ||
+				(cf_joypad_count() > 0 && cf_joypad_button_just_pressed(0, CF_JOYPAD_BUTTON_LEFTSHOULDER)))
 			{
 				playerCharacter.MoveActionPointerADown(); // Move towards index 0
 			}
-			if (cf_key_just_pressed(CF_KEY_O))
+			if (cf_key_just_pressed(CF_KEY_O) ||
+				(cf_joypad_count() > 0 && cf_joypad_button_just_pressed(0, CF_JOYPAD_BUTTON_RIGHTSHOULDER)))
 			{
 				playerCharacter.MoveActionPointerAUp(); // Move towards end of list
 			}
 
-			// Handle action pointer B navigation (K/L keys)
-			if (cf_key_just_pressed(CF_KEY_K))
+			// Handle action pointer B navigation (K/L keys or left/right triggers)
+			if (cf_key_just_pressed(CF_KEY_K) || (leftTriggerPressed && !leftTriggerWasPressed))
 			{
 				playerCharacter.MoveActionPointerBDown(); // Move towards index 0
 			}
-			if (cf_key_just_pressed(CF_KEY_L))
+			if (cf_key_just_pressed(CF_KEY_L) || (rightTriggerPressed && !rightTriggerWasPressed))
 			{
 				playerCharacter.MoveActionPointerBUp(); // Move towards end of list
 			}
+
+			// Update trigger states for next frame
+			leftTriggerWasPressed = leftTriggerPressed;
+			rightTriggerWasPressed = rightTriggerPressed;
 		}
 
 		// Camera feature demo keys
@@ -980,6 +1106,12 @@ int main(int argc, char *argv[])
 			coordinatorWindow->render();
 		}
 
+		// Render Input info window if enabled
+		if (inputInfoWindow)
+		{
+			inputInfoWindow->render();
+		}
+
 		// Render all character info windows
 		for (auto &characterWindow : characterInfoWindows)
 		{
@@ -1009,6 +1141,13 @@ int main(int argc, char *argv[])
 
 	// Cleanup on-screen checks
 	OnScreenChecks::shutdown();
+
+	// Close input log file if it was opened
+	if (inputLogFile.is_open())
+	{
+		inputLogFile.close();
+		printf("Input log file closed\n");
+	}
 
 	destroy_app();
 	return 0;

@@ -3,8 +3,9 @@
   "window": {
     "width": 1280,
     "height": 720,
-    "viewportZoom": 1.0,
-    "viewportScale": 1.5
+    "viewportWidth": 1280,
+    "viewportHeight": 720,
+    "viewportScale": 1.0
   },
   "DebugWindows": [
     {
@@ -19,23 +20,21 @@
     }
   ],
   "Debug": {
-    "highlightViewport": true,
+    "highlightViewport": false,
     "highlightNavmesh": false,
     "highlightNavMeshPaths": false,
     "highlightAgents": false,
     "highlightSpatialGrid": false,
     "highlightPlayerNavmeshCollisionBox": false,
-    "highlightLayers": ["structure 1"],
+    "highlightLayers": ["Ground"],
     "highlightLayerBorders": [],
     "highlightLayerOuterBorders": [],
-    "highlightCharacterHitboxes": true,
+    "highlightCharacterHitboxes": false,
     "highlightCoordinatorInfo": false,
     "ShowFPSMetrics": true,
-    "ShowJobMetrics": true,
+    "ShowJobMetrics": false,
     "ShowPlayerInfo": false,
     "ShowCoordinatorInfo": false,
-    "ShowInputInfo": false,
-    "RecordInputInfo": false,
-    "clickToInspectCharacter": true
+    "clickToInspectCharacter": false
   }
 }

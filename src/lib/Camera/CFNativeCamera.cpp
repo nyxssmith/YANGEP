@@ -41,10 +41,11 @@ void CFNativeCamera::apply()
     // Use CF's built-in transform system
     cf_draw_push();
 
-    // Camera transform: move world opposite to camera position (plus shake offset), then zoom
+    // Camera transform: First scale, then translate by scaled amount
+    // This ensures the camera position stays at the center regardless of zoom
     v2 final_position = cf_v2(m_position.x + m_shake_offset.x, m_position.y + m_shake_offset.y);
-    cf_draw_translate(-final_position.x, -final_position.y);
     cf_draw_scale(m_zoom, m_zoom);
+    cf_draw_translate(-final_position.x, -final_position.y);
 
     m_is_applied = true;
 }
@@ -397,20 +398,15 @@ v2 CFNativeCamera::lerp(v2 a, v2 b, float t) const
 
 CF_Aabb CFNativeCamera::getViewBounds() const
 {
-    // Get screen dimensions (from stored viewport or window)
-    float screen_width, screen_height;
-    if (m_use_window_size)
-    {
-        screen_width = (float)cf_app_get_width();
-        screen_height = (float)cf_app_get_height();
-    }
-    else
-    {
-        screen_width = m_viewport_width;
-        screen_height = m_viewport_height;
-    }
+    // Use viewport dimensions (which may be scaled from window size)
+    // This ensures view bounds match what's actually being rendered
+    v2 viewport_size = getViewportSize();
+    float screen_width = viewport_size.x;
+    float screen_height = viewport_size.y;
 
     // Calculate world-space dimensions based on zoom
+    // At zoom=1.0, screen size = world size
+    // At zoom=2.0, we see half the world space (zoomed in)
     float world_width = screen_width / m_zoom;
     float world_height = screen_height / m_zoom;
 
@@ -422,9 +418,20 @@ CF_Aabb CFNativeCamera::getViewBounds() const
     float half_width = world_width * 0.5f;
     float half_height = world_height * 0.5f;
 
-    return make_aabb(
+    CF_Aabb result = make_aabb(
         cf_v2(effective_position.x - half_width, effective_position.y - half_height),
         cf_v2(effective_position.x + half_width, effective_position.y + half_height));
+
+    static int frame_count = 0;
+    if (frame_count++ % 60 == 0)
+    {
+        printf("ViewBounds: screen=%.0fx%.0f, zoom=%.2f, world=%.0fx%.0f, pos=(%.0f,%.0f), bounds=(%.0f,%.0f)-(%.0f,%.0f)\n",
+               screen_width, screen_height, m_zoom, world_width, world_height,
+               effective_position.x, effective_position.y,
+               result.min.x, result.min.y, result.max.x, result.max.y);
+    }
+
+    return result;
 }
 
 bool CFNativeCamera::isVisible(CF_Aabb bounds) const
