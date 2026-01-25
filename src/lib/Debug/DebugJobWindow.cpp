@@ -1,6 +1,6 @@
 #include "DebugJobWindow.h"
 #include "JobSystem.h"
-#include <dcimgui.h>
+#include <imgui.h>
 #include <stdio.h>
 
 DebugJobWindow::DebugJobWindow(const std::string &title)
@@ -13,38 +13,38 @@ void DebugJobWindow::render()
 {
     if (!JobSystem::isInitialized())
     {
-        ImGui_Begin(m_title.c_str(), nullptr, 0);
-        ImGui_Text("Job System: NOT INITIALIZED");
-        ImGui_End();
+        ImGui::Begin(m_title.c_str(), nullptr);
+        ImGui::Text("Job System: NOT INITIALIZED");
+        ImGui::End();
         return;
     }
 
-    ImGui_Begin(m_title.c_str(), nullptr, 0);
+    ImGui::Begin(m_title.c_str(), nullptr);
 
     // Job system status header
-    ImGui_Text("Job System Status");
-    ImGui_Separator();
+    ImGui::Text("Job System Status");
+    ImGui::Separator();
 
     // Worker thread count and pending jobs
     int workerCount = JobSystem::getWorkerCount();
     int pendingJobs = JobSystem::getPendingJobCount();
-    ImGui_Text("Worker Threads: %d", workerCount);
-    ImGui_Text("Pending Jobs: %d", pendingJobs);
+    ImGui::Text("Worker Threads: %d", workerCount);
+    ImGui::Text("Pending Jobs: %d", pendingJobs);
 
     // System status
     if (JobSystem::isInitialized())
     {
-        ImGui_TextColored(ImVec4{0.0f, 1.0f, 0.0f, 1.0f}, "Status: RUNNING");
+        ImGui::TextColored(ImVec4{0.0f, 1.0f, 0.0f, 1.0f}, "Status: RUNNING");
     }
     else
     {
-        ImGui_TextColored(ImVec4{1.0f, 0.0f, 0.0f, 1.0f}, "Status: STOPPED");
+        ImGui::TextColored(ImVec4{1.0f, 0.0f, 0.0f, 1.0f}, "Status: STOPPED");
     }
 
-    ImGui_Separator();
+    ImGui::Separator();
 
     // Worker sections
-    ImGui_Text("Workers:");
+    ImGui::Text("Workers:");
 
     auto workerInfo = JobSystem::getWorkerInfo();
     for (const auto &worker : workerInfo)
@@ -53,44 +53,44 @@ void DebugJobWindow::render()
         char workerLabel[64];
         snprintf(workerLabel, sizeof(workerLabel), "Worker %d", worker.workerId);
 
-        if (ImGui_CollapsingHeader(workerLabel, ImGuiTreeNodeFlags_DefaultOpen))
+        if (ImGui::CollapsingHeader(workerLabel, ImGuiTreeNodeFlags_DefaultOpen))
         {
             // Label
-            ImGui_Text("  Label: %s", worker.label.c_str());
+            ImGui::Text("  Label: %s", worker.label.c_str());
 
             // Pending jobs in queue
-            ImGui_Text("  Queued Jobs: %d", worker.pendingJobCount);
+            ImGui::Text("  Queued Jobs: %d", worker.pendingJobCount);
 
             // Running jobs
-            ImGui_Text("  Running Jobs: %d", worker.runningJobCount);
+            ImGui::Text("  Running Jobs: %d", worker.runningJobCount);
 
             // Status
             if (worker.runningJobCount > 0)
             {
-                ImGui_TextColored(ImVec4{0.0f, 1.0f, 0.0f, 1.0f}, "  Status: BUSY");
+                ImGui::TextColored(ImVec4{0.0f, 1.0f, 0.0f, 1.0f}, "  Status: BUSY");
             }
             else
             {
-                ImGui_TextColored(ImVec4{0.5f, 0.5f, 0.5f, 1.0f}, "  Status: IDLE");
+                ImGui::TextColored(ImVec4{0.5f, 0.5f, 0.5f, 1.0f}, "  Status: IDLE");
             }
         }
     }
 
-    ImGui_Separator();
+    ImGui::Separator();
 
     // Show details toggle
-    ImGui_Checkbox("Show API Info", &m_showDetails);
+    ImGui::Checkbox("Show API Info", &m_showDetails);
 
     if (m_showDetails)
     {
-        ImGui_Separator();
-        ImGui_Text("API Information:");
-        ImGui_BulletText("submitJob(work, name) - Queue a task");
-        ImGui_BulletText("kick() - Start jobs (non-blocking)");
-        ImGui_BulletText("kickAndWait() - Start and wait");
+        ImGui::Separator();
+        ImGui::Text("API Information:");
+        ImGui::BulletText("submitJob(work, name) - Queue a task");
+        ImGui::BulletText("kick() - Start jobs (non-blocking)");
+        ImGui::BulletText("kickAndWait() - Start and wait");
     }
 
-    ImGui_End();
+    ImGui::End();
 }
 
 const std::string &DebugJobWindow::getTitle() const

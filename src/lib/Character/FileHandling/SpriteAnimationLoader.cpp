@@ -5,8 +5,23 @@
 #include <cstring>
 #include <algorithm>
 #include <unistd.h>
+#include <cstdarg>
 
 using namespace Cute;
+
+// Mute verbose sprite loader logs unless enabled.
+static bool g_sprite_loader_verbose = false;
+static int s_printf(const char* fmt, ...)
+{
+	if (!g_sprite_loader_verbose) return 0;
+	va_list args;
+	va_start(args, fmt);
+	int r = vprintf(fmt, args);
+	va_end(args);
+	fflush(stdout);
+	return r;
+}
+#define printf s_printf
 
 // Predefined animation layouts
 namespace AnimationLayouts

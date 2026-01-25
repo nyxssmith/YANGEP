@@ -4,6 +4,7 @@
 #include "State.h"
 #include "DataFile.h"
 #include <stdio.h>
+#include <imgui.h>
 
 DebugStateMachineWindow::DebugStateMachineWindow(const std::string &title, StateMachine *stateMachine)
     : DebugWindow(title), m_stateMachine(stateMachine)
@@ -17,24 +18,24 @@ void DebugStateMachineWindow::render()
         return;
     }
 
-    ImGui_Begin(m_title.c_str(), &m_show, 0);
+    ImGui::Begin(m_title.c_str(), &m_show);
 
     // Display state machine name
-    ImGui_Text("State Machine: %s", m_stateMachine->getName().c_str());
-    ImGui_Text("Loop Counter: %d", m_stateMachine->getLoopCounter());
-    ImGui_Separator();
+    ImGui::Text("State Machine: %s", m_stateMachine->getName().c_str());
+    ImGui::Text("Loop Counter: %d", m_stateMachine->getLoopCounter());
+    ImGui::Separator();
 
     // Get current state
     State *currentState = m_stateMachine->getCurrentState();
 
     // Display all states
-    ImGui_Text("States:");
-    ImGui_Indent();
+    ImGui::Text("States:");
+    ImGui::Indent();
 
     const auto &states = m_stateMachine->getStates();
     if (states.empty())
     {
-        ImGui_Text("(No states)");
+        ImGui::Text("(No states)");
     }
     else
     {
@@ -57,19 +58,19 @@ void DebugStateMachineWindow::render()
             // Mark current state
             if (state == currentState)
             {
-                ImGui_Text("[CURRENT] %s", stateName.c_str());
-                ImGui_SameLine();
+                ImGui::Text("[CURRENT] %s", stateName.c_str());
+                ImGui::SameLine();
             }
             else
             {
-                ImGui_Text("          %s", stateName.c_str());
-                ImGui_SameLine();
+                ImGui::Text("          %s", stateName.c_str());
+                ImGui::SameLine();
             }
 
             // Button to open debug window for this state
             char buttonLabel[128];
             snprintf(buttonLabel, sizeof(buttonLabel), "Debug##state_%zu", i);
-            if (ImGui_ButtonEx(buttonLabel, (ImVec2){0, 0}))
+            if (ImGui::Button(buttonLabel))
             {
                 // Check if we already have a window for this state
                 bool found = false;
@@ -92,9 +93,9 @@ void DebugStateMachineWindow::render()
         }
     }
 
-    ImGui_Unindent();
+    ImGui::Unindent();
 
-    ImGui_End();
+    ImGui::End();
 
     // Render all state windows
     for (auto &window : m_stateWindows)
