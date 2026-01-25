@@ -1,1 +1,1 @@
-0.0.26-main-329d60a
+0.0.28-nyx-steamdeck-camera-view-changes-b0f0506
