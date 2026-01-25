@@ -206,6 +206,8 @@ endif()
 add_executable(
 	${PROJECT_NAME}_action_editor
 	actionEditor/main.cpp
+	actionEditor/DebugActionWindow.cpp
+	actionEditor/DebugActionsListWindow.cpp
 	src/lib/FileHandling/DataFile.cpp
 	src/lib/FileHandling/RealConfigFile.cpp
 	src/lib/FileHandling/Utils.cpp

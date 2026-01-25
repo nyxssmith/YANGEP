@@ -44,14 +44,76 @@ void ABActions::calculate()
     actionBOnlyBoxes.clear();
     bothActionBoxes.clear();
 
-    // Can't calculate if either action is null
-    if (!actionA || !actionB)
+    // Can't calculate if both actions are null
+    if (!actionA && !actionB)
     {
-        printf("ABActions: Cannot calculate - one or both actions are null\n");
+        printf("ABActions: Cannot calculate - both actions are null\n");
         return;
     }
 
-    // Get hitboxes from both actions
+    // If only action A exists
+    if (actionA && !actionB)
+    {
+        HitBox *hitboxA = actionA->getHitBox();
+        if (!hitboxA)
+        {
+            printf("ABActions: Action A has no hitbox\n");
+            return;
+        }
+
+        const std::vector<HitboxTile> &tilesA = hitboxA->getTiles();
+
+        for (Direction dir : {Direction::UP, Direction::DOWN, Direction::LEFT, Direction::RIGHT})
+        {
+            std::vector<CF_Aabb> tempBoxesA = hitboxA->getBoxes(dir, cf_v2(0, 0));
+            float hitboxSizeA = tempBoxesA.empty() ? 32.0f : (tempBoxesA[0].max.x - tempBoxesA[0].min.x);
+
+            for (const auto &tile : tilesA)
+            {
+                std::vector<HitboxTile> singleTile = {tile};
+                std::vector<CF_Aabb> boxes = HitBox::buildFromTiles(singleTile, hitboxSizeA, 0.0f, dir);
+                actionAOnlyBoxes[dir].insert(actionAOnlyBoxes[dir].end(), boxes.begin(), boxes.end());
+            }
+
+            printf("ABActions: Direction %d - A only: %zu\n",
+                   static_cast<int>(dir),
+                   actionAOnlyBoxes[dir].size());
+        }
+        return;
+    }
+
+    // If only action B exists
+    if (!actionA && actionB)
+    {
+        HitBox *hitboxB = actionB->getHitBox();
+        if (!hitboxB)
+        {
+            printf("ABActions: Action B has no hitbox\n");
+            return;
+        }
+
+        const std::vector<HitboxTile> &tilesB = hitboxB->getTiles();
+
+        for (Direction dir : {Direction::UP, Direction::DOWN, Direction::LEFT, Direction::RIGHT})
+        {
+            std::vector<CF_Aabb> tempBoxesB = hitboxB->getBoxes(dir, cf_v2(0, 0));
+            float hitboxSizeB = tempBoxesB.empty() ? 32.0f : (tempBoxesB[0].max.x - tempBoxesB[0].min.x);
+
+            for (const auto &tile : tilesB)
+            {
+                std::vector<HitboxTile> singleTile = {tile};
+                std::vector<CF_Aabb> boxes = HitBox::buildFromTiles(singleTile, hitboxSizeB, 0.0f, dir);
+                actionBOnlyBoxes[dir].insert(actionBOnlyBoxes[dir].end(), boxes.begin(), boxes.end());
+            }
+
+            printf("ABActions: Direction %d - B only: %zu\n",
+                   static_cast<int>(dir),
+                   actionBOnlyBoxes[dir].size());
+        }
+        return;
+    }
+
+    // Both actions exist - calculate overlap
     HitBox *hitboxA = actionA->getHitBox();
     HitBox *hitboxB = actionB->getHitBox();
 

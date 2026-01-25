@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <memory>
 #include <dcimgui.h>
+#include <fstream>
 #include "DebugWindow.h"
 #include "DataFileDebugWindow.h"
 #include "DebugWindowList.h"
@@ -16,6 +17,8 @@
 #include "DebugPlayerInfoWindow.h"
 #include "DebugCharacterInfoWindow.h"
 #include "DebugCoordinatorWindow.h"
+#include "DebugActionWindow.h"
+#include "DebugActionsListWindow.h"
 #include "OnScreenChecks.h"
 #include "Coordinator.h"
 #include "Utils.h"
@@ -31,6 +34,33 @@
 #include "ShaderRegistry.h"
 #include "HighlightTile.h"
 using namespace Cute;
+
+// Forward declarations
+void ClearActions(AnimatedDataCharacterNavMeshPlayer &playerCharacter);
+
+void ClearActions(AnimatedDataCharacterNavMeshPlayer &playerCharacter)
+{
+    // Build a list of action names first, then remove them
+    std::vector<std::string> actionNames;
+    for (const auto &action : playerCharacter.getActions())
+    {
+        if (action.contains("name"))
+        {
+            actionNames.push_back(action["name"].get<std::string>());
+        }
+    }
+
+    // Now remove all actions by name
+    for (const auto &actionName : actionNames)
+    {
+        playerCharacter.removeAction(actionName);
+    }
+
+    printf("Action editor: Removed %zu actions from player\n", actionNames.size());
+
+    // Recalculate AB actions
+    playerCharacter.calculateABActions();
+}
 
 int main(int argc, char *argv[])
 {
@@ -241,6 +271,12 @@ int main(int argc, char *argv[])
     // Character info debug windows (created on click)
     std::vector<std::unique_ptr<DebugCharacterInfoWindow>> characterInfoWindows;
 
+    // Action editor debug window for editing action properties
+    std::unique_ptr<DebugActionWindow> actionWindow;
+
+    // Actions list window for browsing and selecting actions to edit
+    std::unique_ptr<DebugActionsListWindow> actionsListWindow;
+
     if (windowConfig.contains("Debug"))
     {
         auto &debug = windowConfig["Debug"];
@@ -302,6 +338,9 @@ int main(int argc, char *argv[])
         destroy_app();
         return -1;
     }
+
+    // Remove all innate actions from player for action editor
+    ClearActions(playerCharacter);
 
     // add debug items to the player
     Item itemA("assets/DataFiles/Items/item-a.json");
@@ -383,6 +422,10 @@ int main(int argc, char *argv[])
                                                                      level);
         printf("Created Coordinator debug window\n");
     }
+
+    // Create actions list window (always present in action editor)
+    actionsListWindow = std::make_unique<DebugActionsListWindow>("Actions List", actionWindow);
+    printf("Created Actions List window\n");
 
     // Main loop
     printf("Skeleton Adventure Game:\n");
@@ -748,29 +791,236 @@ int main(int argc, char *argv[])
             fpsWindow->markSection("Agent Update");
         }
 
-        // Update playerCharacter animation with move vector (direction only, no actual movement)
-        playerCharacter.update(dt, cf_v2(0.0f, 0.0f));
+        // Check if action editor window is open and track state changes
+        static bool wasActionEditorOpen = false;
+        bool actionEditorOpen = (actionWindow && actionWindow->isShown());
 
-        // Update player direction based on input (without moving)
-        if (moveVector.x != 0.0f || moveVector.y != 0.0f)
+        // Detect when action window is newly opened
+        if (actionEditorOpen && !wasActionEditorOpen)
         {
-            // Determine direction based on the dominant axis
-            Direction newDirection;
-            if (cf_abs(moveVector.x) > cf_abs(moveVector.y))
+            // Clear all actions from player
+            ClearActions(playerCharacter);
+
+            // Add the action being edited to the player
+            std::string actionFolderPath = actionWindow->getActionFolderPath();
+            if (playerCharacter.addAction(actionFolderPath))
             {
-                // Horizontal movement is dominant
-                newDirection = (moveVector.x > 0) ? Direction::RIGHT : Direction::LEFT;
+                printf("Action editor: Added action from %s to player\n", actionFolderPath.c_str());
             }
             else
             {
-                // Vertical movement is dominant
-                newDirection = (moveVector.y > 0) ? Direction::UP : Direction::DOWN;
+                printf("Action editor: Failed to add action from %s\n", actionFolderPath.c_str());
             }
-            playerCharacter.setDirection(newDirection);
+
+            // Recalculate AB actions with the new action
+            playerCharacter.calculateABActions();
+
+            printf("Action editor opened - actions cleared and recalculated\n");
         }
 
-        // Get updated player position from playerCharacter (for camera following)
-        playerPosition = playerCharacter.getPosition();
+        wasActionEditorOpen = actionEditorOpen;
+
+        if (actionEditorOpen)
+        {
+            // Reset player to starting position
+            v2 startPosition = cf_v2(startWorldX, startWorldY);
+            playerCharacter.setPosition(startPosition);
+            playerPosition = startPosition;
+
+            // Handle mouse click to add/remove tiles from hitbox
+            if (cf_mouse_just_pressed(CF_MOUSE_BUTTON_LEFT))
+            {
+                // Get mouse position in window coordinates
+                float mouseWindowX = cf_mouse_x();
+                float mouseWindowY = cf_mouse_y();
+
+                // Get current window dimensions
+                int windowWidth = cf_app_get_width();
+                int windowHeight = cf_app_get_height();
+
+                // Get viewport dimensions from camera
+                v2 viewportSize = cfCamera.getViewportSize();
+
+                // Calculate viewport offset (assuming viewport is centered in window)
+                float viewportOffsetX = (windowWidth - viewportSize.x) * 0.5f;
+                float viewportOffsetY = (windowHeight - viewportSize.y) * 0.5f;
+
+                // Convert window coordinates to viewport coordinates
+                float mouseViewportX = mouseWindowX - viewportOffsetX;
+                float mouseViewportY = mouseWindowY - viewportOffsetY;
+
+                // Check if mouse is within viewport bounds
+                if (mouseViewportX >= 0 && mouseViewportX < viewportSize.x &&
+                    mouseViewportY >= 0 && mouseViewportY < viewportSize.y)
+                {
+                    // Convert viewport to world coordinates
+                    v2 centered = cf_v2(mouseViewportX - viewportSize.x * 0.5f,
+                                        -(mouseViewportY - viewportSize.y * 0.5f)); // Negate Y to flip from Y-down to Y-up
+                    float zoom = cfCamera.getZoom();
+                    centered = cf_v2(centered.x / zoom, centered.y / zoom);
+                    v2 cameraPos = cfCamera.getPosition();
+                    v2 mouseWorldPos = cf_v2(centered.x + cameraPos.x, centered.y + cameraPos.y);
+
+                    // Convert to tile coordinates relative to player position
+                    float relativeTileX = (mouseWorldPos.x - playerPosition.x) / tile_width;
+                    float relativeTileY = (mouseWorldPos.y - playerPosition.y) / tile_height;
+
+                    // Round to nearest tile
+                    int tileX = static_cast<int>(round(relativeTileX));
+                    int tileY = static_cast<int>(round(relativeTileY));
+
+                    // Transform tile coordinates based on player facing direction
+                    // All hitbox.json files are defined as if facing RIGHT
+                    Direction playerDir = playerCharacter.getCurrentDirection();
+                    int hitboxX = tileX;
+                    int hitboxY = tileY;
+
+                    switch (playerDir)
+                    {
+                    case Direction::RIGHT:
+                        // No transformation needed - already in right-facing coordinates
+                        break;
+                    case Direction::UP:
+                        // When facing up, what's to the right becomes behind (negative y)
+                        // and what's ahead becomes to the right
+                        hitboxX = tileY;
+                        hitboxY = -tileX;
+                        break;
+                    case Direction::LEFT:
+                        // When facing left, everything is mirrored
+                        hitboxX = -tileX;
+                        hitboxY = -tileY;
+                        break;
+                    case Direction::DOWN:
+                        // When facing down, what's to the right becomes ahead
+                        // and what's ahead becomes to the left
+                        hitboxX = -tileY;
+                        hitboxY = tileX;
+                        break;
+                    }
+
+                    printf("Clicked tile: screen(%.1f, %.1f) world(%.1f, %.1f) relative(%d, %d) hitbox(%d, %d) facing %d\n",
+                           mouseWindowX, mouseWindowY, mouseWorldPos.x, mouseWorldPos.y,
+                           tileX, tileY, hitboxX, hitboxY, static_cast<int>(playerDir));
+
+                    // Get the VFS path and real filesystem path
+                    std::string hitboxVFSPath = actionWindow->getActionFolderPath() + "/hitbox.json";
+                    std::string hitboxRealPath = hitboxVFSPath;
+                    if (hitboxRealPath.starts_with("/assets/"))
+                    {
+                        hitboxRealPath = hitboxRealPath.substr(1); // Remove leading "/" to get "assets/..."
+                    }
+
+                    // Load the hitbox.json file from VFS
+                    DataFile hitboxData(hitboxVFSPath);
+
+                    if (hitboxData.contains("tiles") && hitboxData["tiles"].is_array())
+                    {
+                        auto &tiles = hitboxData["tiles"];
+
+                        // Check if this tile already exists
+                        bool tileExists = false;
+                        size_t existingIndex = 0;
+
+                        for (size_t i = 0; i < tiles.size(); ++i)
+                        {
+                            if (tiles[i].contains("x") && tiles[i].contains("y"))
+                            {
+                                int existingX = tiles[i]["x"];
+                                int existingY = tiles[i]["y"];
+
+                                if (existingX == hitboxX && existingY == hitboxY)
+                                {
+                                    tileExists = true;
+                                    existingIndex = i;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (tileExists)
+                        {
+                            // Remove the tile
+                            tiles.erase(tiles.begin() + existingIndex);
+                            printf("Removed tile (%d, %d) from hitbox\n", hitboxX, hitboxY);
+                        }
+                        else
+                        {
+                            // Add the tile
+                            nlohmann::json newTile;
+                            newTile["x"] = hitboxX;
+                            newTile["y"] = hitboxY;
+                            newTile["damage_modifier"] = 1.0f;
+                            tiles.push_back(newTile);
+                            printf("Added tile (%d, %d) to hitbox\n", hitboxX, hitboxY);
+                        }
+
+                        // Save the modified hitbox.json directly to real filesystem
+                        try
+                        {
+                            std::ofstream hitboxFile(hitboxRealPath);
+                            if (hitboxFile.is_open())
+                            {
+                                hitboxFile << hitboxData.dump(2);
+                                hitboxFile.close();
+                                printf("Saved hitbox changes to %s\n", hitboxRealPath.c_str());
+
+                                // Reload the action from disk
+                                ClearActions(playerCharacter);
+                                if (playerCharacter.addAction(actionWindow->getActionFolderPath()))
+                                {
+                                    printf("Reloaded action with updated hitbox\n");
+                                    playerCharacter.calculateABActions();
+                                }
+                                else
+                                {
+                                    printf("Failed to reload action\n");
+                                }
+                            }
+                            else
+                            {
+                                printf("Failed to open %s for writing\n", hitboxRealPath.c_str());
+                            }
+                        }
+                        catch (const std::exception &e)
+                        {
+                            printf("Failed to save hitbox changes: %s\n", e.what());
+                        }
+                    }
+                    else
+                    {
+                        printf("Invalid hitbox.json format - missing tiles array\n");
+                    }
+                }
+            }
+
+            // Update player direction based on input (without moving)
+            if (moveVector.x != 0.0f || moveVector.y != 0.0f)
+            {
+                // Determine direction based on the dominant axis
+                Direction newDirection;
+                if (cf_abs(moveVector.x) > cf_abs(moveVector.y))
+                {
+                    // Horizontal movement is dominant
+                    newDirection = (moveVector.x > 0) ? Direction::RIGHT : Direction::LEFT;
+                }
+                else
+                {
+                    // Vertical movement is dominant
+                    newDirection = (moveVector.y > 0) ? Direction::UP : Direction::DOWN;
+                }
+                playerCharacter.setDirection(newDirection);
+            }
+
+            // Update animation without movement
+            playerCharacter.update(dt, cf_v2(0.0f, 0.0f));
+        }
+        else
+        {
+            // Normal movement when action editor is closed
+            playerCharacter.update(dt, moveVector);
+            playerPosition = playerCharacter.getPosition();
+        }
         if (fpsWindow)
         {
             fpsWindow->markSection("Player Update");
@@ -973,6 +1223,18 @@ int main(int argc, char *argv[])
         for (auto &characterWindow : characterInfoWindows)
         {
             characterWindow->render();
+        }
+
+        // Render actions list window
+        if (actionsListWindow)
+        {
+            actionsListWindow->render();
+        }
+
+        // Render action editor window if one is open
+        if (actionWindow)
+        {
+            actionWindow->render();
         }
 
         // Remove closed character info windows
