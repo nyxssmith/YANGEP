@@ -28,12 +28,10 @@ run_preserve_assets: build
 	@echo "Running with preserved assets..."
 	./scripts/run.sh
 
-animation_demo: build
-	@echo "Running Animation Demo..."
-	cd build && ./yangep_animation_demo
-
-
-
+steamdeck: build
+	@echo "Copying to Steam Deck..."
+	./scripts/scp_steamdeck.sh
+	
 
 
 test: build
