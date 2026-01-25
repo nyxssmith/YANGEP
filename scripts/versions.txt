@@ -25,3 +25,4 @@
 0.0.25-nyx-action-pointer-moving-6a8b854
 0.0.26-main-329d60a
 0.0.27-nyx-steamdeck-camera-view-changes-107b06c
+0.0.28-nyx-steamdeck-camera-view-changes-b0f0506

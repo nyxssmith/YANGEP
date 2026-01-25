@@ -1,1 +1,1 @@
-0.0.27-nyx-steamdeck-camera-view-changes-107b06c
+0.0.28-nyx-steamdeck-camera-view-changes-b0f0506
