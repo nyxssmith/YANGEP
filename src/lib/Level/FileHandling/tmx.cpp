@@ -1027,6 +1027,13 @@ bool TMXTileset::getLocalTileCoords(int gid, int &tile_x, int &tile_y) const
 
     int tiles_per_row = source_width / tileset_width;
 
+    if (tiles_per_row <= 0)
+    {
+        printf("ERROR: tiles_per_row is %d (source_width=%d, tileset_width=%d) for GID %d\n",
+               tiles_per_row, source_width, tileset_width, gid);
+        return false;
+    }
+
     tile_x = local_id % tiles_per_row;
     tile_y = local_id / tiles_per_row;
     printf("Local tile coords for GID %d: (%d, %d)\n", gid, tile_x, tile_y);

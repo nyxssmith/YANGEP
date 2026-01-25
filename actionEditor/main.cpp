@@ -19,8 +19,6 @@
 #include "DebugCoordinatorWindow.h"
 #include "DebugActionWindow.h"
 #include "DebugActionsListWindow.h"
-#include "OnScreenChecks.h"
-#include "Coordinator.h"
 #include "Utils.h"
 #include "DataFile.h"
 #include "RealConfigFile.h"
@@ -419,20 +417,6 @@ int main(int argc, char *argv[])
 
     // NavMesh path for pathfinding (stored as shared_ptr)
     std::shared_ptr<NavMeshPath> navmeshPath = nullptr;
-
-    // Initialize and start on-screen checks worker
-    OnScreenChecks::initialize(&playerPosition, &cfCamera, &level, &playerCharacter);
-    OnScreenChecks::start();
-
-    // Create coordinator debug window if enabled (now that OnScreenChecks is initialized)
-    if (ShowCoordinatorInfo)
-    {
-        coordinatorWindow = std::make_unique<DebugCoordinatorWindow>("Coordinator Info",
-                                                                     OnScreenChecks::getCoordinator(),
-                                                                     &playerCharacter,
-                                                                     level);
-        printf("Created Coordinator debug window\n");
-    }
 
     // Create actions list window (always present in action editor)
     actionsListWindow = std::make_unique<DebugActionsListWindow>("Actions List", actionWindow);
@@ -1091,11 +1075,7 @@ int main(int argc, char *argv[])
             float tileHeight = static_cast<float>(level.getTileHeight());
             int playerTileX = static_cast<int>(std::round(playerPosition.x / tileWidth));
             int playerTileY = static_cast<int>(std::round(playerPosition.y / tileHeight));
-            OnScreenChecks::getCoordinator()->updateNearPlayerGrid(playerTileX, playerTileY);
-
-            // Render the grid
-            OnScreenChecks::getCoordinator()->render();
-        }
+                }
 
         // Render NavMesh points debug visualization (if enabled)
         if (showNavMeshPoints && level.getNavMesh().getPointCount() > 0)
@@ -1263,14 +1243,8 @@ int main(int argc, char *argv[])
         app_draw_onto_screen();
     }
 
-    // Shutdown on-screen checks worker
-    OnScreenChecks::requestShutdown();
-
     // Shutdown job system
     JobSystem::shutdown();
-
-    // Cleanup on-screen checks
-    OnScreenChecks::shutdown();
 
     destroy_app();
     return 0;

@@ -33,7 +33,7 @@
     "ShowFPSMetrics": true,
     "ShowJobMetrics": true,
     "ShowPlayerInfo": false,
-    "ShowCoordinatorInfo": false,
+    "ShowCoordinatorInfo": true,
     "ShowInputInfo": false,
     "RecordInputInfo": false,
     "clickToInspectCharacter": true

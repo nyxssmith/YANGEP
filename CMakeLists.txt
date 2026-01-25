@@ -116,6 +116,8 @@ add_executable(
 	src/lib/Level/FileHandling/tmx.cpp
 	src/lib/Level/GameLogic/LevelMap.cpp
 	src/lib/Level/GameLogic/LevelV1.cpp
+	src/lib/Level/GameLogic/LevelV2.cpp
+	src/lib/Level/GameLogic/World.cpp
 	src/lib/Level/GameLogic/WorldPositionRenderedObjectsList.cpp
 	src/lib/Level/GameLogic/NavMesh.cpp
 	src/lib/Level/GameLogic/NavMeshPoint.cpp

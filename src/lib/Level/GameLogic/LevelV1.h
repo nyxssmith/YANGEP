@@ -56,6 +56,14 @@ private:
     // Initialization status
     bool initialized;
 
+protected:
+    /**
+     * Set the initialization status
+     * Protected method for derived classes to invalidate initialization
+     * @param status true if initialized, false otherwise
+     */
+    void setInitialized(bool status) { initialized = status; }
+
 public:
     /**
      * Constructor - initializes all level components from a directory
@@ -125,7 +133,7 @@ public:
      * @param agent Unique pointer to the agent to add
      * @return Raw pointer to the added agent (for reference, level owns the agent)
      */
-    AnimatedDataCharacterNavMeshAgent *addAgent(std::unique_ptr<AnimatedDataCharacterNavMeshAgent> agent);
+    virtual AnimatedDataCharacterNavMeshAgent *addAgent(std::unique_ptr<AnimatedDataCharacterNavMeshAgent> agent);
 
     /**
      * Create and add a NavMesh agent from an entity data file
@@ -170,7 +178,7 @@ public:
     /**
      * Remove all agents from the level
      */
-    void clearAgents();
+    virtual void clearAgents();
 
     /**
      * Check if any agents (excluding the specified agent) are within a given area

@@ -19,6 +19,8 @@
 #include "DataFile.h"
 #include "RealConfigFile.h"
 #include "LevelV1.h"
+#include "LevelV2.h"
+#include "World.h"
 #include "JobSystem.h"
 
 #include "CFNativeCamera.h"
@@ -171,8 +173,21 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	// Create world
+
+	World world("/assets/Worlds/test-a");
+	if (!world.isInitialized())
+	{
+		printf("Error: Failed to initialize world\n");
+		destroy_app();
+		return -1;
+	}
+	printf("World initialized with %zu levels\n", world.getLevelCount());
+	world.debugPrint();
+
 	// Create LevelV1 instance - handles all TMX and NavMesh initialization
-	LevelV1 level("/assets/Levels/test_two");
+	// LevelV1 level("/assets/Levels/test_two");
+	LevelV2 level("/assets/Levels/test_three");
 
 	if (!level.isInitialized())
 	{
