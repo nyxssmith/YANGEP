@@ -57,13 +57,13 @@ Has shotgun and shield actions
 Features needed to be added to the engine to support the MVP.
 Each block of checkboxes is dependency ordered, but blocks can be done in parallel.
 
-#### World and Level Management
+#### World and Level Management (Nyx)
 
 - [ ] Multiple Levels combined into World
 - [ ] Engine can re-load a world at any time (for level transitions / restarts)
 - [ ] Main menu "world" that allows player to select which track to play
 
-#### Item, Action, Health System
+#### Item, Action, Health System (Nyx)
 
 - [ ] Items Provide Actions
 - [ ] UI for showing items on left side of screen
@@ -73,12 +73,17 @@ Each block of checkboxes is dependency ordered, but blocks can be done in parall
 
 #### Enemy Behavior
 
-- [ ] Enemies can be spawned at specific locations in the level
+- [x] Enemies can be spawned at specific locations in the level
 - [ ] Enemies have simple behavior patterns (e.g. move towards player, attack when in range)
 - [ ] Enemies can use their actions (e.g. shoot, attack) (coordinator handles this part)
 
-#### Level Design Tools (unordered)
+#### Level Design Tools
 
 - [ ] Ability to place spawn points for enemies in the level editor
 - [ ] Ability to pre-set a level with specific items for the player to start with
+
+#### Animation and Art Pipeline (Aria)
+
 - [ ] Scripts to adapt unity assets to yangep sprite animation format
+- [ ] New character animation format that works with the new unity assets
+- [ ] Character customization system that allows swapping out different body parts and colors (for player character)
