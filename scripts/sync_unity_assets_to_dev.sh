@@ -41,14 +41,14 @@ ASSETS_SRC_DIR="assets/Art/AnimationsSheets/UnityAssetsRaw"
 
 if [[ "$target" == "nyx" ]]; then
 	echo "sending assets to nyx"
-    RSYNC_IP="192.168.1.17"
+    RSYNC_IP="192.168.1.171"
     RSYNC_USER="nyx"
-    TARGET_DIR="assets/Art/AnimationsSheets/UnityAssetsRaw"
+    TARGET_DIR="/home/nyx/Git/YANGEP/assets/Art/AnimationsSheets/UnityAssetsRaw"
 elif [[ "$target" == "aria" ]]; then
 	echo "sending assets to aria"
-    RSYNC_IP="todo"
+    RSYNC_IP="192.168.1.181"
     RSYNC_USER="aria"
-    TARGET_DIR="todo"
+    TARGET_DIR="/Users/aria/games/YANGEP/assets/Art/AnimationsSheets/UnityAssetsRaw"
 fi
 
 # Sync the assets using rsync
