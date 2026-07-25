@@ -124,6 +124,18 @@ public:
     Inventory &getInventory();
     const Inventory &getInventory() const;
 
+    // Hitbox accessor
+    HitBox *getCharacterHitbox() const;
+
+    // Initialization state
+    bool getIsInitialized() const;
+
+    // Input state accessors
+    bool getKeysPressed(int index) const;
+    void setKeysPressed(int index, bool pressed);
+    bool getAnimationKeys(int index) const;
+    void setAnimationKeys(int index, bool pressed);
+
 protected:
     // Inventory - character's item inventory
     Inventory inventory;
@@ -147,6 +159,10 @@ private:
     // Demo state
     bool initialized;
     float demoTime;
+
+protected:
+    // Set initialized state (for derived classes)
+    void setInitialized(bool value);
 
     // Input state
     bool keysPressed[4];   // UP, LEFT, DOWN, RIGHT

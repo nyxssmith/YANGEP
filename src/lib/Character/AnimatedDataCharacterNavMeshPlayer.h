@@ -1,7 +1,7 @@
 #ifndef ANIMATED_DATA_CHARACTER_NAVMESH_PLAYER_H
 #define ANIMATED_DATA_CHARACTER_NAVMESH_PLAYER_H
 
-#include "AnimatedDataCharacter.h"
+#include "Crab.h"
 #include "NavMesh.h"
 #include "ABActions.h"
 
@@ -14,7 +14,7 @@ using namespace Cute;
  * player-controlled characters. It doesn't have AI/pathfinding logic,
  * but does track the navmesh for walkable area detection.
  */
-class AnimatedDataCharacterNavMeshPlayer : public AnimatedDataCharacter
+class AnimatedDataCharacterNavMeshPlayer : public Crab
 {
 public:
     AnimatedDataCharacterNavMeshPlayer();

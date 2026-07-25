@@ -1,7 +1,7 @@
 #ifndef ANIMATED_DATA_CHARACTER_NAVMESH_AGENT_H
 #define ANIMATED_DATA_CHARACTER_NAVMESH_AGENT_H
 
-#include "AnimatedDataCharacter.h"
+#include "Crab.h"
 #include "NavMesh.h"
 #include "NavMeshPath.h"
 #include "StateMachineController.h"
@@ -10,8 +10,8 @@
 
 using namespace Cute;
 
-// Extended AnimatedDataCharacter that is aware of and tracks which NavMesh it is on
-class AnimatedDataCharacterNavMeshAgent : public AnimatedDataCharacter
+// Extended Crab that is aware of and tracks which NavMesh it is on
+class AnimatedDataCharacterNavMeshAgent : public Crab
 {
 public:
     AnimatedDataCharacterNavMeshAgent();
@@ -73,9 +73,11 @@ public:
     void OnScreenBackgroundUpdateJob(float dt);
     void OffScreenBackgroundUpdateJob(float dt);
 
-    // On-screen visibility (set by OnScreenChecks worker)
-    bool getIsOnScreen() const { return isOnScreen; }
-    void setIsOnScreen(bool onScreen) { isOnScreen = onScreen; }
+    // Get on-screen visibility
+    bool getIsOnScreen() const;
+
+    // Set on-screen visibility (for internal use)
+    void setIsOnScreen(bool visible);
 
 private:
     // The navmesh this agent is on (non-owning pointer)
@@ -95,11 +97,12 @@ private:
     std::atomic<bool> backgroundJobComplete;
     v2 backgroundMoveVector;
 
-    // Background AI calculation (runs in worker thread)
-    void calculateMoveVector(float dt);
-
     // On-screen visibility flag (updated by OnScreenChecks worker)
     bool isOnScreen = true;
+
+private:
+    // Calculate move vector for the agent
+    void calculateMoveVector(float dt);
 };
 
 #endif // ANIMATED_DATA_CHARACTER_NAVMESH_AGENT_H

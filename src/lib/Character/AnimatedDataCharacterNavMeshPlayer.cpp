@@ -5,7 +5,7 @@ using namespace Cute;
 
 // Constructor
 AnimatedDataCharacterNavMeshPlayer::AnimatedDataCharacterNavMeshPlayer()
-    : AnimatedDataCharacter(), navmesh(nullptr), currentPolygon(-1), spriteWidth(64.0f), spriteHeight(64.0f), abActions(nullptr)
+    : Crab(), navmesh(nullptr), currentPolygon(-1), spriteWidth(64.0f), spriteHeight(64.0f), abActions(nullptr)
 {
     // Player has an inventory of size 4
     inventory.changeSize(4);
@@ -173,14 +173,14 @@ void AnimatedDataCharacterNavMeshPlayer::update(float dt, v2 moveVector)
         {
             // Can't move there - call parent update with zero move vector
             // This will switch animation to idle and not move the player
-            AnimatedDataCharacter::update(dt, cf_v2(0.0f, 0.0f));
+            Crab::update(dt, cf_v2(0.0f, 0.0f));
             updateCurrentPolygon();
             return;
         }
     }
 
     // Move is valid, call parent update normally
-    AnimatedDataCharacter::update(dt, moveVector);
+    Crab::update(dt, moveVector);
 
     // Update our current polygon after movement
     if (navmesh)
@@ -216,14 +216,14 @@ void AnimatedDataCharacterNavMeshPlayer::calculateABActions()
 // Override setActionPointerA to recalculate ABActions
 void AnimatedDataCharacterNavMeshPlayer::setActionPointerA(size_t index)
 {
-    AnimatedDataCharacter::setActionPointerA(index);
+    Crab::setActionPointerA(index);
     calculateABActions();
 }
 
 // Override setActionPointerB to recalculate ABActions
 void AnimatedDataCharacterNavMeshPlayer::setActionPointerB(size_t index)
 {
-    AnimatedDataCharacter::setActionPointerB(index);
+    Crab::setActionPointerB(index);
     calculateABActions();
 }
 

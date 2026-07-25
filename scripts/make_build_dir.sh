@@ -10,5 +10,5 @@ fi
 if [[ "$OSTYPE" == "darwin"* ]]; then
     cd "$BUILD_DIR" && cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug ..
 elif [[ "$OSTYPE" == "linux"* ]]; then
-    cd "$BUILD_DIR" && cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-include cstdint" ..
+    cd "$BUILD_DIR" && cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-include cstdint" -DCMAKE_POLICY_VERSION_MINIMUM=3.5 ..
 fi

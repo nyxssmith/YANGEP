@@ -1036,3 +1036,47 @@ const Inventory &AnimatedDataCharacter::getInventory() const
 {
     return inventory;
 }
+
+// Hitbox accessor
+HitBox *AnimatedDataCharacter::getCharacterHitbox() const
+{
+    return characterHitbox;
+}
+
+// Initialization state
+bool AnimatedDataCharacter::getIsInitialized() const
+{
+    return initialized;
+}
+
+void AnimatedDataCharacter::setInitialized(bool value)
+{
+    initialized = value;
+}
+
+// Input state accessors
+bool AnimatedDataCharacter::getKeysPressed(int index) const
+{
+    if (index >= 0 && index < 4)
+        return keysPressed[index];
+    return false;
+}
+
+void AnimatedDataCharacter::setKeysPressed(int index, bool pressed)
+{
+    if (index >= 0 && index < 4)
+        keysPressed[index] = pressed;
+}
+
+bool AnimatedDataCharacter::getAnimationKeys(int index) const
+{
+    if (index >= 0 && index < 2)
+        return animationKeys[index];
+    return false;
+}
+
+void AnimatedDataCharacter::setAnimationKeys(int index, bool pressed)
+{
+    if (index >= 0 && index < 2)
+        animationKeys[index] = pressed;
+}
