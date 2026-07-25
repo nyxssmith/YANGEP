@@ -5,3 +5,4 @@ imgui.ini
 .cache/
 *.dump
 input_log.txt
+assets/Art/UnityAssetsRaw/*
