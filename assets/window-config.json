@@ -1,9 +1,9 @@
 {
   "schemaVersion": "1.0",
   "window": {
-    "width": 1280,
-    "height": 720,
-    "viewportZoom": 1.0,
+    "width": 2500,
+    "height": 1500,
+    "viewportZoom": 3,
     "viewportScale": 1.5
   },
   "DebugWindows": [
@@ -23,15 +23,15 @@
     "highlightNavmesh": false,
     "highlightNavMeshPaths": false,
     "highlightAgents": false,
-    "highlightSpatialGrid": false,
+    "highlightSpatialGrid": true,
     "highlightPlayerNavmeshCollisionBox": false,
     "highlightLayers": ["structure 1"],
     "highlightLayerBorders": [],
     "highlightLayerOuterBorders": [],
-    "highlightCharacterHitboxes": true,
+    "highlightCharacterHitboxes": false,
     "highlightCoordinatorInfo": false,
     "ShowFPSMetrics": true,
-    "ShowJobMetrics": true,
+    "ShowJobMetrics": false,
     "ShowPlayerInfo": false,
     "ShowCoordinatorInfo": false,
     "ShowInputInfo": false,
