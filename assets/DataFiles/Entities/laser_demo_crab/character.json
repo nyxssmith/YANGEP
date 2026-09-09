@@ -1,0 +1,12 @@
+{
+  "name": "laser_demo_crab",
+  "hitbox_size": 32,
+  "hitbox_distance": 0,
+  "innate_actions": [],
+  "layers": [
+    {
+      "filename": "laser_demo_crab.png",
+      "tile_size": 128
+    }
+  ]
+}

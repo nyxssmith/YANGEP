@@ -1,0 +1,12 @@
+{
+  "name": "blue_red_legs",
+  "hitbox_size": 32,
+  "hitbox_distance": 0,
+  "innate_actions": [],
+  "layers": [
+    {
+      "filename": "blue_red_legs.png",
+      "tile_size": 128
+    }
+  ]
+}
