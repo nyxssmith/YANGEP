@@ -2,6 +2,14 @@
 
 all: build
 
+render_all_base_animations: crab_configs_to_entities
+	@echo "Rendering all base animations..."
+	./scripts/render_all_base_animations.sh
+
+crab_configs_to_entities:
+	@echo "Converting crab configs to entities..."
+	./scripts/crab_configs_to_entities.sh
+
 build:
 	@echo "Initializing build directory..."
 	./scripts/make_build_dir.sh

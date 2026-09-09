@@ -1,0 +1,101 @@
+{
+  "name": "crab",
+  "source_images": {
+    "body_facing_up": {
+      "image_path": "images/body_facing_up.png",
+      "source_image_size": {
+        "width": 0,
+        "height": 0
+      },
+      "attachment_points": {
+        "left_front_leg": { "x": 0, "y": 0 },
+        "left_middle_leg": { "x": 0, "y": 0 },
+        "left_rear_leg": { "x": 0, "y": 0 },
+        "right_front_leg": { "x": 0, "y": 0 },
+        "right_middle_leg": { "x": 0, "y": 0 },
+        "right_rear_leg": { "x": 0, "y": 0 },
+        "left_claw": { "x": 0, "y": 0 },
+        "right_claw": { "x": 0, "y": 0 }
+      }
+    },
+    "body_facing_right": {
+      "image_path": "images/body_facing_right.png",
+      "source_image_size": {
+        "width": 0,
+        "height": 0
+      },
+      "attachment_points": {
+        "left_front_leg": { "x": 0, "y": 0 },
+        "left_middle_leg": { "x": 0, "y": 0 },
+        "left_rear_leg": { "x": 0, "y": 0 },
+        "right_front_leg": { "x": 0, "y": 0 },
+        "right_middle_leg": { "x": 0, "y": 0 },
+        "right_rear_leg": { "x": 0, "y": 0 },
+        "left_claw": { "x": 0, "y": 0 },
+        "right_claw": { "x": 0, "y": 0 }
+      }
+    },
+    "body_facing_down": {
+      "image_path": "images/body_facing_down.png",
+      "source_image_size": {
+        "width": 0,
+        "height": 0
+      },
+      "attachment_points": {
+        "left_front_leg": { "x": 0, "y": 0 },
+        "left_middle_leg": { "x": 0, "y": 0 },
+        "left_rear_leg": { "x": 0, "y": 0 },
+        "right_front_leg": { "x": 0, "y": 0 },
+        "right_middle_leg": { "x": 0, "y": 0 },
+        "right_rear_leg": { "x": 0, "y": 0 },
+        "left_claw": { "x": 0, "y": 0 },
+        "right_claw": { "x": 0, "y": 0 }
+      }
+    },
+    "leg_facing_up": {
+      "image_path": "images/leg_facing_up.png",
+      "source_image_size": {
+        "width": 0,
+        "height": 0
+      },
+      "attachment_point_x": 0,
+      "attachment_point_y": 0
+    },
+    "leg_lower_sideways": {
+      "image_path": "images/leg_lower_sideways.png",
+      "source_image_size": {
+        "width": 0,
+        "height": 0
+      },
+      "attachment_point_x": 0,
+      "attachment_point_y": 0
+    },
+    "leg_upper_sideways": {
+      "image_path": "images/leg_upper_sideways.png",
+      "source_image_size": {
+        "width": 0,
+        "height": 0
+      },
+      "attachment_point_x": 0,
+      "attachment_point_y": 0
+    },
+    "claw_facing_up": {
+      "image_path": "images/claw_facing_up.png",
+      "source_image_size": {
+        "width": 0,
+        "height": 0
+      },
+      "attachment_point_x": 0,
+      "attachment_point_y": 0
+    },
+    "claw_facing_right": {
+      "image_path": "images/claw_facing_right.png",
+      "source_image_size": {
+        "width": 0,
+        "height": 0
+      },
+      "attachment_point_x": 0,
+      "attachment_point_y": 0
+    }
+  }
+}

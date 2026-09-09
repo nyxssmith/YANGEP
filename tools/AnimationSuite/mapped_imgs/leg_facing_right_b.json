@@ -1,0 +1,9 @@
+{
+  "image_path": "mapped_imgs/leg_facing_right_b.png",
+  "source_image_size": {
+    "width": 64,
+    "height": 64
+  },
+  "attachment_point_x": 18,
+  "attachment_point_y": 40
+}

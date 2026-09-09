@@ -1,0 +1,36 @@
+{
+  "name": "idle",
+  "direction": "left",
+  "frames": [
+    {
+      "name": "frame_1",
+      "attachment_points": {
+        "left_front_leg": {
+          "x": 34,
+          "y": 39,
+          "rotation": 0.0
+        },
+        "left_middle_leg": {
+          "x": 42,
+          "y": 42,
+          "rotation": 0.0
+        },
+        "left_rear_leg": {
+          "x": 52,
+          "y": 42,
+          "rotation": 0.0
+        },
+        "left_claw": {
+          "x": 27,
+          "y": 31,
+          "rotation": 0.0
+        },
+        "right_claw": {
+          "x": 27,
+          "y": 31,
+          "rotation": 0.0
+        }
+      }
+    }
+  ]
+}
