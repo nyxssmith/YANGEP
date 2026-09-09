@@ -53,7 +53,7 @@ static bool getPNGDimensions(const std::string &path, uint32_t &width, uint32_t 
 AnimatedDataCharacter::AnimatedDataCharacter()
     : initialized(false), demoTime(0.0f), directionChangeTime(0.0f), animationChangeTime(0.0f),
       currentAnimation("idle"), currentDirection(Direction::DOWN), currentFrame(0), frameTimer(0.0f),
-      position(v2(0, 0)), wasMoving(false), isDoingAction(false), hitboxDebugActive(false), hitboxSize(32.0f), hitboxDistance(0.0f),
+      position(v2(0, 0)), entityScale(1.0f), wasMoving(false), isDoingAction(false), hitboxDebugActive(false), hitboxSize(32.0f), hitboxDistance(0.0f),
       hitboxShape(HitboxShape::SQUARE), level(nullptr), actionPointerA(0), actionPointerB(0), activeAction(nullptr), stageOfLife(StageOfLife::Alive),
       inventory(1)
 {
@@ -529,6 +529,9 @@ void AnimatedDataCharacter::renderCurrentFrame()
     if (!currentAnimFrame)
         return;
 
+    cf_draw_push();
+    cf_draw_scale(entityScale, entityScale);
+
     // Render all sprite layers (bottom to top)
     if (!currentAnimFrame->spriteLayers.empty())
     {
@@ -545,6 +548,8 @@ void AnimatedDataCharacter::renderCurrentFrame()
         // Fallback to legacy single sprite
         cf_draw_sprite(&currentAnimFrame->sprite);
     }
+
+    cf_draw_pop();
 }
 
 // Render the current animation frame at a specific position
@@ -571,6 +576,7 @@ void AnimatedDataCharacter::renderCurrentFrameAt(v2 renderPosition)
     // Apply position transformation and render all sprite layers (bottom to top)
     cf_draw_push();
     cf_draw_translate_v2(renderPosition);
+    cf_draw_scale(entityScale, entityScale);
 
     if (!currentAnimFrame->spriteLayers.empty())
     {
@@ -659,6 +665,11 @@ v2 AnimatedDataCharacter::getPosition() const
 void AnimatedDataCharacter::setPosition(v2 newPosition)
 {
     position = newPosition;
+}
+
+void AnimatedDataCharacter::setEntityScale(float scale)
+{
+    entityScale = scale > 0.0f ? scale : 1.0f;
 }
 
 Direction AnimatedDataCharacter::getCurrentDirection() const

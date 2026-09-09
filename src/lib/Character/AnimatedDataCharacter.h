@@ -67,6 +67,9 @@ public:
     // Set current position
     void setPosition(v2 newPosition);
 
+    // Set visual sprite scale relative to the tilemap.
+    void setEntityScale(float scale);
+
     // Get current direction
     Direction getCurrentDirection() const;
 
@@ -174,6 +177,7 @@ protected:
 
     // Position for rendering
     v2 position;
+    float entityScale;
 
     // Movement tracking for animation switching
     bool wasMoving;

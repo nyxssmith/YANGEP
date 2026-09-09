@@ -125,6 +125,7 @@ int main(int argc, char *argv[])
 	bool debugHighlightCoordinatorInfo = false;			  // Default: don't show coordinator info
 	bool debugHighlightPlayerNavmeshCollisionBox = false; // Default: don't show player navmesh collision box
 	bool clickToInspectCharacter = false;				  // Default: don't inspect character on click
+	float debugEntityScale = 1.0f;
 	if (windowConfig.contains("Debug"))
 	{
 		auto &debug = windowConfig["Debug"];
@@ -167,6 +168,11 @@ int main(int argc, char *argv[])
 		{
 			debugHighlightPlayerNavmeshCollisionBox = debug["highlightPlayerNavmeshCollisionBox"];
 			printf("Debug highlightPlayerNavmeshCollisionBox: %s\n", debugHighlightPlayerNavmeshCollisionBox ? "enabled" : "disabled");
+		}
+		if (debug.contains("EntityScale") && debug["EntityScale"].is_number())
+		{
+			debugEntityScale = debug["EntityScale"];
+			printf("Debug EntityScale: %.2f\n", debugEntityScale);
 		}
 		if (debug.contains("clickToInspectCharacter"))
 		{
@@ -397,6 +403,7 @@ int main(int argc, char *argv[])
 
 	// Set initial hitbox visibility from config for player
 	playerCharacter.sethitboxDebugActive(debugHighlightCharacterHitboxes);
+	playerCharacter.setEntityScale(debugEntityScale);
 
 	// Set hitbox visibility for all agents from config
 	for (size_t i = 0; i < level.getAgentCount(); ++i)
@@ -405,6 +412,7 @@ int main(int argc, char *argv[])
 		if (agent)
 		{
 			agent->sethitboxDebugActive(debugHighlightCharacterHitboxes);
+			agent->setEntityScale(debugEntityScale);
 		}
 	}
 
