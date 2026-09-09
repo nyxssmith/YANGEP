@@ -176,7 +176,7 @@ int main(int argc, char *argv[])
 	}
 
 	// Create LevelV1 instance - handles all TMX and NavMesh initialization
-	LevelV1 level("/assets/Levels/test_two");
+	LevelV1 level("/assets/Levels/spaceship");
 
 	if (!level.isInitialized())
 	{

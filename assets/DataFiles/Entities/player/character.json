@@ -5,8 +5,8 @@
   "innate_actions": ["TwoInFront", "ThreeWide", "OneTile", "Cone7Out"],
   "layers": [
     {
-      "filename": "crab_combined.png",
-      "tile_size": 64
+      "filename": "red_crab.png",
+      "tile_size": 128
     }
   ]
 }
