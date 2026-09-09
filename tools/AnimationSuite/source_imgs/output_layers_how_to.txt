@@ -1,0 +1,1 @@
+Export as .ora, rename to zip, look in data dir and all layers are numbered imgs

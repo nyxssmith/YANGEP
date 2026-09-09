@@ -1,0 +1,41 @@
+{
+  "image_path": "mapped_imgs/body_facing_down.png",
+  "source_image_size": {
+    "width": 65,
+    "height": 54
+  },
+  "attachment_points": {
+    "left_front_leg": {
+      "x": 50,
+      "y": 21
+    },
+    "left_middle_leg": {
+      "x": 47,
+      "y": 16
+    },
+    "left_rear_leg": {
+      "x": 43,
+      "y": 12
+    },
+    "right_front_leg": {
+      "x": 15,
+      "y": 21
+    },
+    "right_middle_leg": {
+      "x": 18,
+      "y": 16
+    },
+    "right_rear_leg": {
+      "x": 24,
+      "y": 12
+    },
+    "left_claw": {
+      "x": 46,
+      "y": 29
+    },
+    "right_claw": {
+      "x": 20,
+      "y": 29
+    }
+  }
+}

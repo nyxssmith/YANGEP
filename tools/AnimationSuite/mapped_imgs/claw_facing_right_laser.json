@@ -1,0 +1,9 @@
+{
+  "image_path": "mapped_imgs/claw_facing_right_laser.png",
+  "source_image_size": {
+    "width": 64,
+    "height": 64
+  },
+  "attachment_point_x": 32,
+  "attachment_point_y": 35
+}

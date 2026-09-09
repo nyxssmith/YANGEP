@@ -1,0 +1,9 @@
+{
+  "image_path": "mapped_imgs/claw_facing_down.png",
+  "source_image_size": {
+    "width": 64,
+    "height": 60
+  },
+  "attachment_point_x": 11,
+  "attachment_point_y": 30
+}

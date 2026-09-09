@@ -1,0 +1,10 @@
+{
+  "body_facing_down": "body_facing_down",
+  "body_facing_up": "body_facing_up",
+  "body_facing_right": "body_facing_right",
+  "claw_facing_up": "claw_facing_up",
+  "claw_facing_down": "claw_facing_down",
+  "claw_facing_right": "claw_facing_right",
+  "leg_facing_up": "leg_facing_up",
+  "leg_facing_right": "leg_facing_right_a"
+}

@@ -1,0 +1,12 @@
+{
+  "name": "red_blue_legs",
+  "body": "red",
+  "left_claw": "red",
+  "right_claw": "blue",
+  "front_left_leg": "blue",
+  "middle_left_leg": "blue",
+  "rear_left_leg": "blue",
+  "front_right_leg": "blue",
+  "middle_right_leg": "blue",
+  "rear_right_leg": "blue"
+}
