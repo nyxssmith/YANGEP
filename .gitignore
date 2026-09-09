@@ -8,3 +8,4 @@ input_log.txt
 assets/Art/AnimationsSheets/UnityAssetsRaw/*
 *pycache*
 *venv*/
+tools/AnimationSuite/output_imgs/*
