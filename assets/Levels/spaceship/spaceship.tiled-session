@@ -1,0 +1,30 @@
+{
+    "activeFile": "",
+    "expandedProjectPaths": [
+    ],
+    "fileStates": {
+        "/home/nyx/Downloads/frama_scifi_extension/preview.tmx": {
+            "scale": 1.0984375,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 256.2731152204836,
+                "y": 255.81792318634425
+            }
+        },
+        "/home/nyx/Downloads/frama_scifi_extension/preview.tmx#scifi_hackspace_frama": {
+            "scaleInDock": 1
+        },
+        "/home/nyx/Downloads/frama_scifi_extension/preview.tmx#scifi_space_rpg_tiles_lpcized": {
+            "scaleInDock": 1
+        }
+    },
+    "last.imagePath": "/home/nyx/Git/YANGEP/assets/Levels/spaceship/tiles",
+    "map.lastUsedFormat": "tmx",
+    "openFiles": [
+    ],
+    "project": "spaceship.tiled-project",
+    "recentFiles": [
+        "/home/nyx/Downloads/frama_scifi_extension/preview.tmx"
+    ],
+    "tileset.lastUsedFormat": "tsx"
+}

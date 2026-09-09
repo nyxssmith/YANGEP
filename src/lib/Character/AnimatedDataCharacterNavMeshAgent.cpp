@@ -9,7 +9,7 @@ using namespace Cute;
 
 // Constructor
 AnimatedDataCharacterNavMeshAgent::AnimatedDataCharacterNavMeshAgent()
-    : AnimatedDataCharacter(), navmesh(nullptr), currentPolygon(-1),
+    : Crab(), navmesh(nullptr), currentPolygon(-1),
       currentNavMeshPath(nullptr),
       backgroundJobRunning(false), backgroundJobComplete(false),
       backgroundMoveVector(cf_v2(0.0f, 0.0f))
@@ -25,8 +25,8 @@ AnimatedDataCharacterNavMeshAgent::~AnimatedDataCharacterNavMeshAgent()
 // Override init to also load state machines
 bool AnimatedDataCharacterNavMeshAgent::init(const std::string &folderPath)
 {
-    // Call parent init first
-    if (!AnimatedDataCharacter::init(folderPath))
+    // Call parent init first (Crab extends AnimatedDataCharacter)
+    if (!Crab::init(folderPath))
     {
         return false;
     }
@@ -382,4 +382,13 @@ bool AnimatedDataCharacterNavMeshAgent::loadStateMachinesFromFolder(const std::s
     }
 
     return true;
+}
+
+bool AnimatedDataCharacterNavMeshAgent::getIsOnScreen() const {
+    return isOnScreen;
+}
+
+// Set on-screen visibility (for internal use)
+void AnimatedDataCharacterNavMeshAgent::setIsOnScreen(bool visible) {
+    this->isOnScreen = visible;
 }
