@@ -17,7 +17,7 @@ if ! python -c "import PIL" &> /dev/null; then
 fi
 set -e
 # for each base animation name
-base_animation_names=("idle")
+base_animation_names=("idle" "walkcycle")
 
 for base_animation_name in "${base_animation_names[@]}"; do
     echo "Rendering base animation: $base_animation_name"

@@ -1,0 +1,186 @@
+{
+  "name": "walkcycle",
+  "direction": "down",
+  "frames": [
+    {
+      "name": "frame_1",
+      "attachment_points": {
+        "left_front_leg": {
+          "x": 50,
+          "y": 21,
+          "rotation": 0.0
+        },
+        "left_middle_leg": {
+          "x": 47,
+          "y": 16,
+          "rotation": 0.0
+        },
+        "left_rear_leg": {
+          "x": 43,
+          "y": 12,
+          "rotation": 0.0
+        },
+        "right_front_leg": {
+          "x": 15,
+          "y": 21,
+          "rotation": 0.0
+        },
+        "right_middle_leg": {
+          "x": 18,
+          "y": 16,
+          "rotation": 0.0
+        },
+        "right_rear_leg": {
+          "x": 24,
+          "y": 12,
+          "rotation": 0.0
+        },
+        "left_claw": {
+          "x": 46,
+          "y": 29,
+          "rotation": 0.0
+        },
+        "right_claw": {
+          "x": 20,
+          "y": 29,
+          "rotation": 0.0
+        }
+      }
+    },
+    {
+      "name": "frame_2",
+      "attachment_points": {
+        "left_front_leg": {
+          "x": 50,
+          "y": 21,
+          "rotation": 36.80672268907563
+        },
+        "left_middle_leg": {
+          "x": 47,
+          "y": 16,
+          "rotation": -49.91596638655463
+        },
+        "left_rear_leg": {
+          "x": 43,
+          "y": 12,
+          "rotation": 50.92436974789919
+        },
+        "right_front_leg": {
+          "x": 15,
+          "y": 21,
+          "rotation": 29.747899159663888
+        },
+        "right_middle_leg": {
+          "x": 18,
+          "y": 16,
+          "rotation": -33.781512605042025
+        },
+        "right_rear_leg": {
+          "x": 24,
+          "y": 12,
+          "rotation": 39.83193277310926
+        },
+        "left_claw": {
+          "x": 46,
+          "y": 29,
+          "rotation": 0.0
+        },
+        "right_claw": {
+          "x": 20,
+          "y": 29,
+          "rotation": 0.0
+        }
+      }
+    },
+    {
+      "name": "frame_3",
+      "attachment_points": {
+        "left_front_leg": {
+          "x": 50,
+          "y": 21,
+          "rotation": 11.596638655462186
+        },
+        "left_middle_leg": {
+          "x": 47,
+          "y": 16,
+          "rotation": -5.5462184873949525
+        },
+        "left_rear_leg": {
+          "x": 43,
+          "y": 12,
+          "rotation": 16.638655462184857
+        },
+        "right_front_leg": {
+          "x": 15,
+          "y": 21,
+          "rotation": 2.52100840336135
+        },
+        "right_middle_leg": {
+          "x": 18,
+          "y": 16,
+          "rotation": 3.5294117647058556
+        },
+        "right_rear_leg": {
+          "x": 24,
+          "y": 12,
+          "rotation": -18.655462184873954
+        },
+        "left_claw": {
+          "x": 46,
+          "y": 29,
+          "rotation": 0.0
+        },
+        "right_claw": {
+          "x": 20,
+          "y": 29,
+          "rotation": 0.0
+        }
+      }
+    },
+    {
+      "name": "frame_4",
+      "attachment_points": {
+        "left_front_leg": {
+          "x": 50,
+          "y": 21,
+          "rotation": -36.80672268907563
+        },
+        "left_middle_leg": {
+          "x": 47,
+          "y": 16,
+          "rotation": 47.89915966386553
+        },
+        "left_rear_leg": {
+          "x": 43,
+          "y": 12,
+          "rotation": -18.655462184873954
+        },
+        "right_front_leg": {
+          "x": 15,
+          "y": 21,
+          "rotation": -15.630252100840352
+        },
+        "right_middle_leg": {
+          "x": 18,
+          "y": 16,
+          "rotation": 66.05042016806723
+        },
+        "right_rear_leg": {
+          "x": 24,
+          "y": 12,
+          "rotation": -48.907563025210095
+        },
+        "left_claw": {
+          "x": 46,
+          "y": 29,
+          "rotation": 0.0
+        },
+        "right_claw": {
+          "x": 20,
+          "y": 29,
+          "rotation": 0.0
+        }
+      }
+    }
+  ]
+}

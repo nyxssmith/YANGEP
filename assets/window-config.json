@@ -30,7 +30,7 @@
     "highlightLayerOuterBorders": [],
     "highlightCharacterHitboxes": false,
     "highlightCoordinatorInfo": false,
-    "EntityScale": 12.0,
+    "EntityScale": 2.0,
     "ShowFPSMetrics": true,
     "ShowJobMetrics": false,
     "ShowPlayerInfo": false,

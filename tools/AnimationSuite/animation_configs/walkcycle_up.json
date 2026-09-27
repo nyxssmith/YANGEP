@@ -1,0 +1,186 @@
+{
+  "name": "walkcycle",
+  "direction": "up",
+  "frames": [
+    {
+      "name": "frame_1",
+      "attachment_points": {
+        "left_front_leg": {
+          "x": 13,
+          "y": 30,
+          "rotation": 0.0
+        },
+        "left_middle_leg": {
+          "x": 13,
+          "y": 40,
+          "rotation": 0.0
+        },
+        "left_rear_leg": {
+          "x": 22,
+          "y": 47,
+          "rotation": 0.0
+        },
+        "right_front_leg": {
+          "x": 53,
+          "y": 30,
+          "rotation": 0.0
+        },
+        "right_middle_leg": {
+          "x": 53,
+          "y": 40,
+          "rotation": 0.0
+        },
+        "right_rear_leg": {
+          "x": 48,
+          "y": 47,
+          "rotation": 0.0
+        },
+        "left_claw": {
+          "x": 19,
+          "y": 22,
+          "rotation": 0.0
+        },
+        "right_claw": {
+          "x": 46,
+          "y": 21,
+          "rotation": 0.0
+        }
+      }
+    },
+    {
+      "name": "frame_2",
+      "attachment_points": {
+        "left_front_leg": {
+          "x": 15,
+          "y": 31,
+          "rotation": -42.91021671826624
+        },
+        "left_middle_leg": {
+          "x": 12,
+          "y": 36,
+          "rotation": 38.45201238390092
+        },
+        "left_rear_leg": {
+          "x": 22,
+          "y": 47,
+          "rotation": -45.139318885448915
+        },
+        "right_front_leg": {
+          "x": 53,
+          "y": 30,
+          "rotation": -28.42105263157896
+        },
+        "right_middle_leg": {
+          "x": 53,
+          "y": 40,
+          "rotation": 38.45201238390092
+        },
+        "right_rear_leg": {
+          "x": 47,
+          "y": 44,
+          "rotation": -38.45201238390092
+        },
+        "left_claw": {
+          "x": 19,
+          "y": 22,
+          "rotation": 0.0
+        },
+        "right_claw": {
+          "x": 46,
+          "y": 21,
+          "rotation": 0.0
+        }
+      }
+    },
+    {
+      "name": "frame_3",
+      "attachment_points": {
+        "left_front_leg": {
+          "x": 14,
+          "y": 27,
+          "rotation": 0.5572755417956614
+        },
+        "left_middle_leg": {
+          "x": 12,
+          "y": 36,
+          "rotation": -8.359133126934978
+        },
+        "left_rear_leg": {
+          "x": 19,
+          "y": 44,
+          "rotation": -8.359133126934978
+        },
+        "right_front_leg": {
+          "x": 53,
+          "y": 30,
+          "rotation": 20.619195046439614
+        },
+        "right_middle_leg": {
+          "x": 53,
+          "y": 40,
+          "rotation": -2.786377708978307
+        },
+        "right_rear_leg": {
+          "x": 47,
+          "y": 44,
+          "rotation": 9.4736842105263
+        },
+        "left_claw": {
+          "x": 19,
+          "y": 22,
+          "rotation": 0.0
+        },
+        "right_claw": {
+          "x": 46,
+          "y": 21,
+          "rotation": 0.0
+        }
+      }
+    },
+    {
+      "name": "frame_4",
+      "attachment_points": {
+        "left_front_leg": {
+          "x": 14,
+          "y": 27,
+          "rotation": 47.36842105263156
+        },
+        "left_middle_leg": {
+          "x": 14,
+          "y": 36,
+          "rotation": -49.597523219814235
+        },
+        "left_rear_leg": {
+          "x": 19,
+          "y": 44,
+          "rotation": 45.139318885448915
+        },
+        "right_front_leg": {
+          "x": 53,
+          "y": 30,
+          "rotation": 48.48297213622291
+        },
+        "right_middle_leg": {
+          "x": 53,
+          "y": 37,
+          "rotation": -40.68111455108357
+        },
+        "right_rear_leg": {
+          "x": 47,
+          "y": 44,
+          "rotation": 32.87925696594428
+        },
+        "left_claw": {
+          "x": 19,
+          "y": 22,
+          "rotation": 0.0
+        },
+        "right_claw": {
+          "x": 46,
+          "y": 21,
+          "rotation": 0.0
+        }
+      }
+    }
+  ]
+}
