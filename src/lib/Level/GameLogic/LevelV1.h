@@ -68,6 +68,8 @@ public:
      */
     ~LevelV1() = default;
 
+    int start_tile_x = 0;
+    int start_tile_y = 0;
     /**
      * Check if the level was successfully initialized
      * @return true if all components loaded successfully, false otherwise

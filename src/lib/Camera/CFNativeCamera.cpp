@@ -423,6 +423,7 @@ CF_Aabb CFNativeCamera::getViewBounds() const
         cf_v2(effective_position.x + half_width, effective_position.y + half_height));
 
     static int frame_count = 0;
+    /*
     if (frame_count++ % 60 == 0)
     {
         printf("ViewBounds: screen=%.0fx%.0f, zoom=%.2f, world=%.0fx%.0f, pos=(%.0f,%.0f), bounds=(%.0f,%.0f)-(%.0f,%.0f)\n",
@@ -430,6 +431,7 @@ CF_Aabb CFNativeCamera::getViewBounds() const
                effective_position.x, effective_position.y,
                result.min.x, result.min.y, result.max.x, result.max.y);
     }
+               */
 
     return result;
 }

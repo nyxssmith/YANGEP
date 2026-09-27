@@ -113,6 +113,8 @@ add_executable(
 	src/lib/FileHandling/DataFile.cpp
 	src/lib/FileHandling/RealConfigFile.cpp
 	src/lib/FileHandling/Utils.cpp
+	src/lib/Scenes/Scene.cpp
+	src/lib/Scenes/SceneManager.cpp
 	src/lib/Debug/DebugWindow.cpp
 	src/lib/Debug/DataFileDebugWindow.cpp
 	src/lib/Debug/DebugWindowList.cpp
@@ -190,6 +192,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Level/GameLogic>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/UI>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Items>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Scenes>
 )
 
 # Some basic information needed for CMake to generate your Info.plist file.
@@ -228,6 +231,8 @@ add_executable(
 	src/lib/FileHandling/DataFile.cpp
 	src/lib/FileHandling/RealConfigFile.cpp
 	src/lib/FileHandling/Utils.cpp
+	src/lib/Scenes/Scene.cpp
+	src/lib/Scenes/SceneManager.cpp
 	src/lib/Debug/DebugWindow.cpp
 	src/lib/Debug/DataFileDebugWindow.cpp
 	src/lib/Debug/DebugWindowList.cpp
@@ -279,6 +284,8 @@ add_executable(
 	src/lib/Effects/TrailGhostEffect.cpp
 	src/lib/Effects/DissolveEffect.cpp
 	src/lib/Effects/GhostTrailRenderer.cpp
+	src/lib/UI/AtlasLabelerWindow.cpp
+	src/lib/UI/HudUI.cpp
 	src/lib/UI/HighlightTile.cpp
 	src/lib/UI/ColorUtils.cpp
 	src/lib/Items/Item.cpp
@@ -302,6 +309,7 @@ target_include_directories(${PROJECT_NAME}_action_editor PUBLIC
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Level/GameLogic>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/UI>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Items>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib/Scenes>
 )
 
 target_link_libraries(${PROJECT_NAME}_action_editor

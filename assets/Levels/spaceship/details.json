@@ -1,3 +1,5 @@
 {
-  "name": "spaceship"
+  "name": "spaceship",
+  "start_tile_x": 11,
+  "start_tile_y": 12
 }

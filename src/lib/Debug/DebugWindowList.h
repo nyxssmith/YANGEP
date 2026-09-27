@@ -24,6 +24,12 @@ public:
     DebugWindowList();
     ~DebugWindowList() = default;
 
+    // m_windows holds move-only entries; only allow moving the whole list.
+    DebugWindowList(const DebugWindowList &) = delete;
+    DebugWindowList &operator=(const DebugWindowList &) = delete;
+    DebugWindowList(DebugWindowList &&) = default;
+    DebugWindowList &operator=(DebugWindowList &&) = default;
+
     // Add a new debug window for a file path
     // Returns the ID of the added window, or -1 if failed
     int add(const std::string &filepath);

@@ -38,6 +38,16 @@ LevelV1::LevelV1(const std::string &directoryPath)
             levelName = details["name"].get<std::string>();
             printf("LevelV1: Level name from details: %s\n", levelName.c_str());
         }
+
+        // Load start tile positions from details.json if available
+        if (details.contains("start_tile_x"))
+        {
+            start_tile_x = details["start_tile_x"].get<int>();
+        }
+        if (details.contains("start_tile_y"))
+        {
+            start_tile_y = details["start_tile_y"].get<int>();
+        }
     }
     catch (const std::exception &e)
     {
