@@ -1,5 +1,5 @@
 {
-  "atlas": "/Users/aria/games/YANGEP/assets/GUI/RPG_GUI_moonmod_source.png",
+  "atlas": "/assets/GUI/RPG_GUI_moonmod_source.png",
   "image_height": 666,
   "image_width": 1024,
   "items": [
@@ -1850,6 +1850,6 @@
     }
   ],
   "variants": {
-    "base": "/Users/aria/games/YANGEP/assets/GUI/RPG_GUI_moonmod_source.png"
+    "base": "/assets/GUI/RPG_GUI_moonmod_source.png"
   }
 }
