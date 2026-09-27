@@ -70,6 +70,9 @@ public:
     // Set visual sprite scale relative to the tilemap.
     void setEntityScale(float scale);
 
+    // Get this entity's own scale multiplier (from character.json, default 1.0), independent of the global scale
+    float getEntityScaleMultiplier() const;
+
     // Get current direction
     Direction getCurrentDirection() const;
 
@@ -178,7 +181,8 @@ protected:
 
     // Position for rendering
     v2 position;
-    float entityScale;
+    float entityScale;           // Global scale, set externally (e.g. from window-config.json)
+    float entityScaleMultiplier; // Per-entity scale, from character.json (default 1.0)
 
     // Movement tracking for animation switching
     bool wasMoving;

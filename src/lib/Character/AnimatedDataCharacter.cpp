@@ -53,7 +53,7 @@ static bool getPNGDimensions(const std::string &path, uint32_t &width, uint32_t 
 AnimatedDataCharacter::AnimatedDataCharacter()
     : initialized(false), demoTime(0.0f), directionChangeTime(0.0f), animationChangeTime(0.0f),
       currentAnimation("idle"), currentDirection(Direction::DOWN), currentFrame(0), frameTimer(0.0f), currentAnimationLoops(true),
-      position(v2(0, 0)), entityScale(1.0f), wasMoving(false), isDoingAction(false), hitboxDebugActive(false), hitboxSize(32.0f), hitboxDistance(0.0f),
+      position(v2(0, 0)), entityScale(1.0f), entityScaleMultiplier(1.0f), wasMoving(false), isDoingAction(false), hitboxDebugActive(false), hitboxSize(32.0f), hitboxDistance(0.0f),
       hitboxShape(HitboxShape::SQUARE), level(nullptr), actionPointerA(0), actionPointerB(0), activeAction(nullptr), stageOfLife(StageOfLife::Alive),
       inventory(1)
 {
@@ -127,6 +127,12 @@ bool AnimatedDataCharacter::init(const std::string &folderPath)
     if (datafile.contains("hitbox_distance") && datafile["hitbox_distance"].is_number())
     {
         hitboxDistance = datafile["hitbox_distance"];
+    }
+
+    // Load this entity's own scale multiplier if specified in JSON (used alongside the global entity scale)
+    if (datafile.contains("entity_scale") && datafile["entity_scale"].is_number())
+    {
+        entityScaleMultiplier = datafile["entity_scale"];
     }
 
     // Create default character hitbox - a single tile at the bottom of the sprite
@@ -525,7 +531,8 @@ void AnimatedDataCharacter::renderCurrentFrame()
         return;
 
     cf_draw_push();
-    cf_draw_scale(entityScale, entityScale);
+    float effectiveScale = entityScale * entityScaleMultiplier;
+    cf_draw_scale(effectiveScale, effectiveScale);
 
     // Render all sprite layers (bottom to top)
     if (!currentAnimFrame->spriteLayers.empty())
@@ -562,7 +569,8 @@ void AnimatedDataCharacter::renderCurrentFrameAt(v2 renderPosition)
     // Apply position transformation and render all sprite layers (bottom to top)
     cf_draw_push();
     cf_draw_translate_v2(renderPosition);
-    cf_draw_scale(entityScale, entityScale);
+    float effectiveScale = entityScale * entityScaleMultiplier;
+    cf_draw_scale(effectiveScale, effectiveScale);
 
     if (!currentAnimFrame->spriteLayers.empty())
     {
@@ -656,6 +664,11 @@ void AnimatedDataCharacter::setPosition(v2 newPosition)
 void AnimatedDataCharacter::setEntityScale(float scale)
 {
     entityScale = scale > 0.0f ? scale : 1.0f;
+}
+
+float AnimatedDataCharacter::getEntityScaleMultiplier() const
+{
+    return entityScaleMultiplier;
 }
 
 Direction AnimatedDataCharacter::getCurrentDirection() const

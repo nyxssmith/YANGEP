@@ -2,6 +2,7 @@
   "name": "test_enemy_crab",
   "hitbox_size": 32,
   "hitbox_distance": 0,
+  "entity_scale": 0.5,
   "innate_actions": ["OneTile"],
   "layers": [
     {
