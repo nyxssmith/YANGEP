@@ -5,13 +5,16 @@ Make a folder per level
 
 ```json
 {
-  "name": "spaceship"
+  "name": "spaceship",
+  "start_tile_x": 10,
+  "start_tile_y": 10
 }
 ```
 
 Create a sub folder called `tiles` and put all tilemap pngs used by the level inside it.
 
 Next, create a new tmx project in Tiled for the level. **It should have tile 0,0 as the top left corner, and increase in values to the right and down.** (default behavior in Tiled)
+Also, ensure that the start tile (optional, defaults to 0,0) is on the navmesh layer
 
 In Tiled, create a new tileset using the images from the `tiles` folder. and save it as a .tsx file in the level folder.
 
