@@ -15,6 +15,7 @@
 #include "DebugCharacterInfoWindow.h"
 #include "DebugCoordinatorWindow.h"
 #include "DebugInputInfoWindow.h"
+#include "DebugSceneSwitcherWindow.h"
 #include "OnScreenChecks.h"
 #include "Coordinator.h"
 #include "Utils.h"
@@ -730,6 +731,10 @@ void Scene::mainLoopLevel()
     }
     // Render debug windows
     debugWindows.renderAll();
+    if (debugSceneSwitcherWindow)
+    {
+        debugSceneSwitcherWindow->render();
+    }
 
     if (atlas_labeler_open)
     {

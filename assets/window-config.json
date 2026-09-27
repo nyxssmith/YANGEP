@@ -39,6 +39,7 @@
     "ShowInputInfo": false,
     "RecordInputInfo": false,
     "clickToInspectCharacter": true,
-    "ShowAtlasLabeler": false
+    "ShowAtlasLabeler": false,
+    "ShowSceneSwitcherWindow": true
   }
 }

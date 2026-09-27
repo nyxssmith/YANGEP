@@ -14,6 +14,7 @@
 #include "DebugCharacterInfoWindow.h"
 #include "DebugCoordinatorWindow.h"
 #include "DebugInputInfoWindow.h"
+#include "DebugSceneSwitcherWindow.h"
 #include "OnScreenChecks.h"
 #include "Coordinator.h"
 #include "Utils.h"
@@ -33,6 +34,8 @@
 #include "Inventory.h"
 #include "Item.h"
 #include "SceneManager.h"
+
+SceneManager::SceneManager() = default;
 
 SceneManager::~SceneManager()
 {
@@ -74,6 +77,7 @@ bool SceneManager::LoadScene(const std::string &scene_name)
     currentScene->setShowPlayerInfo(ShowPlayerInfo);
     currentScene->setShowInputInfo(ShowInputInfo);
     currentScene->setShowCoordinatorInfo(ShowCoordinatorInfo);
+    currentScene->setDebugSceneSwitcherWindow(debugSceneSwitcherWindow.get());
     currentScene->setCharacterInfoWindows(characterInfoWindows);
     currentScene->setRecordInputInfo(recordInputInfo);
     currentScene->setInputLogFile(inputLogFile);
@@ -336,6 +340,8 @@ void SceneManager::SharedSetup(int windowWidth, int windowHeight)
         }
     }
 
+    debugSceneSwitcherWindow = std::make_unique<DebugSceneSwitcherWindow>("Scene Switcher");
+
     // Input recording setup
     bool recordInputInfo = false;
     std::ofstream inputLogFile;
@@ -391,6 +397,14 @@ bool SceneManager::MainLoop()
         }
         // if no cleanup is requested, run the main loop of the current scene
         currentScene->mainLoop();
+        if (debugSceneSwitcherWindow)
+        {
+            const std::string requestedScene = debugSceneSwitcherWindow->takeRequestedScene();
+            if (!requestedScene.empty())
+            {
+                LoadScene(requestedScene);
+            }
+        }
         return true;
     }
     else
@@ -413,6 +427,10 @@ void SceneManager::Cleanup()
 
 void SceneManager::SharedCleanup()
 {
+    if (currentScene && currentScene->getHasSetup())
+    {
+        Cleanup();
+    }
 
     // Shutdown on-screen checks worker
     OnScreenChecks::requestShutdown();

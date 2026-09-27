@@ -18,6 +18,7 @@ class DebugCoordinatorWindow;
 class DebugFPSWindow;
 class DebugJobWindow;
 class DebugInputInfoWindow;
+class DebugSceneSwitcherWindow;
 class CFNativeCamera;
 
 // Represents a scene loaded from assets/DataFiles/Scenes/<name>.json
@@ -82,6 +83,7 @@ public:
     void setCharacterInfoWindows(std::vector<std::unique_ptr<DebugCharacterInfoWindow>> &value) { characterInfoWindows = std::move(value); }
     void setRecordInputInfo(bool value) { recordInputInfo = value; }
     void setInputLogFile(std::ofstream &value) { inputLogFile = std::move(value); }
+    void setDebugSceneSwitcherWindow(DebugSceneSwitcherWindow *value) { debugSceneSwitcherWindow = value; }
     // Camera is owned by SceneManager so it survives scene swaps; this just points at it.
     void setCfCamera(CFNativeCamera &value) { cfCamera = &value; }
 
@@ -131,6 +133,7 @@ private:
     std::unique_ptr<DebugFPSWindow> fpsWindow;
     std::unique_ptr<DebugJobWindow> jobWindow;
     std::unique_ptr<DebugInputInfoWindow> inputInfoWindow;
+    DebugSceneSwitcherWindow *debugSceneSwitcherWindow = nullptr;
     CFNativeCamera *cfCamera = nullptr; // owned by SceneManager, shared via setCfCamera
     AnimatedDataCharacterNavMeshPlayer playerCharacter;
     HudUI hud_ui;

@@ -5,10 +5,12 @@
 #include <memory>
 #include <string>
 
+class DebugSceneSwitcherWindow;
+
 class SceneManager
 {
 public:
-    SceneManager() = default;
+    SceneManager();
     ~SceneManager();
 
     // Load a new scene from the given scene name. Returns true if successful.
@@ -43,6 +45,7 @@ private:
     bool debugHighlightPlayerNavmeshCollisionBox;
     bool clickToInspectCharacter;
     float debugEntityScale;
+    std::unique_ptr<DebugSceneSwitcherWindow> debugSceneSwitcherWindow;
     DebugWindowList debugWindows;
     AtlasLabelerWindow atlasLabeler;
     bool atlas_labeler_open;
