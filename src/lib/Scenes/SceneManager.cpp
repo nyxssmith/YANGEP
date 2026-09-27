@@ -52,7 +52,10 @@ bool SceneManager::LoadScene(const std::string &scene_name)
     {
         Cleanup();
     }
-    // load new scene into current scene pointer
+    // TODO add toggle to re-run setup or not, if not it lets windowconfig changes live in memory!
+    //  re-run setup to refresh jsons
+    // SharedSetup(viewportWidth, viewportHeight);
+    //  load new scene into current scene pointer
     currentScene = std::make_unique<Scene>();
     if (!currentScene->init(scene_name))
     {
@@ -431,20 +434,6 @@ void SceneManager::SharedCleanup()
     {
         Cleanup();
     }
-
-    // Shutdown on-screen checks worker
-    OnScreenChecks::requestShutdown();
-
-    // Shutdown job system
+    // Shutdown the job system after cleaning up the current scene as it will be cycled
     JobSystem::shutdown();
-
-    // Cleanup on-screen checks
-    OnScreenChecks::shutdown();
-
-    // Close input log file if it was opened
-    if (inputLogFile.is_open())
-    {
-        inputLogFile.close();
-        printf("Input log file closed\n");
-    }
 }

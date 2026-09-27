@@ -977,6 +977,23 @@ void Scene::cleanup()
 void Scene::cleanupLevel()
 {
     // Implement level cleanup logic here
+    // Shutdown on-screen checks worker
+    OnScreenChecks::requestShutdown();
+
+    // Shutdown job system
+    JobSystem::shutdown();
+
+    // Cleanup on-screen checks
+    OnScreenChecks::shutdown();
+
+    // Close input log file if it was opened
+    if (inputLogFile.is_open())
+    {
+        inputLogFile.close();
+        printf("Input log file closed\n");
+    }
+    // start the job system after cleaning up the level
+    JobSystem::initialize();
 }
 
 void Scene::cleanupMenu()
