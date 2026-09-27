@@ -66,6 +66,15 @@ void State::setDefaultValues(const DataFile &values)
     // Re-initialize from the new values
     initFromJson();
 }
+const std::string &State::getName() const
+{
+    return name;
+}
+
+void State::setName(const std::string &name)
+{
+    this->name = name;
+}
 
 void State::initFromJson()
 {

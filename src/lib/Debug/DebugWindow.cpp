@@ -1,10 +1,15 @@
 #include "DebugWindow.h"
 #include <imgui.h>
 #include <stdio.h>
+#include "DataFile.h"
 
 DebugWindow::DebugWindow(const std::string &title)
     : m_title(title), m_show(true)
 {
+    // read the windowconfig
+    DataFile windowConfig("/assets/window-config.json");
+    m_debugWindowScale = windowConfig["Debug"]["debugwindow_scale"];
+    ImGui::GetIO().FontGlobalScale = m_debugWindowScale;
 }
 
 void DebugWindow::render()

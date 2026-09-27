@@ -150,6 +150,7 @@ add_executable(
 	src/lib/Character/StateMachines/States/PrintState.cpp
 	src/lib/Character/StateMachines/States/WanderNewPositionState.cpp
 	src/lib/Character/StateMachines/States/MoveToPositionState.cpp
+	src/lib/Character/StateMachines/States/GoToTilePositionState.cpp
 	src/lib/Combat/HitBox.cpp
 	src/lib/Combat/Action.cpp
 	src/lib/Combat/Damage.cpp
@@ -264,6 +265,7 @@ add_executable(
 	src/lib/Character/StateMachines/States/PrintState.cpp
 	src/lib/Character/StateMachines/States/WanderNewPositionState.cpp
 	src/lib/Character/StateMachines/States/MoveToPositionState.cpp
+	src/lib/Character/StateMachines/States/GoToTilePositionState.cpp
 	src/lib/Combat/HitBox.cpp
 	src/lib/Combat/Action.cpp
 	src/lib/Combat/Damage.cpp

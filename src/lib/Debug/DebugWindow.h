@@ -13,4 +13,5 @@ public:
 protected:
     std::string m_title;
     bool m_show;
+    float m_debugWindowScale;
 };

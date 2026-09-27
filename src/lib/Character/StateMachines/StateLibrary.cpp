@@ -3,6 +3,7 @@
 #include "States/PrintState.h"
 #include "States/WanderNewPositionState.h"
 #include "States/MoveToPositionState.h"
+#include "States/GoToTilePositionState.h"
 #include <cstdio>
 
 StateLibrary::StateLibrary()
@@ -74,4 +75,8 @@ void StateLibrary::initializeBuiltInStates()
     // Register MoveToPositionState
     registerState("move_to_position", []() -> std::unique_ptr<State>
                   { return std::make_unique<MoveToPositionState>(); });
+
+    // Register GoToTilePositionState
+    registerState("go_to_tile_position", []() -> std::unique_ptr<State>
+                  { return std::make_unique<GoToTilePositionState>(); });
 }

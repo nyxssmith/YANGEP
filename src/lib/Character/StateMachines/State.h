@@ -49,6 +49,9 @@ public:
     // currentDirection: the current direction the agent is facing
     // Returns the direction the agent should face
     virtual CF_V2 FaceDirection(CF_V2 currentDirection);
+    // Get the name of the state
+    const std::string &getName() const;
+    void setName(const std::string &name);
 
 protected:
     // Common initialization from json data
@@ -56,6 +59,7 @@ protected:
 
 private:
     DataFile defaultValues;
+    std::string name = "defaultname";
     bool isRunning;
     AnimatedDataCharacterNavMeshAgent *agent; // Non-owning pointer to the agent
 };

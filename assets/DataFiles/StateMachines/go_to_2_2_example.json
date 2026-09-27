@@ -1,0 +1,11 @@
+{
+  "name": "go to 2,2 example",
+  "states": [
+    { "name": "wait", "inputs": { "ms": 3000 } },
+    { "name": "wander_new_position", "inputs": { "tiles_radius": 5 } },
+    { "name": "move_to_position" },
+    { "name": "wait", "inputs": { "ms": 3000 } },
+    { "name": "go_to_tile_position", "inputs": { "tile_x": 10, "tile_y": 5 } },
+    { "name": "move_to_position" }
+  ]
+}
