@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
 	}
 	// cleanup shared resources
 	sceneManager.SharedCleanup();
-
+	// cf destroy app
 	destroy_app();
 	return 0;
 }

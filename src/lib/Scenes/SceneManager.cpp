@@ -39,10 +39,6 @@ SceneManager::SceneManager() = default;
 
 SceneManager::~SceneManager()
 {
-    Cleanup();
-    // clear pointers to current and next scenes
-    currentScene = nullptr;
-    nextScene = nullptr;
 }
 
 bool SceneManager::LoadScene(const std::string &scene_name)
