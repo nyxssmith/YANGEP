@@ -85,9 +85,9 @@ void StateMachine::initFromJson()
                 *static_cast<nlohmann::json *>(&inputs) = stateJson["inputs"];
                 state->setDefaultValues(inputs);
             }
-
+            state->setName(stateName);
             states.push_back(std::move(state));
-            // printf("StateMachine '%s': Added state '%s'\n", name.c_str(), stateName.c_str());
+            printf("StateMachine '%s': Added state '%s'\n", name.c_str(), stateName.c_str());
         }
     }
 

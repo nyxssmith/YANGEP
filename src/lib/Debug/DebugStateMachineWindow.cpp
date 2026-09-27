@@ -49,7 +49,7 @@ void DebugStateMachineWindow::render()
 
             // Get the state name from its default values
             const DataFile &stateData = state->getDefaultValues();
-            std::string stateName = "Unknown";
+            std::string stateName = state->getName();
             if (stateData.contains("name") && stateData["name"].is_string())
             {
                 stateName = stateData["name"].get<std::string>();
