@@ -115,6 +115,9 @@ struct Animation
     // Get frame by index only (for non-directional animations)
     const AnimationFrame *getFrame(int frameIndex) const;
 
+    // Number of frames loaded for a given direction
+    int getFrameCount(Direction direction) const;
+
     // Calculate total duration
     void calculateDuration();
 };

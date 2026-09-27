@@ -402,39 +402,20 @@ void AnimatedDataCharacter::updateAnimation(float dt)
     // Update frame timer
     frameTimer += dt * 1000.0f; // Convert to milliseconds
 
-    // Find current frame
-    const AnimationFrame *currentAnimFrame = nullptr;
-    for (const auto &frame : anim->frames)
-    {
-        if (frame.direction == currentDirection && frame.frameIndex == currentFrame)
-        {
-            currentAnimFrame = &frame;
-            break;
-        }
-    }
+    const AnimationFrame *currentAnimFrame = anim->getFrame(currentFrame, currentDirection);
 
     // If we found a frame, check if we should advance
     if (currentAnimFrame && frameTimer >= currentAnimFrame->delay)
     {
         frameTimer = 0.0f;
 
-        // Advance to next frame - but handle idle vs animated differently
-        if (currentAnimation == "idle")
+        // Advance and wrap using the frame count actually loaded for this animation/direction,
+        // so any animation (idle, walkcycle, or future ones) wraps correctly regardless of length
+        currentFrame++;
+        int frameCount = anim->getFrameCount(currentDirection);
+        if (frameCount <= 0 || currentFrame >= frameCount)
         {
-            // Idle animations don't advance frames - they stay at frame 0 for each direction
             currentFrame = 0;
-        }
-        else
-        {
-            // Walkcycle and other animations advance through frames within each direction
-            currentFrame++;
-
-            // For walkcycle: 9 frames per direction, so max frame index is 8
-            int maxFramesPerDirection = 9;
-            if (currentFrame >= maxFramesPerDirection)
-            {
-                currentFrame = 0;
-            }
         }
     }
 }
@@ -515,16 +496,7 @@ void AnimatedDataCharacter::renderCurrentFrame()
     if (!anim || anim->frames.empty())
         return;
 
-    // Find the current frame for the current direction
-    const AnimationFrame *currentAnimFrame = nullptr;
-    for (const auto &frame : anim->frames)
-    {
-        if (frame.direction == currentDirection && frame.frameIndex == currentFrame)
-        {
-            currentAnimFrame = &frame;
-            break;
-        }
-    }
+    const AnimationFrame *currentAnimFrame = anim->getFrame(currentFrame, currentDirection);
 
     if (!currentAnimFrame)
         return;
@@ -559,16 +531,7 @@ void AnimatedDataCharacter::renderCurrentFrameAt(v2 renderPosition)
     if (!anim || anim->frames.empty())
         return;
 
-    // Find the current frame for the current direction
-    const AnimationFrame *currentAnimFrame = nullptr;
-    for (const auto &frame : anim->frames)
-    {
-        if (frame.direction == currentDirection && frame.frameIndex == currentFrame)
-        {
-            currentAnimFrame = &frame;
-            break;
-        }
-    }
+    const AnimationFrame *currentAnimFrame = anim->getFrame(currentFrame, currentDirection);
 
     if (!currentAnimFrame)
         return;
