@@ -1,0 +1,12 @@
+{
+  "name": "test_enemy_crab",
+  "hitbox_size": 32,
+  "hitbox_distance": 0,
+  "innate_actions": ["OneTile"],
+  "layers": [
+    {
+      "filename": "blue_red_legs.png",
+      "tile_size": 128
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "entities": [
+    {
+      "name": "test_enemy_crab",
+      "position": { "x": 10, "y": 10 },
+      "path": "/assets/DataFiles/Entities/test_enemy_crab"
+    }
+  ]
+}
