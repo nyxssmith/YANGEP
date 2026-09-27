@@ -1,4 +1,4 @@
 {
-  "state_machines": ["wander"],
+  "state_machines": ["wander", "go_to_2_2_example"],
   "default_state_machine": "wander"
 }
