@@ -19,6 +19,7 @@
     }
   ],
   "Debug": {
+    "debugwindow_scale": 2.0,
     "highlightViewport": true,
     "highlightNavmesh": false,
     "highlightNavMeshPaths": false,
