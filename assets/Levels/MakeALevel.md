@@ -17,6 +17,7 @@ Next, create a new tmx project in Tiled for the level. **It should have tile 0,0
 Also, ensure that the start tile (optional, defaults to 0,0) is on the navmesh layer
 
 In Tiled, create a new tileset using the images from the `tiles` folder. and save it as a .tsx file in the level folder.
+Make sure the tilemap png, is RGBA (supports transparency)
 
 Next you can draw the level.
 
