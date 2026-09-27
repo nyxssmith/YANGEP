@@ -56,27 +56,8 @@ bool LevelMap::loadLayers()
 
         if (encoding == "csv" || encoding.empty())
         {
-            // Parse CSV data inline
             std::string csv_data = data_node.text().get();
-            layer->data.clear();
-
-            std::istringstream stream(csv_data);
-            std::string line;
-            while (std::getline(stream, line))
-            {
-                std::istringstream line_stream(line);
-                std::string cell;
-                while (std::getline(line_stream, cell, ','))
-                {
-                    // Remove whitespace
-                    cell.erase(std::remove_if(cell.begin(), cell.end(), ::isspace), cell.end());
-                    if (!cell.empty())
-                    {
-                        int tile_id = std::stoi(cell);
-                        layer->data.push_back(tile_id);
-                    }
-                }
-            }
+            tmxParseCSVData(csv_data, layer->data, layer->flip_flags, layer->name);
         }
         else
         {
@@ -305,6 +286,7 @@ void LevelMap::renderSingleLayer(std::shared_ptr<TMXLayer> layer, const CFNative
                 overlap_scale = 1.01f;
             }
             cf_draw_scale(overlap_scale, overlap_scale);
+            tmxApplyTileFlip(layer->getTileFlipFlags(x, y));
 
             if (layer->opacity < 1.0f)
             {

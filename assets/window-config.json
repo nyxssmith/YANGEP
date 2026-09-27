@@ -34,7 +34,7 @@
     "EntityScale": 2.0,
     "ShowFPSMetrics": true,
     "ShowJobMetrics": false,
-    "ShowPlayerInfo": false,
+    "ShowPlayerInfo": true,
     "ShowCoordinatorInfo": false,
     "ShowInputInfo": false,
     "RecordInputInfo": false,

@@ -1,5 +1,5 @@
 {
   "name": "spaceship",
-  "start_tile_x": 24,
-  "start_tile_y": 16
+  "start_tile_x": 16,
+  "start_tile_y": 10
 }

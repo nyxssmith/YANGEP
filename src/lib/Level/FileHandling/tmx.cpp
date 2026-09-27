@@ -5,6 +5,7 @@
 #include <functional>
 #include <sstream>
 #include <algorithm>
+#include <stdexcept>
 
 tmx::tmx(const std::string &path) : path(path), map_width(0), map_height(0), tile_width(32), tile_height(32)
 {
@@ -178,7 +179,7 @@ bool tmx::loadLayers()
         {
             // Parse CSV data
             std::string csv_data = data_node.text().get();
-            parseCSVData(csv_data, layer->data);
+            tmxParseCSVData(csv_data, layer->data, layer->flip_flags, layer->name);
         }
         else
         {
@@ -215,9 +216,14 @@ bool tmx::loadLayers()
     return !layers.empty() || !navmesh_layers.empty();
 }
 
-void tmx::parseCSVData(const std::string &csv_data, std::vector<int> &tile_data) const
+void tmxParseCSVData(const std::string &csv_data, std::vector<int> &tile_data,
+                     std::vector<uint8_t> &flip_flags, const std::string &layer_name)
 {
     tile_data.clear();
+    flip_flags.clear();
+
+    int flipped_count = 0;
+    int invalid_count = 0;
 
     std::istringstream stream(csv_data);
     std::string line;
@@ -232,13 +238,70 @@ void tmx::parseCSVData(const std::string &csv_data, std::vector<int> &tile_data)
             // Remove whitespace
             cell.erase(std::remove_if(cell.begin(), cell.end(), ::isspace), cell.end());
 
-            if (!cell.empty())
+            if (cell.empty())
+                continue;
+
+            uint32_t raw_gid = 0;
+            try
             {
-                int tile_id = std::stoi(cell);
-                tile_data.push_back(tile_id);
+                unsigned long long parsed = std::stoull(cell);
+                if (parsed > UINT32_MAX)
+                    throw std::out_of_range("gid exceeds 32 bits");
+                raw_gid = static_cast<uint32_t>(parsed);
             }
+            catch (const std::exception &e)
+            {
+                printf("TMX Warning: layer '%s' tile index %zu has invalid GID '%s' (%s); treating as empty\n",
+                       layer_name.c_str(), tile_data.size(), cell.c_str(), e.what());
+                invalid_count++;
+            }
+
+            uint8_t flags = static_cast<uint8_t>((raw_gid & TMX_FLIP_FLAGS_MASK) >> TMX_FLIP_FLAGS_SHIFT);
+            if (flags != 0)
+                flipped_count++;
+
+            tile_data.push_back(static_cast<int>(raw_gid & ~TMX_FLIP_FLAGS_MASK));
+            flip_flags.push_back(flags);
         }
     }
+
+    if (flipped_count > 0 || invalid_count > 0)
+    {
+        printf("TMX: layer '%s' has %d flipped/rotated tiles and %d invalid tiles\n",
+               layer_name.c_str(), flipped_count, invalid_count);
+    }
+}
+
+void tmxApplyTileFlip(uint8_t flip_flags)
+{
+    if (flip_flags == 0)
+        return;
+
+    const uint32_t flags = static_cast<uint32_t>(flip_flags) << TMX_FLIP_FLAGS_SHIFT;
+
+    // Tiled applies diagonal, then horizontal, then vertical flips in Y-down
+    // image space. In our Y-up render space the Y-down diagonal (y = x)
+    // becomes the anti-diagonal, i.e. (x, y) -> (-y, -x).
+    float m00 = 1.0f, m01 = 0.0f, m10 = 0.0f, m11 = 1.0f;
+    if (flags & TMX_FLIPPED_DIAGONALLY)
+    {
+        m00 = 0.0f; m01 = -1.0f;
+        m10 = -1.0f; m11 = 0.0f;
+    }
+    if (flags & TMX_FLIPPED_HORIZONTALLY)
+    {
+        m00 = -m00; m01 = -m01;
+    }
+    if (flags & TMX_FLIPPED_VERTICALLY)
+    {
+        m10 = -m10; m11 = -m11;
+    }
+
+    CF_M3x2 m;
+    m.m.x = cf_v2(m00, m10);
+    m.m.y = cf_v2(m01, m11);
+    m.p = cf_v2(0.0f, 0.0f);
+    cf_draw_transform(m);
 }
 
 std::shared_ptr<TMXTileset> tmx::findTilesetForGID(int gid) const
@@ -455,6 +518,7 @@ void tmx::renderLayer(int layer_index, float world_x, float world_y) const
             // This makes each tile slightly larger to ensure no gaps appear
             const float overlap_scale = 1.001f; // 0.1% overlap
             cf_draw_scale(overlap_scale, overlap_scale);
+            tmxApplyTileFlip(layer->getTileFlipFlags(x, y));
 
             if (layer->opacity < 1.0f)
             {
@@ -609,6 +673,7 @@ void tmx::renderLayer(int layer_index, const CFNativeCamera &camera, bool highli
                 overlap_scale = 1.01f; // 1% overlap for low zoom (increased from 0.2%)
             }
             cf_draw_scale(overlap_scale, overlap_scale);
+            tmxApplyTileFlip(layer->getTileFlipFlags(x, y));
 
             if (layer->opacity < 1.0f)
             {
@@ -1092,6 +1157,22 @@ int TMXLayer::getTileGID(int x, int y) const
     if (index >= 0 && index < static_cast<int>(data.size()))
     {
         return data[index];
+    }
+
+    return 0;
+}
+
+uint8_t TMXLayer::getTileFlipFlags(int x, int y) const
+{
+    if (!isValidCoordinate(x, y))
+    {
+        return 0;
+    }
+
+    int index = y * width + x;
+    if (index >= 0 && index < static_cast<int>(flip_flags.size()))
+    {
+        return flip_flags[index];
     }
 
     return 0;

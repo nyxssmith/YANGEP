@@ -115,8 +115,9 @@ int Scene::setupLevel()
 
     if (!level->isInitialized())
     {
-        printf("Error: Failed to initialize level\n");
-        destroy_app();
+        printf("Error: Failed to initialize level '%s'; shutting down\n", (level_directory + level_name).c_str());
+        // main() owns destroy_app(); destroying here leaves the main loop running on a freed GPU device.
+        cf_app_signal_shutdown();
         return -1;
     }
 
@@ -290,6 +291,11 @@ void Scene::mainLoop()
 
 void Scene::mainLoopLevel()
 {
+    if (!level || !level->isInitialized())
+    {
+        return;
+    }
+
     // Implement level main loop logic here
     //============================================================================================
     //============================================================================================

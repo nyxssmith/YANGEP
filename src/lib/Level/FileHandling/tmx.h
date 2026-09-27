@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 #include <vector>
 #include <memory>
@@ -13,6 +14,24 @@ struct TMXTileset;
 struct TMXLayer;
 class Camera;
 class DataFile;
+
+// Tiled stores per-tile flip/rotation in the top 4 bits of each GID, so raw
+// values can exceed INT_MAX. See https://doc.mapeditor.org/en/stable/reference/global-tile-ids/
+constexpr uint32_t TMX_FLIPPED_HORIZONTALLY = 0x80000000u;
+constexpr uint32_t TMX_FLIPPED_VERTICALLY = 0x40000000u;
+constexpr uint32_t TMX_FLIPPED_DIAGONALLY = 0x20000000u;
+constexpr uint32_t TMX_ROTATED_HEXAGONAL_120 = 0x10000000u;
+constexpr uint32_t TMX_FLIP_FLAGS_MASK = 0xF0000000u;
+constexpr int TMX_FLIP_FLAGS_SHIFT = 28;
+
+// Parse Tiled CSV layer data into flag-free GIDs plus per-tile flip flags
+// (the top 4 GID bits shifted down into a uint8_t).
+void tmxParseCSVData(const std::string &csv_data, std::vector<int> &tile_data,
+                     std::vector<uint8_t> &flip_flags, const std::string &layer_name);
+
+// Apply a tile's flip flags to the current draw transform. The tile must
+// already be translated to its (centered) position; call before cf_draw_sprite.
+void tmxApplyTileFlip(uint8_t flip_flags);
 
 // Structure to represent a line segment (edge)
 struct EdgeLine
@@ -61,7 +80,6 @@ private:
 
     // Helper functions
     bool loadTilesets();
-    void parseCSVData(const std::string &csv_data, std::vector<int> &tile_data) const;
 
 protected:
     virtual bool loadLayers();
@@ -183,7 +201,8 @@ struct TMXLayer
     int height;            // Layer height in tiles
     bool visible;          // Layer visibility
     float opacity;         // Layer opacity (0.0 - 1.0)
-    std::vector<int> data; // Tile data (global IDs) in row-major order
+    std::vector<int> data; // Tile data (global IDs, flip flags stripped) in row-major order
+    std::vector<uint8_t> flip_flags; // Per-tile Tiled flip flags (GID bits >> TMX_FLIP_FLAGS_SHIFT), parallel to data
 
     TMXLayer() : id(0), width(0), height(0), visible(true), opacity(1.0f) {}
 
@@ -191,6 +210,9 @@ struct TMXLayer
     // x: horizontal position (0 = leftmost)
     // y: vertical position (0 = topmost)
     int getTileGID(int x, int y) const;
+
+    // Get the tile's flip flags (0 = not flipped)
+    uint8_t getTileFlipFlags(int x, int y) const;
 
     // Check if coordinates are within layer bounds
     bool isValidCoordinate(int x, int y) const;
