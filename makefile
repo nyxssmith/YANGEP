@@ -32,6 +32,10 @@ run_action_editor: build
 	@echo "Running "
 	./scripts/action_editor.sh
 
+run_animation_devtools_launcher: 
+	@echo "Running animation devtools launcher..."
+	./scripts/run_animation_devtools_launcher.sh
+	
 run_preserve_assets: build
 	@echo "Running with preserved assets..."
 	./scripts/run.sh
