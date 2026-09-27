@@ -1,0 +1,276 @@
+{
+  "name": "melee_right_claw",
+  "direction": "down",
+  "frames": [
+    {
+      "name": "frame_1",
+      "attachment_points": {
+        "left_front_leg": {
+          "x": 50,
+          "y": 21,
+          "rotation": 0.0
+        },
+        "left_middle_leg": {
+          "x": 47,
+          "y": 16,
+          "rotation": 0.0
+        },
+        "left_rear_leg": {
+          "x": 43,
+          "y": 12,
+          "rotation": 0.0
+        },
+        "right_front_leg": {
+          "x": 15,
+          "y": 21,
+          "rotation": 0.0
+        },
+        "right_middle_leg": {
+          "x": 18,
+          "y": 16,
+          "rotation": 0.0
+        },
+        "right_rear_leg": {
+          "x": 24,
+          "y": 12,
+          "rotation": 0.0
+        },
+        "left_claw": {
+          "x": 46,
+          "y": 29,
+          "rotation": 0.0
+        },
+        "right_claw": {
+          "x": 20,
+          "y": 29,
+          "rotation": 0.0
+        }
+      }
+    },
+    {
+      "name": "frame_2",
+      "attachment_points": {
+        "left_front_leg": {
+          "x": 50,
+          "y": 21,
+          "rotation": 0.0
+        },
+        "left_middle_leg": {
+          "x": 47,
+          "y": 16,
+          "rotation": 0.0
+        },
+        "left_rear_leg": {
+          "x": 43,
+          "y": 12,
+          "rotation": 0.0
+        },
+        "right_front_leg": {
+          "x": 15,
+          "y": 21,
+          "rotation": 0.0
+        },
+        "right_middle_leg": {
+          "x": 18,
+          "y": 16,
+          "rotation": 0.0
+        },
+        "right_rear_leg": {
+          "x": 24,
+          "y": 12,
+          "rotation": 0.0
+        },
+        "left_claw": {
+          "x": 46,
+          "y": 29,
+          "rotation": 0.0
+        },
+        "right_claw": {
+          "x": 20,
+          "y": 29,
+          "rotation": -31.35483870967741
+        }
+      }
+    },
+    {
+      "name": "frame_3",
+      "attachment_points": {
+        "left_front_leg": {
+          "x": 50,
+          "y": 21,
+          "rotation": 0.0
+        },
+        "left_middle_leg": {
+          "x": 47,
+          "y": 16,
+          "rotation": 0.0
+        },
+        "left_rear_leg": {
+          "x": 43,
+          "y": 12,
+          "rotation": 0.0
+        },
+        "right_front_leg": {
+          "x": 15,
+          "y": 21,
+          "rotation": 0.0
+        },
+        "right_middle_leg": {
+          "x": 18,
+          "y": 16,
+          "rotation": 0.0
+        },
+        "right_rear_leg": {
+          "x": 24,
+          "y": 12,
+          "rotation": 0.0
+        },
+        "left_claw": {
+          "x": 46,
+          "y": 29,
+          "rotation": 0.0
+        },
+        "right_claw": {
+          "x": 20,
+          "y": 29,
+          "rotation": -47.61290322580646
+        }
+      }
+    },
+    {
+      "name": "frame_4",
+      "attachment_points": {
+        "left_front_leg": {
+          "x": 50,
+          "y": 21,
+          "rotation": 0.0
+        },
+        "left_middle_leg": {
+          "x": 47,
+          "y": 16,
+          "rotation": 0.0
+        },
+        "left_rear_leg": {
+          "x": 43,
+          "y": 12,
+          "rotation": 0.0
+        },
+        "right_front_leg": {
+          "x": 15,
+          "y": 21,
+          "rotation": 0.0
+        },
+        "right_middle_leg": {
+          "x": 18,
+          "y": 16,
+          "rotation": 0.0
+        },
+        "right_rear_leg": {
+          "x": 24,
+          "y": 12,
+          "rotation": 0.0
+        },
+        "left_claw": {
+          "x": 46,
+          "y": 29,
+          "rotation": 0.0
+        },
+        "right_claw": {
+          "x": 20,
+          "y": 29,
+          "rotation": -17.419354838709694
+        }
+      }
+    },
+    {
+      "name": "frame_5",
+      "attachment_points": {
+        "left_front_leg": {
+          "x": 50,
+          "y": 21,
+          "rotation": 0.0
+        },
+        "left_middle_leg": {
+          "x": 47,
+          "y": 16,
+          "rotation": 0.0
+        },
+        "left_rear_leg": {
+          "x": 43,
+          "y": 12,
+          "rotation": 0.0
+        },
+        "right_front_leg": {
+          "x": 15,
+          "y": 21,
+          "rotation": 0.0
+        },
+        "right_middle_leg": {
+          "x": 18,
+          "y": 16,
+          "rotation": 0.0
+        },
+        "right_rear_leg": {
+          "x": 24,
+          "y": 12,
+          "rotation": 0.0
+        },
+        "left_claw": {
+          "x": 46,
+          "y": 29,
+          "rotation": 0.0
+        },
+        "right_claw": {
+          "x": 23,
+          "y": 34,
+          "rotation": -17.419354838709694
+        }
+      }
+    },
+    {
+      "name": "frame_6",
+      "attachment_points": {
+        "left_front_leg": {
+          "x": 50,
+          "y": 21,
+          "rotation": 0.0
+        },
+        "left_middle_leg": {
+          "x": 47,
+          "y": 16,
+          "rotation": 0.0
+        },
+        "left_rear_leg": {
+          "x": 43,
+          "y": 12,
+          "rotation": 0.0
+        },
+        "right_front_leg": {
+          "x": 15,
+          "y": 21,
+          "rotation": 0.0
+        },
+        "right_middle_leg": {
+          "x": 18,
+          "y": 16,
+          "rotation": 0.0
+        },
+        "right_rear_leg": {
+          "x": 24,
+          "y": 12,
+          "rotation": 0.0
+        },
+        "left_claw": {
+          "x": 46,
+          "y": 29,
+          "rotation": 0.0
+        },
+        "right_claw": {
+          "x": 19,
+          "y": 29,
+          "rotation": -5.806451612903231
+        }
+      }
+    }
+  ]
+}

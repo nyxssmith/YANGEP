@@ -29,6 +29,10 @@ private:
     Damage *damage;
     bool hasDamage;
 
+    // Animation to play while this action is executing
+    std::string animation;
+    bool loopAnimation;
+
 public:
     Action() = default;
     Action(const std::string &folderPath);
@@ -65,6 +69,11 @@ public:
     bool hasDamageData() const;
     Damage *getDamage() const;
     void doDamage();
+
+    // Animation to play while this action is executing (defaults to "melee_right_claw")
+    const std::string &getAnimation() const;
+    // Whether the action's animation should loop instead of playing once (defaults to false)
+    bool getLoopAnimation() const;
 
     // Get characters currently in this action's hitbox
     std::vector<AnimatedDataCharacter *> getCharactersInHitbox() const;

@@ -158,6 +158,7 @@ private:
     Direction currentDirection;
     int currentFrame;
     float frameTimer;
+    bool currentAnimationLoops; // false holds on the last frame instead of looping back to 0
 
     // Demo state
     bool initialized;

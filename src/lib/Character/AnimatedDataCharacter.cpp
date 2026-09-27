@@ -52,7 +52,7 @@ static bool getPNGDimensions(const std::string &path, uint32_t &width, uint32_t 
 // Constructor
 AnimatedDataCharacter::AnimatedDataCharacter()
     : initialized(false), demoTime(0.0f), directionChangeTime(0.0f), animationChangeTime(0.0f),
-      currentAnimation("idle"), currentDirection(Direction::DOWN), currentFrame(0), frameTimer(0.0f),
+      currentAnimation("idle"), currentDirection(Direction::DOWN), currentFrame(0), frameTimer(0.0f), currentAnimationLoops(true),
       position(v2(0, 0)), entityScale(1.0f), wasMoving(false), isDoingAction(false), hitboxDebugActive(false), hitboxSize(32.0f), hitboxDistance(0.0f),
       hitboxShape(HitboxShape::SQUARE), level(nullptr), actionPointerA(0), actionPointerB(0), activeAction(nullptr), stageOfLife(StageOfLife::Alive),
       inventory(1)
@@ -196,48 +196,48 @@ bool AnimatedDataCharacter::init(const std::string &folderPath)
     printf("AnimatedDataCharacter: Using %zu layers\n", layerFilenames.size());
     printf("AnimatedDataCharacter: Using tile size: %d\n", tileSize);
 
-    // Construct paths using the first layer filename from the datafile for dimension checking
-    std::string idle_body_path = "assets/Art/AnimationsSheets/idle/" + layerFilenames[0];
-    std::string walkcycle_body_path = "assets/Art/AnimationsSheets/walkcycle/" + layerFilenames[0];
-
-    // Get dimensions for idle animation
-    uint32_t idle_width = 0, idle_height = 0;
-    if (!getPNGDimensions(idle_body_path, idle_width, idle_height))
+    // Discover every animation subfolder under AnimationsSheets (idle, walkcycle, melee_right_claw, etc.)
+    // and compute its layout from PNG dimensions, so new animations don't require code changes.
+    std::vector<AnimationLayout> layouts;
+    const char *animSheetsRoot = "/assets/Art/AnimationsSheets";
+    const char **animEntries = cf_fs_enumerate_directory(animSheetsRoot);
+    if (animEntries)
     {
-        printf("AnimatedDataCharacter: ERROR: Cannot read dimensions from %s\n", idle_body_path.c_str());
-        return false;
+        for (const char **entry = animEntries; *entry; ++entry)
+        {
+            std::string animName = *entry;
+            std::string animFolderPath = std::string(animSheetsRoot) + "/" + animName;
+
+            CF_Stat animStat;
+            if (cf_is_error(cf_fs_stat(animFolderPath.c_str(), &animStat)) || animStat.type != CF_FILE_TYPE_DIRECTORY)
+                continue;
+
+            std::string bodyPath = "assets/Art/AnimationsSheets/" + animName + "/" + layerFilenames[0];
+            uint32_t animWidth = 0, animHeight = 0;
+            if (!getPNGDimensions(bodyPath, animWidth, animHeight))
+            {
+                printf("AnimatedDataCharacter: WARNING: Cannot read dimensions from %s, skipping animation '%s'\n", bodyPath.c_str(), animName.c_str());
+                continue;
+            }
+
+            int framesPerDirection = animWidth / tileSize;
+            int directionCount = animHeight / tileSize;
+
+            printf("AnimatedDataCharacter: %s dimensions: %ux%u (frames: %d, directions: %d)\n",
+                   animName.c_str(), animWidth, animHeight, framesPerDirection, directionCount);
+
+            layouts.emplace_back(
+                animName, layerFilenames, tileSize, tileSize, framesPerDirection, directionCount,
+                std::vector<Direction>{Direction::UP, Direction::LEFT, Direction::DOWN, Direction::RIGHT});
+        }
+        cf_fs_free_enumerated_directory(animEntries);
     }
 
-    // Get dimensions for walkcycle animation
-    uint32_t walkcycle_width = 0, walkcycle_height = 0;
-    if (!getPNGDimensions(walkcycle_body_path, walkcycle_width, walkcycle_height))
+    if (layouts.empty())
     {
-        printf("AnimatedDataCharacter: ERROR: Cannot read dimensions from %s\n", walkcycle_body_path.c_str());
+        printf("AnimatedDataCharacter: ERROR: No animation folders found under %s\n", animSheetsRoot);
         return false;
     }
-
-    // Calculate frame counts dynamically
-    // Frames per direction = image_width / tile_size
-    // Number of directions = image_height / tile_size
-    int idle_frames_per_direction = idle_width / tileSize;
-    int idle_direction_count = idle_height / tileSize;
-
-    int walkcycle_frames_per_direction = walkcycle_width / tileSize;
-    int walkcycle_direction_count = walkcycle_height / tileSize;
-
-    printf("AnimatedDataCharacter: Idle dimensions: %ux%u (frames: %d, directions: %d)\n",
-           idle_width, idle_height, idle_frames_per_direction, idle_direction_count);
-    printf("AnimatedDataCharacter: Walkcycle dimensions: %ux%u (frames: %d, directions: %d)\n",
-           walkcycle_width, walkcycle_height, walkcycle_frames_per_direction, walkcycle_direction_count);
-
-    // Define the animation layouts using computed values and all layer filenames
-    std::vector<AnimationLayout> layouts = {
-        AnimationLayout(
-            "idle", layerFilenames, tileSize, tileSize, idle_frames_per_direction, idle_direction_count,
-            {Direction::UP, Direction::LEFT, Direction::DOWN, Direction::RIGHT}),
-        AnimationLayout(
-            "walkcycle", layerFilenames, tileSize, tileSize, walkcycle_frames_per_direction, walkcycle_direction_count,
-            {Direction::UP, Direction::LEFT, Direction::DOWN, Direction::RIGHT})};
 
     // Load the animation table using our new system
     animationTable = loader.loadAnimationTable("assets/Art/AnimationsSheets", layouts);
@@ -334,6 +334,7 @@ void AnimatedDataCharacter::update(float dt, v2 moveVector)
             currentAnimation = "walkcycle";
             currentFrame = 0;
             frameTimer = 0.0f;
+            currentAnimationLoops = true;
         }
     }
     else if (!isMoving && wasMoving)
@@ -343,9 +344,23 @@ void AnimatedDataCharacter::update(float dt, v2 moveVector)
             currentAnimation = "idle";
             currentFrame = 0;
             frameTimer = 0.0f;
+            currentAnimationLoops = true;
         }
     }
     wasMoving = isMoving;
+
+    // Play the active action's animation while it's executing (skip if not loaded, to avoid rendering nothing)
+    if (isDoingAction && activeAction && !activeAction->getInCooldown())
+    {
+        const std::string &actionAnimation = activeAction->getAnimation();
+        if (animationTable.hasAnimation(actionAnimation) && currentAnimation != actionAnimation)
+        {
+            currentAnimation = actionAnimation;
+            currentFrame = 0;
+            frameTimer = 0.0f;
+            currentAnimationLoops = activeAction->getLoopAnimation();
+        }
+    }
 
     // Handle manual animation input (allows user to override auto-switching with 1/2/SPACE keys)
     handleInput();
@@ -377,12 +392,14 @@ void AnimatedDataCharacter::handleInput()
         currentAnimation = "idle";
         currentFrame = 0;
         frameTimer = 0.0f;
+        currentAnimationLoops = true;
     }
     else if (animKey2)
     {
         currentAnimation = "walkcycle";
         currentFrame = 0;
         frameTimer = 0.0f;
+        currentAnimationLoops = true;
     }
 
     // Handle R key - reset position
@@ -413,9 +430,14 @@ void AnimatedDataCharacter::updateAnimation(float dt)
         // so any animation (idle, walkcycle, or future ones) wraps correctly regardless of length
         currentFrame++;
         int frameCount = anim->getFrameCount(currentDirection);
-        if (frameCount <= 0 || currentFrame >= frameCount)
+        if (frameCount <= 0)
         {
             currentFrame = 0;
+        }
+        else if (currentFrame >= frameCount)
+        {
+            // Non-looping animations (e.g. one-shot action animations) hold on the last frame
+            currentFrame = currentAnimationLoops ? 0 : frameCount - 1;
         }
     }
 }
@@ -442,6 +464,7 @@ void AnimatedDataCharacter::cycleAnimation()
 
     currentFrame = 0;
     frameTimer = 0.0f;
+    currentAnimationLoops = true;
 }
 
 // Render the demo

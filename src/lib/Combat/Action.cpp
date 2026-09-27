@@ -7,14 +7,14 @@
 #include <unordered_set>
 
 // Constructor that takes a folder path and loads action.json from that folder
-Action::Action(const std::string &folderPath) : hasHitbox(false), hitbox(nullptr), hitboxSize(32.0f), hitboxDistance(0.0f), isActive(false), character(nullptr), warmup_timer(0.0f), cooldown_timer(0.0f), in_cooldown(false), damage(nullptr), hasDamage(false)
+Action::Action(const std::string &folderPath) : hasHitbox(false), hitbox(nullptr), hitboxSize(32.0f), hitboxDistance(0.0f), isActive(false), character(nullptr), warmup_timer(0.0f), cooldown_timer(0.0f), in_cooldown(false), damage(nullptr), hasDamage(false), animation("melee_right_claw"), loopAnimation(false)
 {
     loadFromFolder(folderPath, hitboxSize, hitboxDistance);
 }
 
 // Constructor with custom hitbox size and distance
 Action::Action(const std::string &folderPath, float hitboxSize, float hitboxDistance)
-    : hasHitbox(false), hitbox(nullptr), hitboxSize(hitboxSize), hitboxDistance(hitboxDistance), isActive(false), character(nullptr), warmup_timer(0.0f), cooldown_timer(0.0f), in_cooldown(false), damage(nullptr), hasDamage(false)
+    : hasHitbox(false), hitbox(nullptr), hitboxSize(hitboxSize), hitboxDistance(hitboxDistance), isActive(false), character(nullptr), warmup_timer(0.0f), cooldown_timer(0.0f), in_cooldown(false), damage(nullptr), hasDamage(false), animation("melee_right_claw"), loopAnimation(false)
 {
     loadFromFolder(folderPath, hitboxSize, hitboxDistance);
 }
@@ -48,7 +48,9 @@ Action::Action(const Action &other)
       cooldown_timer(other.cooldown_timer),
       in_cooldown(other.in_cooldown),
       damage(nullptr),
-      hasDamage(other.hasDamage)
+      hasDamage(other.hasDamage),
+      animation(other.animation),
+      loopAnimation(other.loopAnimation)
 {
     // Deep copy the hitbox if it exists
     if (other.hitbox && hasHitbox)
@@ -95,6 +97,8 @@ Action &Action::operator=(const Action &other)
         cooldown_timer = other.cooldown_timer;
         in_cooldown = other.in_cooldown;
         hasDamage = other.hasDamage;
+        animation = other.animation;
+        loopAnimation = other.loopAnimation;
 
         // Deep copy the hitbox if it exists
         if (other.hitbox && hasHitbox)
@@ -148,6 +152,18 @@ bool Action::loadFromFolder(const std::string &folderPath, float hitboxSize, flo
     {
         hasDamage = false;
         damage = nullptr;
+    }
+
+    // Load animation name if present in action.json, otherwise keep the default
+    if (actionLoaded && contains("animation") && (*this)["animation"].is_string())
+    {
+        animation = (*this)["animation"].get<std::string>();
+    }
+
+    // Load loop_animation flag if present in action.json, otherwise keep the default (play once)
+    if (actionLoaded && contains("loop_animation") && (*this)["loop_animation"].is_boolean())
+    {
+        loopAnimation = (*this)["loop_animation"].get<bool>();
     }
 
     // Try to load hitbox.json if it exists
@@ -355,6 +371,16 @@ bool Action::hasDamageData() const
 Damage *Action::getDamage() const
 {
     return damage;
+}
+
+const std::string &Action::getAnimation() const
+{
+    return animation;
+}
+
+bool Action::getLoopAnimation() const
+{
+    return loopAnimation;
 }
 
 void Action::doDamage()
