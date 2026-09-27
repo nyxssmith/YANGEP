@@ -4,5 +4,6 @@
   "description": "A test action for demonstration purposes",
   "warmup": 1000,
   "cooldown": 3000,
-  "damage": 5.0
+  "damage": 5.0,
+  "animation": "melee_right_claw"
 }

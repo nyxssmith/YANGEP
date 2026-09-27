@@ -6,9 +6,10 @@ import subprocess
 import sys
 import tkinter as tk
 from pathlib import Path
-from tkinter import ttk
+from tkinter import messagebox, ttk
 
 PROJECT_DIR = Path(__file__).resolve().parent
+ANIMATION_CONFIG_DIR = PROJECT_DIR / "animation_configs"
 
 TOOLS = (
 	(
@@ -43,6 +44,39 @@ def launch(script_name: str) -> None:
 	subprocess.Popen([sys.executable, str(PROJECT_DIR / script_name)], cwd=PROJECT_DIR)
 
 
+def animation_config_names() -> list[str]:
+	return sorted(path.stem for path in ANIMATION_CONFIG_DIR.glob("*.json"))
+
+
+def open_edit_animation_picker(root: tk.Tk) -> None:
+	names = animation_config_names()
+	if not names:
+		messagebox.showerror("No animations", f"No animation config JSON files found in {ANIMATION_CONFIG_DIR}.")
+		return
+
+	dialog = tk.Toplevel(root)
+	dialog.title("Edit Animation")
+	dialog.resizable(False, False)
+	dialog.transient(root)
+	dialog.grab_set()
+
+	ttk.Label(dialog, text="Choose an animation to edit:").pack(anchor="w", padx=12, pady=(12, 4))
+	selected_name = tk.StringVar(value=names[0])
+	ttk.Combobox(dialog, textvariable=selected_name, values=names, state="readonly", width=30).pack(padx=12, pady=(0, 12), fill="x")
+
+	def confirm() -> None:
+		subprocess.Popen(
+			[sys.executable, str(PROJECT_DIR / "make_animation.py"), "--edit", selected_name.get()],
+			cwd=PROJECT_DIR,
+		)
+		dialog.destroy()
+
+	buttons = ttk.Frame(dialog)
+	buttons.pack(fill="x", padx=12, pady=(0, 12))
+	ttk.Button(buttons, text="Cancel", command=dialog.destroy).pack(side="right", padx=(6, 0))
+	ttk.Button(buttons, text="Edit", command=confirm).pack(side="right")
+
+
 class DevToolsLauncher:
 	def __init__(self, root: tk.Tk) -> None:
 		root.title("Crab Maker Dev Tools")
@@ -57,7 +91,11 @@ class DevToolsLauncher:
 			row = ttk.LabelFrame(container, text=title, padding=8)
 			row.pack(fill="x", pady=(0, 8))
 			ttk.Label(row, text=description, wraplength=420, justify="left").pack(anchor="w", pady=(0, 6))
-			ttk.Button(row, text="Launch", command=lambda script_name=script_name: launch(script_name)).pack(anchor="e")
+			button_row = ttk.Frame(row)
+			button_row.pack(anchor="e")
+			if title == "Make Animation":
+				ttk.Button(button_row, text="Edit Existing", command=lambda: open_edit_animation_picker(root)).pack(side="left", padx=(0, 6))
+			ttk.Button(button_row, text="Launch", command=lambda script_name=script_name: launch(script_name)).pack(side="left")
 
 
 def main() -> None:

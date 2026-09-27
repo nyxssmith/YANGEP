@@ -73,12 +73,19 @@ def load_crab_config(name: str) -> dict[str, Any]:
 class AnimationMapper:
 	"""Edit a sequence of body-local limb attachment points."""
 
-	def __init__(self, root: tk.Tk, animation_name: str, crab_config_name: str) -> None:
+	def __init__(
+		self,
+		root: tk.Tk,
+		animation_name: str,
+		crab_config_name: str,
+		direction: str = "up",
+		frames: list[dict[str, Any]] | None = None,
+	) -> None:
 		self.root = root
 		self.animation_name = animation_name
 		self.crab_config_name = tk.StringVar(value=crab_config_name)
 		self.crab_config: dict[str, str] = {}
-		self.direction = tk.StringVar(value="up")
+		self.direction = tk.StringVar(value=direction)
 		self.part_widgets: dict[str, ttk.Frame] = {}
 		self.body_config: dict[str, Any] = {}
 		self.part_configs: dict[str, dict[str, Any]] = {}
@@ -160,6 +167,11 @@ class AnimationMapper:
 		ttk.Label(playback_frame, text="Seconds / frame:").pack(anchor="w")
 		spf_spinbox = ttk.Spinbox(playback_frame, from_=0.05, to=10.0, increment=0.05, textvariable=self.spf_var, width=10)
 		spf_spinbox.pack(anchor="w", fill="x")
+
+		if frames:
+			self.frames = copy.deepcopy(frames)
+			self.current_frame_index = 0
+			self.set_current_points(self.frames[0]["attachment_points"])
 
 		self.redraw_canvas()
 
@@ -514,17 +526,39 @@ class AnimationMapper:
 		messagebox.showinfo("Animation saved", f"Saved {output_path.relative_to(PROJECT_DIR)}")
 
 
+def load_animation_config(name: str) -> dict[str, Any]:
+	with (ANIMATION_DIR / f"{name}.json").open(encoding="utf-8") as animation_file:
+		return json.load(animation_file)
+
+
 def main() -> None:
 	parser = argparse.ArgumentParser(description="Create a crab animation by posing a crab config's limbs.")
 	parser.add_argument("--name", help="Animation name and output JSON filename.")
 	parser.add_argument("--crab-config", help="Crab config name (from crab_configs/) to preview and pose.")
+	parser.add_argument("--edit", help="Existing animation config filename stem (from animation_configs/) to load and edit.")
 	args = parser.parse_args()
 
 	root = tk.Tk()
-	animation_name = args.name or simpledialog.askstring("Animation name", "Animation name (for example, walk):", parent=root)
-	if not animation_name:
-		root.destroy()
-		return
+
+	initial_direction = "up"
+	initial_frames: list[dict[str, Any]] | None = None
+
+	if args.edit:
+		try:
+			animation = load_animation_config(args.edit)
+		except FileNotFoundError:
+			messagebox.showerror("Animation not found", f"No animation config named {args.edit!r} in {ANIMATION_DIR}.")
+			root.destroy()
+			return
+		animation_name = animation["name"]
+		initial_direction = animation.get("direction", "up")
+		initial_frames = animation.get("frames", [])
+	else:
+		animation_name = args.name or simpledialog.askstring("Animation name", "Animation name (for example, walk):", parent=root)
+		if not animation_name:
+			root.destroy()
+			return
+		animation_name = animation_name.strip()
 
 	configs = crab_config_names()
 	if not configs:
@@ -533,7 +567,7 @@ def main() -> None:
 		return
 	crab_config_name = args.crab_config if args.crab_config in configs else configs[0]
 
-	AnimationMapper(root, animation_name.strip(), crab_config_name)
+	AnimationMapper(root, animation_name, crab_config_name, direction=initial_direction, frames=initial_frames)
 	root.mainloop()
 
 

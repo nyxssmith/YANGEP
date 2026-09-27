@@ -1,0 +1,126 @@
+{
+  "name": "walkcycle",
+  "direction": "left",
+  "frames": [
+    {
+      "name": "frame_1",
+      "attachment_points": {
+        "left_front_leg": {
+          "x": 34,
+          "y": 39,
+          "rotation": 0.0
+        },
+        "left_middle_leg": {
+          "x": 42,
+          "y": 42,
+          "rotation": 0.0
+        },
+        "left_rear_leg": {
+          "x": 52,
+          "y": 42,
+          "rotation": 0.0
+        },
+        "left_claw": {
+          "x": 27,
+          "y": 31,
+          "rotation": 0.0
+        },
+        "right_claw": {
+          "x": 27,
+          "y": 31,
+          "rotation": 0.0
+        }
+      }
+    },
+    {
+      "name": "frame_2",
+      "attachment_points": {
+        "left_front_leg": {
+          "x": 34,
+          "y": 39,
+          "rotation": -67.22891566265059
+        },
+        "left_middle_leg": {
+          "x": 42,
+          "y": 42,
+          "rotation": 34.6987951807229
+        },
+        "left_rear_leg": {
+          "x": 52,
+          "y": 42,
+          "rotation": -52.048192771084345
+        },
+        "left_claw": {
+          "x": 27,
+          "y": 31,
+          "rotation": 0.0
+        },
+        "right_claw": {
+          "x": 27,
+          "y": 31,
+          "rotation": 0.0
+        }
+      }
+    },
+    {
+      "name": "frame_3",
+      "attachment_points": {
+        "left_front_leg": {
+          "x": 34,
+          "y": 39,
+          "rotation": -13.01204819277109
+        },
+        "left_middle_leg": {
+          "x": 42,
+          "y": 42,
+          "rotation": -8.674698795180717
+        },
+        "left_rear_leg": {
+          "x": 52,
+          "y": 42,
+          "rotation": -13.01204819277109
+        },
+        "left_claw": {
+          "x": 27,
+          "y": 31,
+          "rotation": 0.0
+        },
+        "right_claw": {
+          "x": 27,
+          "y": 31,
+          "rotation": 0.0
+        }
+      }
+    },
+    {
+      "name": "frame_4",
+      "attachment_points": {
+        "left_front_leg": {
+          "x": 34,
+          "y": 39,
+          "rotation": 13.01204819277109
+        },
+        "left_middle_leg": {
+          "x": 42,
+          "y": 42,
+          "rotation": -65.06024096385543
+        },
+        "left_rear_leg": {
+          "x": 52,
+          "y": 42,
+          "rotation": 36.8674698795181
+        },
+        "left_claw": {
+          "x": 27,
+          "y": 31,
+          "rotation": 0.0
+        },
+        "right_claw": {
+          "x": 27,
+          "y": 31,
+          "rotation": 0.0
+        }
+      }
+    }
+  ]
+}

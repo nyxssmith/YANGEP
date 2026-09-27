@@ -11,15 +11,16 @@ using namespace Cute;
 
 // Mute verbose sprite loader logs unless enabled.
 static bool g_sprite_loader_verbose = false;
-static int s_printf(const char* fmt, ...)
+static int s_printf(const char *fmt, ...)
 {
-	if (!g_sprite_loader_verbose) return 0;
-	va_list args;
-	va_start(args, fmt);
-	int r = vprintf(fmt, args);
-	va_end(args);
-	fflush(stdout);
-	return r;
+    if (!g_sprite_loader_verbose)
+        return 0;
+    va_list args;
+    va_start(args, fmt);
+    int r = vprintf(fmt, args);
+    va_end(args);
+    fflush(stdout);
+    return r;
 }
 #define printf s_printf
 
@@ -478,6 +479,19 @@ const AnimationFrame *Animation::getFrame(int frameIndex) const
         }
     }
     return nullptr;
+}
+
+int Animation::getFrameCount(Direction direction) const
+{
+    int count = 0;
+    for (const auto &frame : frames)
+    {
+        if (frame.direction == direction)
+        {
+            count++;
+        }
+    }
+    return count;
 }
 
 void Animation::calculateDuration()
