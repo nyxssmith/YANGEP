@@ -74,7 +74,8 @@ AnimatedDataCharacter::~AnimatedDataCharacter()
     // Cleanup character hitbox if it exists
     if (characterHitbox)
     {
-        delete characterHitbox;
+        // TODO properly delete the hitbox, but rn it crashes
+        // delete characterHitbox;
         characterHitbox = nullptr;
     }
 } // Initialize the character with a folder path containing character.json
