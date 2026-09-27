@@ -1,4 +1,15 @@
 {
-  "state_machines": ["wander", "go_to_2_2_example"],
+  "state_machines": [
+    "wander",
+    "go_to_2_2_example",
+    {
+      "name": "goto 2",
+      "states": [
+        { "name": "wait", "inputs": { "ms": 3000 } },
+        { "name": "wander_new_position", "inputs": { "tiles_radius": 10 } },
+        { "name": "move_to_position" }
+      ]
+    }
+  ],
   "default_state_machine": "wander"
 }
