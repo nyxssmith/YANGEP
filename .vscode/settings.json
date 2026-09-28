@@ -84,5 +84,6 @@
         "cfenv": "cpp",
         "typeinfo": "cpp",
         "variant": "cpp"
-    }
+    },
+    "lmstudioCode.minContextLength": 131072
 }

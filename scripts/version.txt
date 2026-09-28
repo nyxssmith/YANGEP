@@ -1,1 +1,1 @@
-0.0.28-nyx-steamdeck-camera-view-changes-b0f0506
+0.0.29-crabgame-d51df26

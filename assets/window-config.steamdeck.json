@@ -31,11 +31,12 @@
     "highlightCharacterHitboxes": false,
     "highlightCoordinatorInfo": false,
     "ShowFPSMetrics": true,
-    "ShowJobMetrics": true,
+    "ShowJobMetrics": false,
     "ShowPlayerInfo": false,
     "ShowCoordinatorInfo": false,
     "ShowInputInfo": false,
     "RecordInputInfo": false,
-    "clickToInspectCharacter": false
+    "clickToInspectCharacter": false,
+    "ShowSceneSwitcherWindow": true
   }
 }
