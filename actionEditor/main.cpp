@@ -1260,7 +1260,8 @@ int main(int argc, char *argv[])
         // cull dying agents to dead, so they are removed next update loop
         level.cullDyingAgents();
 
-        app_draw_onto_screen();
+        // Must clear: the viewport can extend past the map, and the app canvas persists between frames.
+        app_draw_onto_screen(true);
     }
 
     // Shutdown on-screen checks worker
