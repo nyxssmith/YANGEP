@@ -19,7 +19,10 @@
     }
   ],
   "Debug": {
+    "clickToInspectCharacter": true,
+    "clickToCreateEntity": true,
     "debugwindow_scale": 2.0,
+    "highlightTileUnderCursor": true,
     "highlightViewport": true,
     "highlightNavmesh": false,
     "highlightNavMeshPaths": false,
@@ -38,7 +41,6 @@
     "ShowCoordinatorInfo": false,
     "ShowInputInfo": false,
     "RecordInputInfo": false,
-    "clickToInspectCharacter": true,
     "ShowAtlasLabeler": false,
     "ShowSceneSwitcherWindow": true
   }

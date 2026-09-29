@@ -44,6 +44,8 @@ private:
     bool debugHighlightCoordinatorInfo;
     bool debugHighlightPlayerNavmeshCollisionBox;
     bool clickToInspectCharacter;
+    bool clickToCreateEntity;
+    bool debugHighlightTileUnderCursor;
     float debugEntityScale;
     std::unique_ptr<DebugSceneSwitcherWindow> debugSceneSwitcherWindow;
     DebugWindowList debugWindows;

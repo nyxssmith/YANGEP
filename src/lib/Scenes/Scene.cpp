@@ -317,7 +317,8 @@ void Scene::mainLoopLevel()
     //}
 
     // Handle mouse click for character inspection
-    if (clickToInspectCharacter && cf_mouse_just_pressed(CF_MOUSE_BUTTON_LEFT))
+    int debugHighlightTileX, debugHighlightTileY;
+    if (debugHighlightTileUnderCursor || (((clickToInspectCharacter || clickToCreateEntity) && cf_mouse_just_pressed(CF_MOUSE_BUTTON_LEFT))))
     {
         // Get mouse position in window coordinates
         float mouseWindowX = cf_mouse_x();
@@ -368,45 +369,55 @@ void Scene::mainLoopLevel()
                 int mapHeight = level->getLevelMap().getMapHeight();
                 int renderTileX = tmxTileX;
                 int renderTileY = mapHeight - 1 - tmxTileY;
-
-                printf("Mouse Click - Screen: (%.1f, %.1f) | World: (%.1f, %.1f) | Tile: (%d, %d)\n",
-                       mouseWindowX, mouseWindowY, mouseWorldPos.x, mouseWorldPos.y, renderTileX, renderTileY);
-
-                // Get all entities at this tile
-                auto entities = level->get_entities_at(renderTileX, renderTileY);
-                if (entities.empty())
+                // export these calculated render tile coordinates for debugging purposes
+                debugHighlightTileX = renderTileX;
+                debugHighlightTileY = renderTileY;
+                if ((clickToInspectCharacter || clickToCreateEntity) && cf_mouse_just_pressed(CF_MOUSE_BUTTON_LEFT))
                 {
-                    printf("  No entities at tile (%d, %d)\n", renderTileX, renderTileY);
-                }
-                else
-                {
-                    printf("  Entities at tile (%d, %d):\n", renderTileX, renderTileY);
-                    for (auto *entity : entities)
+
+                    printf("Mouse Click - Screen: (%.1f, %.1f) | World: (%.1f, %.1f) | Tile: (%d, %d)\n",
+                           mouseWindowX, mouseWindowY, mouseWorldPos.x, mouseWorldPos.y, renderTileX, renderTileY);
+
+                    // Get all entities at this tile
+                    auto entities = level->get_entities_at(renderTileX, renderTileY);
+                    if (entities.empty())
                     {
-                        printf("    - %s\n", entity->getDataFilePath().c_str());
-
-                        // Check if we already have a window tracking this entity
-                        bool alreadyTracking = false;
-                        for (const auto &window : characterInfoWindows)
+                        printf("  No entities at tile (%d, %d)\n", renderTileX, renderTileY);
+                        if (clickToCreateEntity)
                         {
-                            if (window->isTracking(entity))
+                            printf("  Click to create entity is enabled\n");
+                        }
+                    }
+                    else
+                    {
+                        printf("  Entities at tile (%d, %d):\n", renderTileX, renderTileY);
+                        for (auto *entity : entities)
+                        {
+                            printf("    - %s\n", entity->getDataFilePath().c_str());
+
+                            // Check if we already have a window tracking this entity
+                            bool alreadyTracking = false;
+                            for (const auto &window : characterInfoWindows)
                             {
-                                alreadyTracking = true;
-                                break;
+                                if (window->isTracking(entity))
+                                {
+                                    alreadyTracking = true;
+                                    break;
+                                }
                             }
-                        }
 
-                        // Create a new debug window for this entity if not already tracking
-                        if (!alreadyTracking)
-                        {
-                            std::string windowTitle = "Character Info: " + entity->getDataFilePath();
-                            auto newWindow = std::make_unique<DebugCharacterInfoWindow>(windowTitle, entity, *level);
-                            characterInfoWindows.push_back(std::move(newWindow));
-                            printf("      Created debug window for entity\n");
-                        }
-                        else
-                        {
-                            printf("      Already tracking this entity\n");
+                            // Create a new debug window for this entity if not already tracking
+                            if (!alreadyTracking)
+                            {
+                                std::string windowTitle = "Character Info: " + entity->getDataFilePath();
+                                auto newWindow = std::make_unique<DebugCharacterInfoWindow>(windowTitle, entity, *level);
+                                characterInfoWindows.push_back(std::move(newWindow));
+                                printf("      Created debug window for entity\n");
+                            }
+                            else
+                            {
+                                printf("      Already tracking this entity\n");
+                            }
                         }
                     }
                 }
@@ -771,6 +782,13 @@ void Scene::mainLoopLevel()
 
     // Render everything: tiles, action hitboxes, agents, and player
     level->render(*cfCamera, windowConfig, &playerCharacter, 0.0f, 0.0f);
+
+    // if highlight is turned on
+    if (debugHighlightTileUnderCursor)
+    {
+        CF_Color highlightColor = cf_make_color_rgb(199, 21, 133); // Medium violet red
+        highlightTile(*level, debugHighlightTileX, debugHighlightTileY, highlightColor);
+    }
 
     if (fpsWindow)
     {

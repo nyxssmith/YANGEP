@@ -88,6 +88,8 @@ bool SceneManager::LoadScene(const std::string &scene_name)
     currentScene->setHighlightCoordinatorInfo(debugHighlightCoordinatorInfo);
     currentScene->setHighlightPlayerNavmeshCollisionBox(debugHighlightPlayerNavmeshCollisionBox);
     currentScene->setClickToInspectCharacter(clickToInspectCharacter);
+    currentScene->setClickToCreateEntity(clickToCreateEntity);
+    currentScene->setHighlightTileUnderCursor(debugHighlightTileUnderCursor);
     return true;
 }
 
@@ -210,6 +212,16 @@ void SceneManager::SharedSetup(int windowWidth, int windowHeight)
         {
             clickToInspectCharacter = debug["clickToInspectCharacter"];
             printf("Debug clickToInspectCharacter: %s\n", clickToInspectCharacter ? "enabled" : "disabled");
+        }
+        if (debug.contains("clickToCreateEntity"))
+        {
+            clickToCreateEntity = debug["clickToCreateEntity"];
+            printf("Debug clickToCreateEntity: %s\n", clickToCreateEntity ? "enabled" : "disabled");
+        }
+        if (debug.contains("highlightTileUnderCursor"))
+        {
+            debugHighlightTileUnderCursor = debug["highlightTileUnderCursor"];
+            printf("Debug highlightTileUnderCursor: %s\n", debugHighlightTileUnderCursor ? "enabled" : "disabled");
         }
     }
 

@@ -68,6 +68,8 @@ public:
     void setHighlightCoordinatorInfo(bool value) { debugHighlightCoordinatorInfo = value; }
     void setHighlightPlayerNavmeshCollisionBox(bool value) { debugHighlightPlayerNavmeshCollisionBox = value; }
     void setClickToInspectCharacter(bool value) { clickToInspectCharacter = value; }
+    void setClickToCreateEntity(bool value) { clickToCreateEntity = value; }
+    void setHighlightTileUnderCursor(bool value) { debugHighlightTileUnderCursor = value; }
     void setDebugEntityScale(float value) { debugEntityScale = value; }
     void setDebugWindows(DebugWindowList &value) { debugWindows = std::move(value); }
     void setAtlasLabeler(const AtlasLabelerWindow &value) { atlasLabeler = value; }
@@ -110,6 +112,8 @@ private:
     bool debugHighlightCoordinatorInfo = false;
     bool debugHighlightPlayerNavmeshCollisionBox = false;
     bool clickToInspectCharacter = false;
+    bool clickToCreateEntity = false;
+    bool debugHighlightTileUnderCursor = false;
     float debugEntityScale = 0.0f;
     DebugWindowList debugWindows;
     AtlasLabelerWindow atlasLabeler;
