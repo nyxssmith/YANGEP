@@ -21,7 +21,7 @@
   "Debug": {
     "debugwindow_scale": 2.0,
     "highlightViewport": true,
-    "highlightNavmesh": true,
+    "highlightNavmesh": false,
     "highlightNavMeshPaths": false,
     "highlightAgents": false,
     "highlightSpatialGrid": false,

@@ -80,6 +80,13 @@ bool SceneManager::LoadScene(const std::string &scene_name)
     currentScene->setCharacterInfoWindows(characterInfoWindows);
     currentScene->setRecordInputInfo(recordInputInfo);
     currentScene->setInputLogFile(inputLogFile);
+    currentScene->setHighlightSpatialGrid(debugHighlightSpatialGrid);
+    currentScene->setHighlightNavmesh(debugHighlightNavmesh);
+    currentScene->setHighlightNavMeshPaths(debughighlightNavMeshPaths);
+    currentScene->setHighlightAgents(debugHighlightAgents);
+    currentScene->setHighlightCharacterHitboxes(debugHighlightCharacterHitboxes);
+    currentScene->setHighlightCoordinatorInfo(debugHighlightCoordinatorInfo);
+    currentScene->setHighlightPlayerNavmeshCollisionBox(debugHighlightPlayerNavmeshCollisionBox);
     return true;
 }
 
