@@ -10,4 +10,4 @@ strange FPS dips down to 30 fps and then back to 600s (was 800+ w/o height sorti
 need to allow action to ignore hitting agents 
 debug window referencing character crashes if character is destroyed
 need to decide if diagonal/combined movement is allowed (is with controller, not with kb for now, need to make it a toggle in window-config)
-debug window config options are not wired correctly, need to make sure right var is going from window-config -> scene manager -> scene 
+scene-swither debug window edit mode cant set windowconfig for the next scene, need to make it work

@@ -98,6 +98,16 @@ Scene *SceneManager::GetcurrentScene()
     return currentScene.get();
 }
 
+void SceneManager::SetDebugWindowConfigOption(const std::string &key, const bool &value)
+{
+    // override the in-memory window configuration with the new key-value pair
+    windowConfig["Debug"][key] = value;
+}
+
+void SceneManager::ReloadWindowConfig()
+{
+    windowConfig = DataFile("/assets/window-config.json");
+}
 void SceneManager::SharedSetup(int windowWidth, int windowHeight)
 {
     // Set shader directory for runtime-compiled draw shaders
@@ -106,7 +116,7 @@ void SceneManager::SharedSetup(int windowWidth, int windowHeight)
     ShaderRegistry::registerAndLoadAll();
 
     // Load window configuration again using VFS for viewport and debug windows
-    windowConfig = DataFile("/assets/window-config.json");
+    ReloadWindowConfig();
 
     // Read viewport dimensions from config (defaults to window size)
     viewportWidth = (float)windowWidth;
@@ -359,7 +369,7 @@ void SceneManager::SharedSetup(int windowWidth, int windowHeight)
         }
     }
 
-    debugSceneSwitcherWindow = std::make_unique<DebugSceneSwitcherWindow>("Scene Switcher");
+    debugSceneSwitcherWindow = std::make_unique<DebugSceneSwitcherWindow>("Scene Switcher", *this);
 
     // Input recording setup
     bool recordInputInfo = false;

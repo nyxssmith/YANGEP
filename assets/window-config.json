@@ -19,10 +19,10 @@
     }
   ],
   "Debug": {
-    "clickToInspectCharacter": true,
-    "clickToCreateEntity": true,
+    "clickToInspectCharacter": false,
+    "clickToCreateEntity": false,
     "debugwindow_scale": 2.0,
-    "highlightTileUnderCursor": true,
+    "highlightTileUnderCursor": false,
     "highlightViewport": true,
     "highlightNavmesh": false,
     "highlightNavMeshPaths": false,

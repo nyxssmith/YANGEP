@@ -1,10 +1,11 @@
 #include "DebugSceneSwitcherWindow.h"
+#include "DebugCharacterInfoWindow.h"
 #include <algorithm>
 #include <filesystem>
 #include <imgui.h>
 
-DebugSceneSwitcherWindow::DebugSceneSwitcherWindow(const std::string &title)
-    : DebugWindow(title)
+DebugSceneSwitcherWindow::DebugSceneSwitcherWindow(const std::string &title, SceneManager &sceneManager)
+    : DebugWindow(title), m_sceneManager(sceneManager)
 {
     const std::filesystem::path scenesDirectory("assets/DataFiles/Scenes");
     std::error_code error;
@@ -29,10 +30,38 @@ void DebugSceneSwitcherWindow::render()
     {
         for (const auto &scene : m_scenes)
         {
-            if (ImGui::Button(scene.c_str()))
+            // Push a unique ID for this row so ImGui doesn't confuse the "Play"/"Edit" buttons
+            ImGui::PushID(scene.c_str());
+
+            // 1. Scene Name Label
+            ImGui::Text("%s", scene.c_str());
+
+            // 2. Play Button
+            ImGui::SameLine(200.0f); // Adjust this float to align the buttons nicely in a column
+            if (ImGui::Button("Play"))
             {
+                // Separate code before doing the current action
+                // ... do play prep work here ...
+                // reload window config from disk
+                m_sceneManager.ReloadWindowConfig();
                 m_requestedScene = scene;
             }
+
+            // 3. Edit Button
+            ImGui::SameLine();
+            if (ImGui::Button("Edit"))
+            {
+                // Separate code before doing the current action
+                // ... do edit prep work here ...
+                m_sceneManager.SetDebugWindowConfigOption("clickToInspectCharacter", true);
+                m_sceneManager.SetDebugWindowConfigOption("clickToCreateEntity", true);
+                m_sceneManager.SetDebugWindowConfigOption("highlightTileUnderCursor", true);
+                // TODO make these actually persist and work
+
+                m_requestedScene = scene;
+            }
+
+            ImGui::PopID();
         }
     }
     ImGui::End();
@@ -40,7 +69,7 @@ void DebugSceneSwitcherWindow::render()
 
 std::string DebugSceneSwitcherWindow::takeRequestedScene()
 {
-    std::string requestedScene = std::move(m_requestedScene);
+    std::string requested = std::move(m_requestedScene);
     m_requestedScene.clear();
-    return requestedScene;
+    return requested;
 }

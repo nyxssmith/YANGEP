@@ -18,12 +18,14 @@ public:
     // get info
     Scene *GetcurrentScene();
     const Scene *GetcurrentScene() const;
-
+    void ReloadWindowConfig();
     void SharedSetup(int windowWidth, int windowHeight);
     void Setup();
     bool MainLoop(); // return true if app should keep running
     void Cleanup();
     void SharedCleanup();
+
+    void SetDebugWindowConfigOption(const std::string &key, const bool &value);
 
 private:
     // used for scene switching
