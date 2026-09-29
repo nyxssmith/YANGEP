@@ -4,6 +4,7 @@
 #include "StateMachine.h"
 #include <cute.h>
 #include <cstdio>
+#include <format>
 
 using namespace Cute;
 
@@ -337,6 +338,15 @@ bool AnimatedDataCharacterNavMeshAgent::loadStateMachinesFromFolder(const std::s
             std::string stateMachineName = stateMachineJson.get<std::string>();
             std::string stateMachinePath = "assets/DataFiles/StateMachines/" + stateMachineName + ".json";
 
+            // std::string stateMachinePath = stateMachinesPath;
+            // if assets/Levels in the statemachinespath, then parse the level from it, and then use the relative path to locate the state machine file
+            if (stateMachinesPath.find("assets/Levels") != std::string::npos)
+            {
+                size_t pos = stateMachinesPath.find("/Levels/");
+                std::string_view levelName = (pos != std::string_view::npos) ? stateMachinesPath.substr(pos + 8, stateMachinesPath.find('/', pos + 8) - (pos + 8)) : "";
+                stateMachinePath = std::format("/assets/Levels/{}/DataFiles/StateMachines/{}.json", levelName, stateMachineName);
+            }
+
             // Load the state machine file
             DataFile stateMachineFile;
             if (!stateMachineFile.load(stateMachinePath))
@@ -384,11 +394,13 @@ bool AnimatedDataCharacterNavMeshAgent::loadStateMachinesFromFolder(const std::s
     return true;
 }
 
-bool AnimatedDataCharacterNavMeshAgent::getIsOnScreen() const {
+bool AnimatedDataCharacterNavMeshAgent::getIsOnScreen() const
+{
     return isOnScreen;
 }
 
 // Set on-screen visibility (for internal use)
-void AnimatedDataCharacterNavMeshAgent::setIsOnScreen(bool visible) {
+void AnimatedDataCharacterNavMeshAgent::setIsOnScreen(bool visible)
+{
     this->isOnScreen = visible;
 }

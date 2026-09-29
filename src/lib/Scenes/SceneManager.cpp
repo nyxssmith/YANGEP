@@ -87,6 +87,7 @@ bool SceneManager::LoadScene(const std::string &scene_name)
     currentScene->setHighlightCharacterHitboxes(debugHighlightCharacterHitboxes);
     currentScene->setHighlightCoordinatorInfo(debugHighlightCoordinatorInfo);
     currentScene->setHighlightPlayerNavmeshCollisionBox(debugHighlightPlayerNavmeshCollisionBox);
+    currentScene->setClickToInspectCharacter(clickToInspectCharacter);
     return true;
 }
 

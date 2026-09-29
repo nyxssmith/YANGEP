@@ -1,0 +1,4 @@
+{
+  "state_machines": ["another_wander"],
+  "default_state_machine": "another_wander"
+}
