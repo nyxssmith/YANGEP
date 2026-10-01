@@ -98,67 +98,13 @@ Scene *SceneManager::GetcurrentScene()
     return currentScene.get();
 }
 
-void SceneManager::SetDebugWindowConfigOption(const std::string &key, const bool &value)
-{
-    // override the in-memory window configuration with the new key-value pair
-    windowConfig["Debug"][key] = value;
-}
-
 void SceneManager::ReloadWindowConfig()
 {
     windowConfig = DataFile("/assets/window-config.json");
 }
-void SceneManager::SharedSetup(int windowWidth, int windowHeight)
+
+void SceneManager::SetDebugVariablesFromWindowConfig()
 {
-    // Set shader directory for runtime-compiled draw shaders
-    cf_shader_directory("/assets/shaders");
-    // Register and compile shaders at boot
-    ShaderRegistry::registerAndLoadAll();
-
-    // Load window configuration again using VFS for viewport and debug windows
-    ReloadWindowConfig();
-
-    // Read viewport dimensions from config (defaults to window size)
-    viewportWidth = (float)windowWidth;
-    viewportHeight = (float)windowHeight;
-    viewportZoom = 1.0f;            // Default zoom level
-    debugHighlightViewport = false; // Default: don't highlight viewport
-
-    if (windowConfig.contains("window"))
-    {
-        auto &window = windowConfig["window"];
-
-        // Check for viewportScale first - if present, multiply window dimensions
-        if (window.contains("viewportScale"))
-        {
-            float viewportScale = window["viewportScale"];
-            viewportWidth = (float)windowWidth * viewportScale;
-            viewportHeight = (float)windowHeight * viewportScale;
-            printf("Using viewport scale %.2f: viewport=%.0fx%.0f (window=%dx%d)\n",
-                   viewportScale, viewportWidth, viewportHeight, windowWidth, windowHeight);
-        }
-        // Otherwise, check for explicit viewport dimensions
-        else if (window.contains("viewportWidth") && window.contains("viewportHeight"))
-        {
-            viewportWidth = window["viewportWidth"];
-            viewportHeight = window["viewportHeight"];
-            printf("Loaded viewport config: %.0fx%.0f\n", viewportWidth, viewportHeight);
-        }
-        else
-        {
-            printf("No viewport size in config, using window size: %.0fx%.0f\n", viewportWidth, viewportHeight);
-        }
-
-        if (window.contains("viewportZoom"))
-        {
-            viewportZoom = window["viewportZoom"];
-            printf("Loaded viewport zoom: %.2f\n", viewportZoom);
-        }
-    }
-
-    // Create the single shared camera instance, sized for this viewport/zoom.
-    // Scenes point at this instance (via setCfCamera) so it survives scene swaps.
-    cfCamera = CFNativeCamera(cf_v2(0.0f, 0.0f), viewportZoom, viewportWidth, viewportHeight);
 
     // Read debug options from config
     debugHighlightNavmesh = false;                   // Default: don't highlight navmesh
@@ -234,6 +180,61 @@ void SceneManager::SharedSetup(int windowWidth, int windowHeight)
             printf("Debug highlightTileUnderCursor: %s\n", debugHighlightTileUnderCursor ? "enabled" : "disabled");
         }
     }
+}
+void SceneManager::SharedSetup(int windowWidth, int windowHeight)
+{
+    // Set shader directory for runtime-compiled draw shaders
+    cf_shader_directory("/assets/shaders");
+    // Register and compile shaders at boot
+    ShaderRegistry::registerAndLoadAll();
+
+    // Load window configuration again using VFS for viewport and debug windows
+    ReloadWindowConfig();
+
+    // Read viewport dimensions from config (defaults to window size)
+    viewportWidth = (float)windowWidth;
+    viewportHeight = (float)windowHeight;
+    viewportZoom = 1.0f;            // Default zoom level
+    debugHighlightViewport = false; // Default: don't highlight viewport
+
+    if (windowConfig.contains("window"))
+    {
+        auto &window = windowConfig["window"];
+
+        // Check for viewportScale first - if present, multiply window dimensions
+        if (window.contains("viewportScale"))
+        {
+            float viewportScale = window["viewportScale"];
+            viewportWidth = (float)windowWidth * viewportScale;
+            viewportHeight = (float)windowHeight * viewportScale;
+            printf("Using viewport scale %.2f: viewport=%.0fx%.0f (window=%dx%d)\n",
+                   viewportScale, viewportWidth, viewportHeight, windowWidth, windowHeight);
+        }
+        // Otherwise, check for explicit viewport dimensions
+        else if (window.contains("viewportWidth") && window.contains("viewportHeight"))
+        {
+            viewportWidth = window["viewportWidth"];
+            viewportHeight = window["viewportHeight"];
+            printf("Loaded viewport config: %.0fx%.0f\n", viewportWidth, viewportHeight);
+        }
+        else
+        {
+            printf("No viewport size in config, using window size: %.0fx%.0f\n", viewportWidth, viewportHeight);
+        }
+
+        if (window.contains("viewportZoom"))
+        {
+            viewportZoom = window["viewportZoom"];
+            printf("Loaded viewport zoom: %.2f\n", viewportZoom);
+        }
+    }
+
+    // Create the single shared camera instance, sized for this viewport/zoom.
+    // Scenes point at this instance (via setCfCamera) so it survives scene swaps.
+    cfCamera = CFNativeCamera(cf_v2(0.0f, 0.0f), viewportZoom, viewportWidth, viewportHeight);
+
+    // set debug options
+    SetDebugVariablesFromWindowConfig();
 
     // Create debug window list and populate from config
     // DebugWindowList debugWindows;

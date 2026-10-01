@@ -19,13 +19,17 @@ public:
     Scene *GetcurrentScene();
     const Scene *GetcurrentScene() const;
     void ReloadWindowConfig();
+    void SetDebugVariablesFromWindowConfig();
     void SharedSetup(int windowWidth, int windowHeight);
     void Setup();
     bool MainLoop(); // return true if app should keep running
     void Cleanup();
     void SharedCleanup();
 
-    void SetDebugWindowConfigOption(const std::string &key, const bool &value);
+    // debug options controlled by the scene switcher window
+    bool clickToInspectCharacter;
+    bool clickToCreateEntity;
+    bool debugHighlightTileUnderCursor;
 
 private:
     // used for scene switching
@@ -45,9 +49,7 @@ private:
     bool debugHighlightSpatialGrid;
     bool debugHighlightCoordinatorInfo;
     bool debugHighlightPlayerNavmeshCollisionBox;
-    bool clickToInspectCharacter;
-    bool clickToCreateEntity;
-    bool debugHighlightTileUnderCursor;
+
     float debugEntityScale;
     std::unique_ptr<DebugSceneSwitcherWindow> debugSceneSwitcherWindow;
     DebugWindowList debugWindows;

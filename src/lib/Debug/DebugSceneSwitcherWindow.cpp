@@ -44,6 +44,7 @@ void DebugSceneSwitcherWindow::render()
                 // ... do play prep work here ...
                 // reload window config from disk
                 m_sceneManager.ReloadWindowConfig();
+                m_sceneManager.SetDebugVariablesFromWindowConfig();
                 m_requestedScene = scene;
             }
 
@@ -53,11 +54,9 @@ void DebugSceneSwitcherWindow::render()
             {
                 // Separate code before doing the current action
                 // ... do edit prep work here ...
-                m_sceneManager.SetDebugWindowConfigOption("clickToInspectCharacter", true);
-                m_sceneManager.SetDebugWindowConfigOption("clickToCreateEntity", true);
-                m_sceneManager.SetDebugWindowConfigOption("highlightTileUnderCursor", true);
-                // TODO make these actually persist and work
-
+                m_sceneManager.clickToCreateEntity = true;
+                m_sceneManager.clickToInspectCharacter = true;
+                m_sceneManager.debugHighlightTileUnderCursor = true;
                 m_requestedScene = scene;
             }
 
