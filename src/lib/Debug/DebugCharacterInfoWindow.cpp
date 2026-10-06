@@ -30,6 +30,22 @@ void DebugCharacterInfoWindow::render()
     ImGui::TextWrapped("%s", m_character->getDataFilePath().c_str());
     ImGui::Unindent();
 
+    // Add button to open character data file window
+    if (m_character)
+    {
+        if (ImGui::Button("Open Datafile Window"))
+        {
+            m_debugWindowList->add(m_character->getDataFilePath());
+        }
+        if (ImGui::Button("Re-Init"))
+        {
+            // get folder path and re-init the character
+            const std::string &dataFilePath = m_character->getDataFilePath();
+            std::string folderPath = dataFilePath.substr(0, dataFilePath.find_last_of("/\\"));
+            m_character->init(folderPath);
+        }
+    }
+
     ImGui::Separator();
 
     // Get character world position
@@ -92,7 +108,7 @@ void DebugCharacterInfoWindow::render()
     // Create combo box with stage options (null-separated string)
     int currentStageIndex = static_cast<int>(currentStage);
 
-    const char* stageNames[] = {"Alive", "Dying", "Dead"};
+    const char *stageNames[] = {"Alive", "Dying", "Dead"};
     if (ImGui::Combo("##StageOfLife", &currentStageIndex, stageNames, 3))
     {
         // User changed the selection, update the character's stage

@@ -1,10 +1,22 @@
 #include "DebugWindowList.h"
+#include "DataFileDebugWindow.h"
 #include <stdio.h>
+
+DebugWindowEntry::DebugWindowEntry(int id, const std::string &path)
+    : id(id), filepath(path)
+{
+}
+DebugWindowEntry::~DebugWindowEntry() = default;
+DebugWindowEntry::DebugWindowEntry(DebugWindowEntry &&) noexcept = default;
+DebugWindowEntry &DebugWindowEntry::operator=(DebugWindowEntry &&) noexcept = default;
 
 DebugWindowList::DebugWindowList()
     : m_nextID(1)
 {
 }
+DebugWindowList::~DebugWindowList() = default;
+DebugWindowList::DebugWindowList(DebugWindowList &&) noexcept = default;
+DebugWindowList &DebugWindowList::operator=(DebugWindowList &&) noexcept = default;
 
 int DebugWindowList::add(const std::string &filepath)
 {

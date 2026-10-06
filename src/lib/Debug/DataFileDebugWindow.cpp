@@ -545,15 +545,16 @@ void DataFileDebugWindow::render()
         }
 
         ImGui::Separator();
+        ImGui::Text("Window <-> In-Memory JSON");
 
         // JSON synchronization controls
-        if (ImGui::Button("Update JSON from Fields"))
+        if (ImGui::Button("Save Window -> JSON"))
         {
             updateJsonFromLines();
         }
 
         ImGui::SameLine(0, 10);
-        if (ImGui::Button("Refresh from JSON"))
+        if (ImGui::Button("Refresh JSON -> Window"))
         {
             populateFromJson();
         }
@@ -574,7 +575,9 @@ void DataFileDebugWindow::render()
         }
 
         ImGui::SameLine(0, 10);
-        if (ImGui::Button("Reload from File"))
+        ImGui::Text("Memory <-> File");
+
+        if (ImGui::Button("Reload from File (reread then JSON -> Window)"))
         {
             if (m_dataFile.load())
             {

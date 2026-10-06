@@ -87,6 +87,9 @@ bool SceneManager::LoadScene(const std::string &scene_name)
     currentScene->setHighlightCharacterHitboxes(debugHighlightCharacterHitboxes);
     currentScene->setHighlightCoordinatorInfo(debugHighlightCoordinatorInfo);
     currentScene->setHighlightPlayerNavmeshCollisionBox(debugHighlightPlayerNavmeshCollisionBox);
+    currentScene->setClickToInspectCharacter(clickToInspectCharacter);
+    currentScene->setClickToCreateEntity(clickToCreateEntity);
+    currentScene->setHighlightTileUnderCursor(debugHighlightTileUnderCursor);
     return true;
 }
 
@@ -95,57 +98,13 @@ Scene *SceneManager::GetcurrentScene()
     return currentScene.get();
 }
 
-void SceneManager::SharedSetup(int windowWidth, int windowHeight)
+void SceneManager::ReloadWindowConfig()
 {
-    // Set shader directory for runtime-compiled draw shaders
-    cf_shader_directory("/assets/shaders");
-    // Register and compile shaders at boot
-    ShaderRegistry::registerAndLoadAll();
-
-    // Load window configuration again using VFS for viewport and debug windows
     windowConfig = DataFile("/assets/window-config.json");
+}
 
-    // Read viewport dimensions from config (defaults to window size)
-    viewportWidth = (float)windowWidth;
-    viewportHeight = (float)windowHeight;
-    viewportZoom = 1.0f;            // Default zoom level
-    debugHighlightViewport = false; // Default: don't highlight viewport
-
-    if (windowConfig.contains("window"))
-    {
-        auto &window = windowConfig["window"];
-
-        // Check for viewportScale first - if present, multiply window dimensions
-        if (window.contains("viewportScale"))
-        {
-            float viewportScale = window["viewportScale"];
-            viewportWidth = (float)windowWidth * viewportScale;
-            viewportHeight = (float)windowHeight * viewportScale;
-            printf("Using viewport scale %.2f: viewport=%.0fx%.0f (window=%dx%d)\n",
-                   viewportScale, viewportWidth, viewportHeight, windowWidth, windowHeight);
-        }
-        // Otherwise, check for explicit viewport dimensions
-        else if (window.contains("viewportWidth") && window.contains("viewportHeight"))
-        {
-            viewportWidth = window["viewportWidth"];
-            viewportHeight = window["viewportHeight"];
-            printf("Loaded viewport config: %.0fx%.0f\n", viewportWidth, viewportHeight);
-        }
-        else
-        {
-            printf("No viewport size in config, using window size: %.0fx%.0f\n", viewportWidth, viewportHeight);
-        }
-
-        if (window.contains("viewportZoom"))
-        {
-            viewportZoom = window["viewportZoom"];
-            printf("Loaded viewport zoom: %.2f\n", viewportZoom);
-        }
-    }
-
-    // Create the single shared camera instance, sized for this viewport/zoom.
-    // Scenes point at this instance (via setCfCamera) so it survives scene swaps.
-    cfCamera = CFNativeCamera(cf_v2(0.0f, 0.0f), viewportZoom, viewportWidth, viewportHeight);
+void SceneManager::SetDebugVariablesFromWindowConfig()
+{
 
     // Read debug options from config
     debugHighlightNavmesh = false;                   // Default: don't highlight navmesh
@@ -210,7 +169,72 @@ void SceneManager::SharedSetup(int windowWidth, int windowHeight)
             clickToInspectCharacter = debug["clickToInspectCharacter"];
             printf("Debug clickToInspectCharacter: %s\n", clickToInspectCharacter ? "enabled" : "disabled");
         }
+        if (debug.contains("clickToCreateEntity"))
+        {
+            clickToCreateEntity = debug["clickToCreateEntity"];
+            printf("Debug clickToCreateEntity: %s\n", clickToCreateEntity ? "enabled" : "disabled");
+        }
+        if (debug.contains("highlightTileUnderCursor"))
+        {
+            debugHighlightTileUnderCursor = debug["highlightTileUnderCursor"];
+            printf("Debug highlightTileUnderCursor: %s\n", debugHighlightTileUnderCursor ? "enabled" : "disabled");
+        }
     }
+}
+void SceneManager::SharedSetup(int windowWidth, int windowHeight)
+{
+    // Set shader directory for runtime-compiled draw shaders
+    cf_shader_directory("/assets/shaders");
+    // Register and compile shaders at boot
+    ShaderRegistry::registerAndLoadAll();
+
+    // Load window configuration again using VFS for viewport and debug windows
+    ReloadWindowConfig();
+
+    // Read viewport dimensions from config (defaults to window size)
+    viewportWidth = (float)windowWidth;
+    viewportHeight = (float)windowHeight;
+    viewportZoom = 1.0f;            // Default zoom level
+    debugHighlightViewport = false; // Default: don't highlight viewport
+
+    if (windowConfig.contains("window"))
+    {
+        auto &window = windowConfig["window"];
+
+        // Check for viewportScale first - if present, multiply window dimensions
+        if (window.contains("viewportScale"))
+        {
+            float viewportScale = window["viewportScale"];
+            viewportWidth = (float)windowWidth * viewportScale;
+            viewportHeight = (float)windowHeight * viewportScale;
+            printf("Using viewport scale %.2f: viewport=%.0fx%.0f (window=%dx%d)\n",
+                   viewportScale, viewportWidth, viewportHeight, windowWidth, windowHeight);
+        }
+        // Otherwise, check for explicit viewport dimensions
+        else if (window.contains("viewportWidth") && window.contains("viewportHeight"))
+        {
+            viewportWidth = window["viewportWidth"];
+            viewportHeight = window["viewportHeight"];
+            printf("Loaded viewport config: %.0fx%.0f\n", viewportWidth, viewportHeight);
+        }
+        else
+        {
+            printf("No viewport size in config, using window size: %.0fx%.0f\n", viewportWidth, viewportHeight);
+        }
+
+        if (window.contains("viewportZoom"))
+        {
+            viewportZoom = window["viewportZoom"];
+            printf("Loaded viewport zoom: %.2f\n", viewportZoom);
+        }
+    }
+
+    // Create the single shared camera instance, sized for this viewport/zoom.
+    // Scenes point at this instance (via setCfCamera) so it survives scene swaps.
+    cfCamera = CFNativeCamera(cf_v2(0.0f, 0.0f), viewportZoom, viewportWidth, viewportHeight);
+
+    // set debug options
+    SetDebugVariablesFromWindowConfig();
 
     // Create debug window list and populate from config
     // DebugWindowList debugWindows;
@@ -346,7 +370,7 @@ void SceneManager::SharedSetup(int windowWidth, int windowHeight)
         }
     }
 
-    debugSceneSwitcherWindow = std::make_unique<DebugSceneSwitcherWindow>("Scene Switcher");
+    debugSceneSwitcherWindow = std::make_unique<DebugSceneSwitcherWindow>("Scene Switcher", *this);
 
     // Input recording setup
     bool recordInputInfo = false;
