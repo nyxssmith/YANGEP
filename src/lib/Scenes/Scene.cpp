@@ -411,6 +411,7 @@ void Scene::mainLoopLevel()
                             {
                                 std::string windowTitle = "Character Info: " + entity->getDataFilePath();
                                 auto newWindow = std::make_unique<DebugCharacterInfoWindow>(windowTitle, entity, *level);
+                                newWindow->setDebugWindowList(&debugWindows);
                                 characterInfoWindows.push_back(std::move(newWindow));
                                 printf("      Created debug window for entity\n");
                             }

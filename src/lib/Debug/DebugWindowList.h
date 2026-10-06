@@ -1,10 +1,12 @@
 #pragma once
-#include "DataFileDebugWindow.h"
+// Forward declaration used instead of including the full header to reduce compilation dependencies
+// #include "DataFileDebugWindow.h"
 #include "DataFile.h"
 #include <string>
 #include <vector>
 #include <memory>
 
+class DataFileDebugWindow;
 struct DebugWindowEntry
 {
     int id;
@@ -12,23 +14,25 @@ struct DebugWindowEntry
     std::unique_ptr<DataFile> dataFile;
     std::unique_ptr<DataFileDebugWindow> window;
 
-    DebugWindowEntry(int id, const std::string &path)
-        : id(id), filepath(path)
-    {
-    }
+    DebugWindowEntry(int id, const std::string &path);
+    // defaulted in the .cpp where DataFileDebugWindow is a complete type
+    ~DebugWindowEntry();
+    DebugWindowEntry(DebugWindowEntry &&) noexcept;
+    DebugWindowEntry &operator=(DebugWindowEntry &&) noexcept;
 };
 
 class DebugWindowList
 {
 public:
     DebugWindowList();
-    ~DebugWindowList() = default;
+    // defaulted in the .cpp where DataFileDebugWindow is a complete type
+    ~DebugWindowList();
 
     // m_windows holds move-only entries; only allow moving the whole list.
     DebugWindowList(const DebugWindowList &) = delete;
     DebugWindowList &operator=(const DebugWindowList &) = delete;
-    DebugWindowList(DebugWindowList &&) = default;
-    DebugWindowList &operator=(DebugWindowList &&) = default;
+    DebugWindowList(DebugWindowList &&) noexcept;
+    DebugWindowList &operator=(DebugWindowList &&) noexcept;
 
     // Add a new debug window for a file path
     // Returns the ID of the added window, or -1 if failed
