@@ -144,14 +144,25 @@ struct AnimationTable
 class SpriteAnimationLoader
 {
 private:
-    // Cache loaded PNG data to avoid reloading
-    std::map<std::string, std::vector<uint8_t>> pngCache;
+    // A PNG decoded once to RGBA8; every frame is cropped from this
+    struct DecodedPNG
+    {
+        int width = 0;
+        int height = 0;
+        std::vector<uint8_t> rgba;
+    };
 
-    // Load PNG file and cache it
+    // Cache of decoded PNGs so each sheet is read and decoded at most once
+    std::map<std::string, DecodedPNG> pngCache;
+
+    // Cache of finished animation tables, keyed by sheets root + layer files + tile size
+    std::map<std::string, std::shared_ptr<const AnimationTable>> tableCache;
+
+    // Read and decode a PNG, then cache it
     bool loadAndCachePNG(const std::string &png_path);
 
-    // Get cached PNG data
-    const std::vector<uint8_t> *getCachedPNG(const std::string &png_path) const;
+    // Get cached decoded PNG
+    const DecodedPNG *getCachedPNG(const std::string &png_path) const;
 
 public:
     SpriteAnimationLoader();
@@ -182,7 +193,17 @@ public:
     AnimationTable loadAnimationTable(const std::string &base_path,
                                       const std::vector<AnimationLayout> &layouts);
 
-    // Clear PNG cache
+    // Get (building on first request) the animation table for a character. Discovers every
+    // animation folder under sheets_root and decodes PNGs lazily; later callers with the same
+    // layers/tile size share the result instead of reloading.
+    std::shared_ptr<const AnimationTable> getCharacterAnimationTable(const std::string &sheets_root,
+                                                                     const std::vector<std::string> &layer_filenames,
+                                                                     int tile_size);
+
+    // Get dimensions of a PNG (decodes and caches it if needed)
+    bool getPNGDimensions(const std::string &png_path, uint32_t &width, uint32_t &height);
+
+    // Clear PNG and animation table caches
     void clearCache();
 
     // Get cache statistics

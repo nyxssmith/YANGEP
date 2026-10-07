@@ -38,6 +38,9 @@ public:
     AnimatedDataCharacter();
     virtual ~AnimatedDataCharacter();
 
+    // Set the scene-owned loader used to fetch animations. Must be called before init().
+    void setSpriteAnimationLoader(SpriteAnimationLoader *spriteLoader) { loader = spriteLoader; }
+
     // Initialize the character with a folder path containing character.json
     virtual bool init(const std::string &folderPath);
 
@@ -150,14 +153,14 @@ protected:
     Inventory inventory;
 
 private:
-    // The animation loader
-    SpriteAnimationLoader loader;
+    // Shared animation loader/cache owned by the scene (not owned here)
+    SpriteAnimationLoader *loader = nullptr;
 
     // DataFile containing character configuration
     DataFile datafile;
 
-    // Animation table containing all skeleton animations
-    AnimationTable animationTable;
+    // Animation table shared between all characters using the same layers
+    std::shared_ptr<const AnimationTable> animationTable;
 
     // Current animation state
     std::string currentAnimation;

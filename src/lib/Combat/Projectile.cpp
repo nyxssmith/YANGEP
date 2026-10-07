@@ -25,5 +25,5 @@ void Projectile::update(float dt, v2 ignoredMoveVector)
         CF_Aabb characterBox = characterHitbox->getBoundingBox(currentDirection, position);
         insideActionHitbox = level->isCharacterInActionHitbox(this, characterBox);
     }
-    printf("Inside action hitbox: %d\n", insideActionHitbox);
+    // printf("Inside action hitbox: %d\n", insideActionHitbox);
 }

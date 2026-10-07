@@ -131,6 +131,8 @@ private:
     bool showNavMesh;
     bool hud_inventory_open = false;
     // objects used by level scenes
+    // Declared first so it outlives the level and characters that use it
+    SpriteAnimationLoader spriteAnimationLoader;
     std::unique_ptr<LevelV1> level;
     std::unique_ptr<DebugPlayerInfoWindow> playerInfoWindow;
     std::unique_ptr<DebugCoordinatorWindow> coordinatorWindow;

@@ -26,6 +26,9 @@ class AnimatedDataCharacter;
 class LevelV1
 {
 private:
+    // Scene-owned sprite/animation cache shared by every agent and projectile created here (non-owning)
+    SpriteAnimationLoader *spriteLoader;
+
     std::string levelDirectory;
     std::string levelName;
 
@@ -61,8 +64,9 @@ public:
     /**
      * Constructor - initializes all level components from a directory
      * @param directoryPath Path to the level directory (e.g., "/assets/Levels/test_two")
+     * @param spriteLoader Scene-owned animation loader/cache used for all characters spawned by this level
      */
-    explicit LevelV1(const std::string &directoryPath);
+    explicit LevelV1(const std::string &directoryPath, SpriteAnimationLoader *spriteLoader);
 
     /**
      * Destructor

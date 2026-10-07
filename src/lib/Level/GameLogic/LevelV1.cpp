@@ -9,8 +9,8 @@
 #include <cstdio>
 
 // LevelV1 implementation
-LevelV1::LevelV1(const std::string &directoryPath)
-    : levelDirectory(directoryPath), levelName(""), levelMap(nullptr), navmesh(nullptr), entities(), details(), tileWidth(0), tileHeight(0), initialized(false), player(nullptr)
+LevelV1::LevelV1(const std::string &directoryPath, SpriteAnimationLoader *spriteLoader)
+    : spriteLoader(spriteLoader), levelDirectory(directoryPath), levelName(""), levelMap(nullptr), navmesh(nullptr), entities(), details(), tileWidth(0), tileHeight(0), initialized(false), player(nullptr)
 {
     printf("LevelV1: Loading level from directory: %s\n", directoryPath.c_str());
 
@@ -346,6 +346,7 @@ AnimatedDataCharacterNavMeshAgent *LevelV1::addAgent(std::unique_ptr<AnimatedDat
 AnimatedDataCharacterNavMeshAgent *LevelV1::createAgentFromFile(const std::string &entityDataPath)
 {
     auto agent = std::make_unique<AnimatedDataCharacterNavMeshAgent>();
+    agent->setSpriteAnimationLoader(spriteLoader);
 
     if (!agent->init(entityDataPath))
     {
@@ -385,6 +386,7 @@ std::unique_ptr<Projectile> LevelV1::createProjectileFromFile(const std::string 
 {
     // agent is projectile
     auto agent = std::make_unique<Projectile>();
+    agent->setSpriteAnimationLoader(spriteLoader);
 
     if (!agent->init(entityDataPath))
     {
@@ -829,7 +831,6 @@ void LevelV1::render(const CFNativeCamera &camera, const DataFile &config, Anima
 
     // 2. Action hitboxes (player and agents)
     renderAgentActions(camera, player);
-    renderProjectiles(camera);
 
     // if player is not doing an action
     // render player available actions
@@ -874,6 +875,8 @@ void LevelV1::render(const CFNativeCamera &camera, const DataFile &config, Anima
                 levelMap->renderSingleLayer(structure->getTMXLayer(), camera, config, worldX, worldY);
             }
         } });
+    // projectiles on top of all
+    renderProjectiles(camera);
 }
 
 void LevelV1::debugPrint() const

@@ -400,6 +400,9 @@ void Action::doTileActionInUpdate()
 
 void Action::doProjectileActionInUpdate()
 {
+    // start time
+    auto start = std::chrono::high_resolution_clock::now();
+
     // Placeholder for projectile action logic
     // spawn a projectile here and add it to the level
     printf("sSpawning projectile\n");
@@ -438,6 +441,10 @@ void Action::doProjectileActionInUpdate()
             }
         }
     }
+
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> elapsed = end - start;
+    printf("Action: Projectile action update took %.3f ms\n", elapsed.count());
 }
 void Action::renderHitbox(CF_Color color, float border_opacity, float fill_opacity)
 {
