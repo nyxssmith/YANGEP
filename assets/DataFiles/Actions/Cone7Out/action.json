@@ -1,5 +1,6 @@
 {
   "name": "cone",
+  "type": "tile",
   "version": "1.0.0",
   "description": "A test action for demonstration purposes",
   "warmup": 10,

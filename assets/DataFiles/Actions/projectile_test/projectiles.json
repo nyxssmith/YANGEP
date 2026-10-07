@@ -1,0 +1,5 @@
+{
+  "projectiles": [
+    { "speed": 100.0, "entity": "projectile_test_entity", "angle": 0.0 }
+  ]
+}

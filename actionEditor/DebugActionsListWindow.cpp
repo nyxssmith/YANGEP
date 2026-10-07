@@ -178,14 +178,14 @@ bool DebugActionsListWindow::createNewAction(const std::string &actionName)
     }
 
     // Create default hitbox.json directly to filesystem
-    nlohmann::json hitboxData;
+    nlohmann::json actionAuxData;
     nlohmann::json tiles = nlohmann::json::array();
     nlohmann::json defaultTile;
     defaultTile["x"] = 1;
     defaultTile["y"] = 0;
     defaultTile["damage_modifier"] = 1.0f;
     tiles.push_back(defaultTile);
-    hitboxData["tiles"] = tiles;
+    actionAuxData["tiles"] = tiles;
 
     std::string hitboxFilePath = realPath + "/hitbox.json";
     try
@@ -196,7 +196,7 @@ bool DebugActionsListWindow::createNewAction(const std::string &actionName)
             printf("DebugActionsListWindow: Failed to open %s for writing\n", hitboxFilePath.c_str());
             return false;
         }
-        hitboxFile << hitboxData.dump(2);
+        hitboxFile << actionAuxData.dump(2);
         hitboxFile.close();
         printf("DebugActionsListWindow: Created %s\n", hitboxFilePath.c_str());
     }

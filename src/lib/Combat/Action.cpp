@@ -2,6 +2,7 @@
 #include "HitBox.h"
 #include "AnimatedDataCharacter.h"
 #include "LevelV1.h"
+#include "Projectile.h"
 #include "../UI/ColorUtils.h"
 #include <cute.h>
 #include <unordered_set>
@@ -32,12 +33,13 @@ Action::~Action()
         delete damage;
         damage = nullptr;
     }
+    delete projectilesData;
 }
 
 // Copy constructor
 Action::Action(const Action &other)
     : DataFile(other), // Copy base class
-      hitboxData(other.hitboxData),
+      actionAuxData(other.actionAuxData),
       hasHitbox(other.hasHitbox),
       hitbox(nullptr),
       hitboxSize(other.hitboxSize),
@@ -50,12 +52,14 @@ Action::Action(const Action &other)
       damage(nullptr),
       hasDamage(other.hasDamage),
       animation(other.animation),
-      loopAnimation(other.loopAnimation)
+      loopAnimation(other.loopAnimation),
+      type(other.type),
+      projectilesData(other.projectilesData ? new ProjectilesData(*other.projectilesData) : nullptr)
 {
     // Deep copy the hitbox if it exists
     if (other.hitbox && hasHitbox)
     {
-        hitbox = HitBox::createHitBoxFromJson(hitboxData, hitboxSize, hitboxDistance);
+        hitbox = HitBox::createHitBoxFromJson(actionAuxData, hitboxSize, hitboxDistance);
     }
     // Deep copy the damage if it exists
     if (other.damage && hasDamage)
@@ -85,9 +89,11 @@ Action &Action::operator=(const Action &other)
             delete damage;
             damage = nullptr;
         }
+        delete projectilesData;
+        projectilesData = nullptr;
 
         // Copy members
-        hitboxData = other.hitboxData;
+        actionAuxData = other.actionAuxData;
         hasHitbox = other.hasHitbox;
         hitboxSize = other.hitboxSize;
         hitboxDistance = other.hitboxDistance;
@@ -99,11 +105,16 @@ Action &Action::operator=(const Action &other)
         hasDamage = other.hasDamage;
         animation = other.animation;
         loopAnimation = other.loopAnimation;
+        type = other.type;
+        if (other.projectilesData)
+        {
+            projectilesData = new ProjectilesData(*other.projectilesData);
+        }
 
         // Deep copy the hitbox if it exists
         if (other.hitbox && hasHitbox)
         {
-            hitbox = HitBox::createHitBoxFromJson(hitboxData, hitboxSize, hitboxDistance);
+            hitbox = HitBox::createHitBoxFromJson(actionAuxData, hitboxSize, hitboxDistance);
         }
 
         // Deep copy the damage if it exists
@@ -154,6 +165,16 @@ bool Action::loadFromFolder(const std::string &folderPath, float hitboxSize, flo
         damage = nullptr;
     }
 
+    // load type
+    if (actionLoaded && contains("type") && (*this)["type"].is_string())
+    {
+        std::string typeStr = (*this)["type"].get<std::string>();
+        if (typeStr == "tile")
+            type = tile;
+        else if (typeStr == "projectile")
+            type = projectile;
+    }
+
     // Load animation name if present in action.json, otherwise keep the default
     if (actionLoaded && contains("animation") && (*this)["animation"].is_string())
     {
@@ -166,42 +187,82 @@ bool Action::loadFromFolder(const std::string &folderPath, float hitboxSize, flo
         loopAnimation = (*this)["loop_animation"].get<bool>();
     }
 
-    // Try to load hitbox.json if it exists
-    std::string hitboxJsonPath = normalizedPath + "hitbox.json";
-    hasHitbox = hitboxData.load(hitboxJsonPath);
-
-    if (hasHitbox)
+    // if type is tile
+    if (type == tile)
     {
-        printf("Action: Loaded hitbox data from %s\n", hitboxJsonPath.c_str());
+        // Try to load hitbox.json if it exists
+        std::string hitboxJsonPath = normalizedPath + "hitbox.json";
+        hasHitbox = actionAuxData.load(hitboxJsonPath);
 
-        // Clean up existing hitbox if any
-        if (hitbox)
+        if (hasHitbox)
         {
-            delete hitbox;
-            hitbox = nullptr;
+            printf("Action: Loaded hitbox data from %s\n", hitboxJsonPath.c_str());
+
+            // Clean up existing hitbox if any
+            if (hitbox)
+            {
+                delete hitbox;
+                hitbox = nullptr;
+            }
+
+            // Create HitBox from JSON data
+            hitbox = HitBox::createHitBoxFromJson(actionAuxData, hitboxSize, hitboxDistance);
+
+            if (hitbox)
+            {
+                printf("Action: Created HitBox with %zu tiles\n", hitbox->getTiles().size());
+            }
+            else
+            {
+                printf("Action: Warning - Failed to create HitBox from JSON data\n");
+                hasHitbox = false;
+            }
+        }
+    }
+    if (type == projectile)
+    {
+        std::string projectileJsonPath = normalizedPath + "projectiles.json";
+        bool hasProj = actionAuxData.load(projectileJsonPath);
+        if (!hasProj || !actionAuxData.contains("projectiles") || !actionAuxData["projectiles"].is_array())
+        {
+            printf("Action: Warning - Missing or invalid projectiles array in %s\n", projectileJsonPath.c_str());
+            return false;
         }
 
-        // Create HitBox from JSON data
-        hitbox = HitBox::createHitBoxFromJson(hitboxData, hitboxSize, hitboxDistance);
-
-        if (hitbox)
+        if (projectilesData == nullptr)
         {
-            printf("Action: Created HitBox with %zu tiles\n", hitbox->getTiles().size());
+            projectilesData = new ProjectilesData();
         }
         else
         {
-            printf("Action: Warning - Failed to create HitBox from JSON data\n");
-            hasHitbox = false;
+            projectilesData->projectiles.clear();
+        }
+
+        for (const auto &projectileJson : actionAuxData["projectiles"])
+        {
+            if (!projectileJson.is_object() ||
+                !projectileJson.contains("speed") || !projectileJson["speed"].is_number() ||
+                !projectileJson.contains("angle") || !projectileJson["angle"].is_number() ||
+                !projectileJson.contains("entity") || !projectileJson["entity"].is_string())
+            {
+                printf("Action: Warning - Invalid projectile entry in %s\n", projectileJsonPath.c_str());
+                projectilesData->projectiles.clear();
+                return false;
+            }
+
+            projectilesData->projectiles.push_back({projectileJson["speed"].get<float>(),
+                                                    projectileJson["angle"].get<float>(),
+                                                    projectileJson["entity"].get<std::string>()});
         }
     }
-
+    // TODO handle projectile type
     return actionLoaded;
 }
 
 // Get hitbox data
 const DataFile &Action::getHitboxData() const
 {
-    return hitboxData;
+    return actionAuxData;
 }
 
 bool Action::hasHitboxData() const
@@ -292,9 +353,10 @@ void Action::update(float dt)
         {
             printf("Action: Warmup complete (%.3f ms)\n", warmupMs);
 
-            // Do damage when warmup completes
-            doDamage();
-
+            if (type == tile)
+                doTileActionInUpdate();
+            if (type == projectile)
+                doProjectileActionInUpdate();
             warmup_timer = 0.0f;
             in_cooldown = true;
 
@@ -330,6 +392,53 @@ void Action::update(float dt)
     }
 }
 
+void Action::doTileActionInUpdate()
+{
+    // Placeholder for tile action logic
+    doDamage();
+}
+
+void Action::doProjectileActionInUpdate()
+{
+    // Placeholder for projectile action logic
+    // spawn a projectile here and add it to the level
+    printf("sSpawning projectile\n");
+    // for each projectile in projectilesData
+    std::string entityPath; // path data for spawning
+                            // Get tile coordinates of character doing action
+    float tileX = this->character->getPosition().x;
+    float tileY = this->character->getPosition().y;
+    if (projectilesData)
+    {
+        for (auto &proj : projectilesData->projectiles)
+        {
+            entityPath = "/assets/DataFiles/Entities/" + proj.entity;
+            printf("Spawning %s\n", proj.entity.c_str());
+            // Create the agent
+
+            std::unique_ptr<Projectile> newProjectile = this->character->level->createProjectileFromFile(entityPath);
+
+            // The level takes ownership; use the returned pointer from here on
+            Projectile *projectileAgent = newProjectile ? this->character->level->addProjectile(std::move(newProjectile)) : nullptr;
+
+            if (projectileAgent)
+            {
+                // Convert tile coordinates to world pixel coordinates
+                // Multiply by tile dimensions to get world position
+                float worldX = tileX * this->character->level->getTileWidth();
+                float worldY = tileY * this->character->level->getTileHeight();
+
+                // TODO calc direction and offset and then apply the speed as the magnitude to the normal vector
+                projectileAgent->setMoveVector(cf_v2(proj.speed, 0));
+                projectileAgent->setPosition(cf_v2(tileX, tileY));
+                printf("Action:   Set projectile position to tile (%.1f, %.1f) = world (%.1f, %.1f)\n",
+                       tileX, tileY, worldX, worldY);
+
+                printf("Action:   Projectile '%s' created\n", entityPath.c_str());
+            }
+        }
+    }
+}
 void Action::renderHitbox(CF_Color color, float border_opacity, float fill_opacity)
 {
     // Check if we have a hitbox and character to render

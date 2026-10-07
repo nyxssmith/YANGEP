@@ -725,6 +725,7 @@ void Scene::mainLoopLevel()
         fpsWindow->markSection("Player Input");
     }
     level->updateAgents(dt);
+    level->updateProjectiles(dt);
 
     if (fpsWindow)
     {

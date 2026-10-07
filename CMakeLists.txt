@@ -156,6 +156,7 @@ add_executable(
 	src/lib/Character/StateMachines/States/GoToTilePositionState.cpp
 	src/lib/Combat/HitBox.cpp
 	src/lib/Combat/Action.cpp
+	src/lib/Combat/Projectile.cpp
 	src/lib/Combat/Damage.cpp
 	src/lib/Combat/ABActions.cpp
 	src/lib/JobSystem/JobSystem.cpp
@@ -275,6 +276,7 @@ add_executable(
 	src/lib/Character/StateMachines/States/GoToTilePositionState.cpp
 	src/lib/Combat/HitBox.cpp
 	src/lib/Combat/Action.cpp
+	src/lib/Combat/Projectile.cpp
 	src/lib/Combat/Damage.cpp
 	src/lib/Combat/ABActions.cpp
 	src/lib/JobSystem/JobSystem.cpp

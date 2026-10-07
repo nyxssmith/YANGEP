@@ -9,7 +9,7 @@
 #include "SpatialGrid.h"
 #include "AnimatedDataCharacterNavMeshAgent.h"
 #include "WorldPositionRenderedObjectsList.h"
-
+#include "Projectile.h"
 // Forward declarations
 class CFNativeCamera;
 class AnimatedDataCharacter;
@@ -39,6 +39,7 @@ private:
 
     // NavMesh agents in this level
     std::vector<std::unique_ptr<AnimatedDataCharacterNavMeshAgent>> agents;
+    std::vector<std::unique_ptr<Projectile>> projectiles;
 
     // Spatial partitioning grid for efficient queries
     SpatialGrid spatialGrid;
@@ -128,6 +129,7 @@ public:
      * @return Raw pointer to the added agent (for reference, level owns the agent)
      */
     AnimatedDataCharacterNavMeshAgent *addAgent(std::unique_ptr<AnimatedDataCharacterNavMeshAgent> agent);
+    Projectile *addProjectile(std::unique_ptr<Projectile> agent);
 
     /**
      * Create and add a NavMesh agent from an entity data file
@@ -135,7 +137,8 @@ public:
      * @return Raw pointer to the created agent, or nullptr if creation failed
      */
     AnimatedDataCharacterNavMeshAgent *createAgentFromFile(const std::string &entityDataPath);
-
+    // Creates an initialized projectile; the caller hands it to addProjectile() to give the level ownership
+    std::unique_ptr<Projectile> createProjectileFromFile(const std::string &entityDataPath);
     /**
      * Get the number of agents in the level
      * @return Number of agents
@@ -218,6 +221,7 @@ public:
      * @param dt Delta time in seconds
      */
     void updateAgents(float dt);
+    void updateProjectiles(float dt);
 
     /**
      * Set all dying agents to dead state
@@ -255,6 +259,7 @@ public:
      * @param camera Camera to use for viewport culling
      */
     void renderAgents(const CFNativeCamera &camera);
+    void renderProjectiles(const CFNativeCamera &camera);
 
     /**
      * Render all layers of the level map, agents, actions, and player

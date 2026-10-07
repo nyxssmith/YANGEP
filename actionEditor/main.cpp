@@ -923,11 +923,11 @@ int main(int argc, char *argv[])
                     }
 
                     // Load the hitbox.json file from VFS
-                    DataFile hitboxData(hitboxVFSPath);
+                    DataFile actionAuxData(hitboxVFSPath);
 
-                    if (hitboxData.contains("tiles") && hitboxData["tiles"].is_array())
+                    if (actionAuxData.contains("tiles") && actionAuxData["tiles"].is_array())
                     {
-                        auto &tiles = hitboxData["tiles"];
+                        auto &tiles = actionAuxData["tiles"];
 
                         // Check if this tile already exists
                         bool tileExists = false;
@@ -972,7 +972,7 @@ int main(int argc, char *argv[])
                             std::ofstream hitboxFile(hitboxRealPath);
                             if (hitboxFile.is_open())
                             {
-                                hitboxFile << hitboxData.dump(2);
+                                hitboxFile << actionAuxData.dump(2);
                                 hitboxFile.close();
                                 printf("Saved hitbox changes to %s\n", hitboxRealPath.c_str());
 

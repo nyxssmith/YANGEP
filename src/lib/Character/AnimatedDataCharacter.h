@@ -39,7 +39,7 @@ public:
     virtual ~AnimatedDataCharacter();
 
     // Initialize the character with a folder path containing character.json
-    bool init(const std::string &folderPath);
+    virtual bool init(const std::string &folderPath);
 
     // Update demo state with a move vector
     void update(float dt, v2 moveVector);
@@ -141,6 +141,9 @@ public:
     void setKeysPressed(int index, bool pressed);
     bool getAnimationKeys(int index) const;
     void setAnimationKeys(int index, bool pressed);
+    // projectiles need access to these
+    Direction currentDirection;
+    LevelV1 *level; // Pointer to level for agent queries
 
 protected:
     // Inventory - character's item inventory
@@ -158,7 +161,6 @@ private:
 
     // Current animation state
     std::string currentAnimation;
-    Direction currentDirection;
     int currentFrame;
     float frameTimer;
     bool currentAnimationLoops; // false holds on the last frame instead of looping back to 0
@@ -197,7 +199,6 @@ protected:
     float hitboxDistance;
     HitBox *characterHitbox; // Character's footprint hitbox
     HitboxShape hitboxShape; // for constructor
-    LevelV1 *level;          // Pointer to level for agent queries
 
     // ActionsList - list of actions for this character
     std::vector<Action> actionsList;
