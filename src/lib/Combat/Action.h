@@ -4,6 +4,7 @@
 #include "Damage.h"
 #include <string>
 #include <cute.h>
+#include "SpriteAnimationLoader.h"
 
 enum ActionType
 {
@@ -70,6 +71,7 @@ public:
     void update(float dt);
     void doTileActionInUpdate();
     void doProjectileActionInUpdate();
+    Cute::v2 getProjectileMoveVector(Direction dir, float speed, float angle);
     void renderHitbox(CF_Color color, float border_opacity = 0.9f, float fill_opacity = 0.4f);
 
     // Character association

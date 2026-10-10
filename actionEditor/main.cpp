@@ -198,7 +198,8 @@ int main(int argc, char *argv[])
     }
 
     // Create LevelV1 instance - handles all TMX and NavMesh initialization
-    LevelV1 level("/assets/Levels/actionEditor");
+    SpriteAnimationLoader spriteAnimationLoader;
+    LevelV1 level("/assets/Levels/actionEditor", &spriteAnimationLoader);
 
     if (!level.isInitialized())
     {
@@ -344,6 +345,7 @@ int main(int argc, char *argv[])
     printf("Player starting at tile (%.1f, %.1f) = world (%.1f, %.1f)\n",
            startTileX, startTileY, startWorldX, startWorldY);
 
+    playerCharacter.setSpriteAnimationLoader(&spriteAnimationLoader);
     if (!playerCharacter.init("assets/DataFiles/Entities/player"))
     {
         destroy_app();

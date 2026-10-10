@@ -411,10 +411,20 @@ void Action::doProjectileActionInUpdate()
                             // Get tile coordinates of character doing action
     float tileX = this->character->getPosition().x;
     float tileY = this->character->getPosition().y;
+
     if (projectilesData)
     {
         for (auto &proj : projectilesData->projectiles)
         {
+            // calculate the vector to give the projectile
+
+            // get facing direction of the character
+            Direction facing = this->character->getCurrentDirection();
+            // TODO maybe? Or make it so the action stops motion of the character?
+            // TODO get the characters move vector and add it to the projectile's initial move vector so it moves faster than self?
+            // pass in args to get the final move vector for the projectile
+            v2 moveVector = getProjectileMoveVector(facing, proj.speed, proj.angle);
+
             entityPath = "/assets/DataFiles/Entities/" + proj.entity;
             printf("Spawning %s\n", proj.entity.c_str());
             // Create the agent
@@ -432,7 +442,7 @@ void Action::doProjectileActionInUpdate()
                 float worldY = tileY * this->character->level->getTileHeight();
 
                 // TODO calc direction and offset and then apply the speed as the magnitude to the normal vector
-                projectileAgent->setMoveVector(cf_v2(proj.speed, 0));
+                projectileAgent->setMoveVector(moveVector);
                 projectileAgent->setPosition(cf_v2(tileX, tileY));
                 printf("Action:   Set projectile position to tile (%.1f, %.1f) = world (%.1f, %.1f)\n",
                        tileX, tileY, worldX, worldY);
@@ -446,6 +456,46 @@ void Action::doProjectileActionInUpdate()
     std::chrono::duration<double, std::milli> elapsed = end - start;
     printf("Action: Projectile action update took %.3f ms\n", elapsed.count());
 }
+
+v2 Action::getProjectileMoveVector(Direction dir, float speed, float angle)
+{
+    // TODO handle angle
+    // get the normalized movement vector based on the character's facing direction
+    float projectileMoveX = 0.0f;
+    float projectileMoveY = 0.0f;
+
+    if (dir == Direction::LEFT)
+    {
+        projectileMoveX = -1.0f;
+    }
+    else if (dir == Direction::RIGHT)
+    {
+        projectileMoveX = 1.0f;
+    }
+    else if (dir == Direction::UP)
+    {
+        projectileMoveY = 1.0f;
+    }
+    else if (dir == Direction::DOWN)
+    {
+        projectileMoveY = -1.0f;
+    }
+
+    // apply the angle to the movement vector
+    if (angle != 0.0f)
+    {
+        float radians = angle * (3.14159265f / 180.0f);
+        float cosAngle = cosf(radians);
+        float sinAngle = sinf(radians);
+        float rotatedX = projectileMoveX * cosAngle - projectileMoveY * sinAngle;
+        float rotatedY = projectileMoveX * sinAngle + projectileMoveY * cosAngle;
+        projectileMoveX = rotatedX;
+        projectileMoveY = rotatedY;
+    }
+
+    return cf_v2(projectileMoveX * speed, projectileMoveY * speed);
+}
+
 void Action::renderHitbox(CF_Color color, float border_opacity, float fill_opacity)
 {
     // Check if we have a hitbox and character to render
