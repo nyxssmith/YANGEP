@@ -81,7 +81,8 @@ public:
     // Damage
     bool hasDamageData() const;
     Damage *getDamage() const;
-    void doDamage();
+    void doDamage(std::vector<AnimatedDataCharacter *> toDamage);
+    std::vector<AnimatedDataCharacter *> getCharactersInHitbox();
 
     // Animation to play while this action is executing (defaults to "melee_right_claw")
     const std::string &getAnimation() const;

@@ -12,18 +12,31 @@ bool Projectile::init(const std::string &folderPath)
 
 void Projectile::update(float dt, v2 ignoredMoveVector)
 {
+    // do regular update for things like animation and navmesh checks
     AnimatedDataCharacterNavMeshAgent::update(dt, moveVector);
     // Add your custom projectile update logic here
 
-    // Default color is yellow for character hitbox
-    CF_Color color = cf_make_color_rgb(255, 255, 0); // Yellow
-
+    // check if the projectile is on or off navmesh
+    // TODO ^
     // Check if this character is inside any active action hitbox in warmup phase
-    bool insideActionHitbox = false;
-    if (level)
+    std::vector<AnimatedDataCharacter *> agentsInArea = level->getAgentsInArea(characterHitbox->getBoxes(currentDirection, position),
+                                                                               characterHitbox->getBoundingBox(currentDirection, position), this);
+    if (agentsInArea.empty())
     {
-        CF_Aabb characterBox = characterHitbox->getBoundingBox(currentDirection, position);
-        insideActionHitbox = level->isCharacterInActionHitbox(this, characterBox);
+        // exit early
+        return;
     }
-    // printf("Inside action hitbox: %d\n", insideActionHitbox);
+    // for each agent in the area, apply the action
+    for (AnimatedDataCharacter *agent : agentsInArea)
+    {
+        // if the agent is the sender, skip it
+        if (agent == sender)
+        {
+            continue;
+        }
+        // Apply the action to each agent
+        action->doDamage(std::vector<AnimatedDataCharacter *>{agent});
+    }
 }
+
+// printf("Inside action hitbox: %d\n", insideActionHitbox);

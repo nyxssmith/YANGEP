@@ -923,7 +923,46 @@ void LevelV1::debugPrint() const
     printf("  Details: %s\n", details.dump(2).c_str());
     printf("========================\n");
 }
+std::vector<AnimatedDataCharacter *> LevelV1::getAgentsInArea(const std::vector<CF_Aabb> &areas, CF_Aabb areasBounds,
+                                                              const AnimatedDataCharacter *excludeAgent) const
+{
+    std::vector<AnimatedDataCharacter *> agentsInArea;
+    // Use spatial grid to narrow down which agents to check
+    std::vector<size_t> nearbyAgents = spatialGrid.queryAABB(areasBounds);
 
+    for (size_t agentIndex : nearbyAgents)
+    {
+        if (agentIndex >= agents.size())
+            continue;
+
+        const auto &agent = agents[agentIndex];
+        if (!agent)
+            continue;
+
+        // Skip the excluded agent
+        // AnimatedDataCharacterNavMeshAgent inherits from AnimatedDataCharacter, so we can compare directly
+        if (excludeAgent && static_cast<const AnimatedDataCharacter *>(agent.get()) == excludeAgent)
+            continue;
+
+        // Get agent position and create a simple AABB for the agent
+        v2 agentPos = agent->getPosition();
+        float agentRadius = 32.0f; // Approximate agent size
+        CF_Aabb agentBox = cf_make_aabb(
+            cf_v2(agentPos.x - agentRadius, agentPos.y - agentRadius),
+            cf_v2(agentPos.x + agentRadius, agentPos.y + agentRadius));
+
+        // Check if agent overlaps with any of the areas
+        for (const auto &area : areas)
+        {
+            if (cf_overlaps(area, agentBox))
+            {
+                agentsInArea.push_back(agent.get());
+            }
+        }
+    }
+
+    return agentsInArea;
+}
 bool LevelV1::checkAgentsInArea(const std::vector<CF_Aabb> &areas, CF_Aabb areasBounds,
                                 const AnimatedDataCharacter *excludeAgent) const
 {

@@ -395,7 +395,7 @@ void Action::update(float dt)
 void Action::doTileActionInUpdate()
 {
     // Placeholder for tile action logic
-    doDamage();
+    doDamage(getCharactersInHitbox());
 }
 
 void Action::doProjectileActionInUpdate()
@@ -441,8 +441,13 @@ void Action::doProjectileActionInUpdate()
                 float worldX = tileX * this->character->level->getTileWidth();
                 float worldY = tileY * this->character->level->getTileHeight();
 
-                // TODO calc direction and offset and then apply the speed as the magnitude to the normal vector
+                // Set the projectile's initial position and movement vector based on the character's position and facing direction
                 projectileAgent->setMoveVector(moveVector);
+                // when projectile hits something, use this action to doDamage
+                projectileAgent->setAction(this);
+                // set the sender of the projectile to the character that spawned it
+                projectileAgent->setSender(this->character);
+                // set the initial position of the projectile in the world
                 projectileAgent->setPosition(cf_v2(tileX, tileY));
                 printf("Action:   Set projectile position to tile (%.1f, %.1f) = world (%.1f, %.1f)\n",
                        tileX, tileY, worldX, worldY);
@@ -549,14 +554,8 @@ bool Action::getLoopAnimation() const
     return loopAnimation;
 }
 
-void Action::doDamage()
+std::vector<AnimatedDataCharacter *> Action::getCharactersInHitbox()
 {
-    // Only do damage if we have damage data
-    if (!hasDamage || !damage)
-    {
-        return;
-    }
-
     // Get all characters in the hitbox
     std::vector<AnimatedDataCharacter *> charactersInHitboxList = getCharactersInHitbox();
 
@@ -564,9 +563,24 @@ void Action::doDamage()
     std::unordered_set<AnimatedDataCharacter *> uniqueCharacters(
         charactersInHitboxList.begin(),
         charactersInHitboxList.end());
+    // Convert the set back to a vector
+    std::vector<AnimatedDataCharacter *> uniqueCharactersList(
+        uniqueCharacters.begin(),
+        uniqueCharacters.end());
+
+    return uniqueCharactersList;
+}
+
+void Action::doDamage(std::vector<AnimatedDataCharacter *> toDamage)
+{
+    // Only do damage if we have damage data
+    if (!hasDamage || !damage)
+    {
+        return;
+    }
 
     // Call OnHit for each unique character
-    for (AnimatedDataCharacter *hitCharacter : uniqueCharacters)
+    for (AnimatedDataCharacter *hitCharacter : toDamage)
     {
         if (hitCharacter)
         {

@@ -188,6 +188,7 @@ public:
      * @return true if any other agents are found in the area, false otherwise
      */
     bool checkAgentsInArea(const std::vector<CF_Aabb> &areas, CF_Aabb areasBounds, const AnimatedDataCharacter *excludeAgent = nullptr) const;
+    std::vector<AnimatedDataCharacter *> getAgentsInArea(const std::vector<CF_Aabb> &areas, CF_Aabb areasBounds, const AnimatedDataCharacter *excludeAgent = nullptr) const;
 
     /**
      * Check if a character is inside any active action hitbox in warmup phase
