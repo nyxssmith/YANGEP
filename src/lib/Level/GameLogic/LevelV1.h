@@ -9,7 +9,7 @@
 #include "SpatialGrid.h"
 #include "AnimatedDataCharacterNavMeshAgent.h"
 #include "WorldPositionRenderedObjectsList.h"
-
+#include "Projectile.h"
 // Forward declarations
 class CFNativeCamera;
 class AnimatedDataCharacter;
@@ -26,6 +26,9 @@ class AnimatedDataCharacter;
 class LevelV1
 {
 private:
+    // Scene-owned sprite/animation cache shared by every agent and projectile created here (non-owning)
+    SpriteAnimationLoader *spriteLoader;
+
     std::string levelDirectory;
     std::string levelName;
 
@@ -39,6 +42,7 @@ private:
 
     // NavMesh agents in this level
     std::vector<std::unique_ptr<AnimatedDataCharacterNavMeshAgent>> agents;
+    std::vector<std::unique_ptr<Projectile>> projectiles;
 
     // Spatial partitioning grid for efficient queries
     SpatialGrid spatialGrid;
@@ -60,8 +64,9 @@ public:
     /**
      * Constructor - initializes all level components from a directory
      * @param directoryPath Path to the level directory (e.g., "/assets/Levels/test_two")
+     * @param spriteLoader Scene-owned animation loader/cache used for all characters spawned by this level
      */
-    explicit LevelV1(const std::string &directoryPath);
+    explicit LevelV1(const std::string &directoryPath, SpriteAnimationLoader *spriteLoader);
 
     /**
      * Destructor
@@ -128,6 +133,7 @@ public:
      * @return Raw pointer to the added agent (for reference, level owns the agent)
      */
     AnimatedDataCharacterNavMeshAgent *addAgent(std::unique_ptr<AnimatedDataCharacterNavMeshAgent> agent);
+    Projectile *addProjectile(std::unique_ptr<Projectile> agent);
 
     /**
      * Create and add a NavMesh agent from an entity data file
@@ -135,7 +141,8 @@ public:
      * @return Raw pointer to the created agent, or nullptr if creation failed
      */
     AnimatedDataCharacterNavMeshAgent *createAgentFromFile(const std::string &entityDataPath);
-
+    // Creates an initialized projectile; the caller hands it to addProjectile() to give the level ownership
+    std::unique_ptr<Projectile> createProjectileFromFile(const std::string &entityDataPath);
     /**
      * Get the number of agents in the level
      * @return Number of agents
@@ -181,6 +188,7 @@ public:
      * @return true if any other agents are found in the area, false otherwise
      */
     bool checkAgentsInArea(const std::vector<CF_Aabb> &areas, CF_Aabb areasBounds, const AnimatedDataCharacter *excludeAgent = nullptr) const;
+    std::vector<AnimatedDataCharacter *> getAgentsInArea(const std::vector<CF_Aabb> &areas, CF_Aabb areasBounds, const AnimatedDataCharacter *excludeAgent = nullptr) const;
 
     /**
      * Check if a character is inside any active action hitbox in warmup phase
@@ -218,6 +226,7 @@ public:
      * @param dt Delta time in seconds
      */
     void updateAgents(float dt);
+    void updateProjectiles(float dt);
 
     /**
      * Set all dying agents to dead state
@@ -255,6 +264,7 @@ public:
      * @param camera Camera to use for viewport culling
      */
     void renderAgents(const CFNativeCamera &camera);
+    void renderProjectiles(const CFNativeCamera &camera);
 
     /**
      * Render all layers of the level map, agents, actions, and player

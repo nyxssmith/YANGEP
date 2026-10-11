@@ -1,0 +1,13 @@
+{
+  "name": "projectile_test_entity",
+  "hitbox_size": 8,
+  "hitbox_distance": 0,
+  "innate_actions": [],
+  "layers": [
+    {
+      "filename": "laser_demo_crab.png",
+      "tile_size": 128
+    }
+  ],
+  "entity_scale": 0.3
+}

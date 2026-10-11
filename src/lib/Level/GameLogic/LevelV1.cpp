@@ -9,8 +9,8 @@
 #include <cstdio>
 
 // LevelV1 implementation
-LevelV1::LevelV1(const std::string &directoryPath)
-    : levelDirectory(directoryPath), levelName(""), levelMap(nullptr), navmesh(nullptr), entities(), details(), tileWidth(0), tileHeight(0), initialized(false), player(nullptr)
+LevelV1::LevelV1(const std::string &directoryPath, SpriteAnimationLoader *spriteLoader)
+    : spriteLoader(spriteLoader), levelDirectory(directoryPath), levelName(""), levelMap(nullptr), navmesh(nullptr), entities(), details(), tileWidth(0), tileHeight(0), initialized(false), player(nullptr)
 {
     printf("LevelV1: Loading level from directory: %s\n", directoryPath.c_str());
 
@@ -346,6 +346,7 @@ AnimatedDataCharacterNavMeshAgent *LevelV1::addAgent(std::unique_ptr<AnimatedDat
 AnimatedDataCharacterNavMeshAgent *LevelV1::createAgentFromFile(const std::string &entityDataPath)
 {
     auto agent = std::make_unique<AnimatedDataCharacterNavMeshAgent>();
+    agent->setSpriteAnimationLoader(spriteLoader);
 
     if (!agent->init(entityDataPath))
     {
@@ -355,6 +356,46 @@ AnimatedDataCharacterNavMeshAgent *LevelV1::createAgentFromFile(const std::strin
 
     printf("LevelV1: Created agent from: %s\n", entityDataPath.c_str());
     return addAgent(std::move(agent));
+}
+
+Projectile *LevelV1::addProjectile(std::unique_ptr<Projectile> projectile)
+{
+    if (!projectile)
+    {
+        printf("LevelV1 Warning: Attempted to add null projectile\n");
+        return nullptr;
+    }
+
+    if (navmesh)
+    {
+        projectile->setNavMesh(navmesh.get());
+    }
+    projectile->setLevel(this);
+
+    projectiles.push_back(std::move(projectile));
+    Projectile *added = projectiles.back().get();
+
+    // Projectile grid indices come after all agent indices (see rebuildSpatialGrid)
+    spatialGrid.insert(agents.size() + projectiles.size() - 1, added->getPosition(), 32.0f);
+    renderedObjects.add(ObjectRenderedByWorldPosition(added));
+
+    return added;
+}
+
+std::unique_ptr<Projectile> LevelV1::createProjectileFromFile(const std::string &entityDataPath)
+{
+    // agent is projectile
+    auto agent = std::make_unique<Projectile>();
+    agent->setSpriteAnimationLoader(spriteLoader);
+
+    if (!agent->init(entityDataPath))
+    {
+        printf("LevelV1 Error: Failed to initialize projectile from: %s\n", entityDataPath.c_str());
+        return nullptr;
+    }
+
+    printf("LevelV1: Created projectile from: %s\n", entityDataPath.c_str());
+    return agent;
 }
 
 AnimatedDataCharacterNavMeshAgent *LevelV1::getAgent(size_t index)
@@ -483,6 +524,81 @@ void LevelV1::updateAgents(float dt)
 
     // Kick off all pending jobs (non-blocking)
     JobSystem::kick();
+}
+void LevelV1::updateProjectiles(float dt)
+{
+
+    // Track indices of dead agents to remove
+    std::vector<size_t> agentsToRemove;
+
+    // Update agents with move vectors (using results from background jobs)
+    for (size_t i = 0; i < projectiles.size(); ++i)
+    {
+        auto &proj = projectiles[i];
+        if (proj)
+        {
+            // Check if projectile is dead and mark for removal
+            if (proj->getStageOfLife() == StageOfLife::Dead)
+            {
+                agentsToRemove.push_back(i);
+                continue;
+            }
+            // skip dying projectiles for now
+            if (proj->getStageOfLife() == StageOfLife::Dying)
+            {
+                continue;
+            }
+
+            // Always use the last computed background move vector
+            // This allows agents to keep moving while their next job is being processed
+            v2 moveVector = proj->getBackgroundMoveVector();
+
+            proj->update(dt, moveVector);
+        }
+    }
+
+    // Update spatial grid with new positions
+    updateSpatialGrid();
+
+    // Remove dead agents before starting background jobs
+    if (agentsToRemove.size() > 0)
+    {
+        // Remove in reverse order to maintain correct indices
+        for (auto it = agentsToRemove.rbegin(); it != agentsToRemove.rend(); ++it)
+        {
+            size_t index = *it;
+            if (index < agents.size())
+            {
+                auto *agentPtr = agents[index].get();
+
+                // CRITICAL: Remove from coordinator BEFORE deleting
+                // This prevents background thread from accessing deleted memory
+                // Try to get coordinator and remove agent if available
+                try
+                {
+                    Coordinator *coordinator = OnScreenChecks::getCoordinator();
+                    if (coordinator)
+                    {
+                        coordinator->removeAgent(agentPtr);
+                    }
+                }
+                catch (...)
+                {
+                    // Coordinator not available (e.g., in tests), skip removal
+                }
+
+                // Remove from rendered objects list
+                renderedObjects.remove(ObjectRenderedByWorldPosition(agentPtr));
+
+                // Remove from agents list (this deletes the agent)
+                projectiles.erase(projectiles.begin() + index);
+                printf("LevelV1: Removed dead agent at index %zu\n", index);
+            }
+        }
+
+        // Rebuild spatial grid after removal
+        rebuildSpatialGrid();
+    }
 }
 
 void LevelV1::cullDyingAgents()
@@ -649,6 +765,54 @@ void LevelV1::renderAgents(const CFNativeCamera &camera)
     //        checkedCount, agents.size(), renderedCount, culledCount);
 }
 
+void LevelV1::renderProjectiles(const CFNativeCamera &camera)
+{
+    int renderedCount = 0;
+    int culledCount = 0;
+    int checkedCount = 0;
+
+    // Use spatial grid to only check agents in visible cells
+    CF_Aabb viewBounds = camera.getViewBounds();
+
+    // Expand view bounds slightly to catch agents on the edge
+    viewBounds.min.x -= 64.0f;
+    viewBounds.min.y -= 64.0f;
+    viewBounds.max.x += 64.0f;
+    viewBounds.max.y += 64.0f;
+
+    // Query spatial grid for agents in view area
+    std::vector<size_t> nearbyAgents = spatialGrid.queryAABB(viewBounds);
+
+    if (nearbyAgents.empty())
+        return;
+    for (size_t agentIndex : nearbyAgents)
+    {
+        // Indices below agents.size() are agents; projectiles follow them
+        if (agentIndex < agents.size() || agentIndex >= agents.size() + projectiles.size())
+            continue;
+
+        auto &agent = projectiles[agentIndex - agents.size()];
+        if (agent)
+        {
+            // Check if agent is marked as on-screen by OnScreenChecks worker
+            if (agent->getIsOnScreen())
+            {
+                v2 agentPos = agent->getPosition();
+                agent->render(agentPos);
+                renderedCount++;
+            }
+            else
+            {
+                culledCount++;
+            }
+        }
+    }
+
+    // Debug output: show how many agents were checked vs total
+    // printf("LevelV1: checked %d/%zu agents, rendered: %d, culled: %d\n",
+    //        checkedCount, agents.size(), renderedCount, culledCount);
+}
+
 void LevelV1::renderLayers(const CFNativeCamera &camera, const DataFile &config, float worldX, float worldY)
 {
     if (!initialized || !levelMap)
@@ -711,6 +875,8 @@ void LevelV1::render(const CFNativeCamera &camera, const DataFile &config, Anima
                 levelMap->renderSingleLayer(structure->getTMXLayer(), camera, config, worldX, worldY);
             }
         } });
+    // projectiles on top of all
+    renderProjectiles(camera);
 }
 
 void LevelV1::debugPrint() const
@@ -757,7 +923,46 @@ void LevelV1::debugPrint() const
     printf("  Details: %s\n", details.dump(2).c_str());
     printf("========================\n");
 }
+std::vector<AnimatedDataCharacter *> LevelV1::getAgentsInArea(const std::vector<CF_Aabb> &areas, CF_Aabb areasBounds,
+                                                              const AnimatedDataCharacter *excludeAgent) const
+{
+    std::vector<AnimatedDataCharacter *> agentsInArea;
+    // Use spatial grid to narrow down which agents to check
+    std::vector<size_t> nearbyAgents = spatialGrid.queryAABB(areasBounds);
 
+    for (size_t agentIndex : nearbyAgents)
+    {
+        if (agentIndex >= agents.size())
+            continue;
+
+        const auto &agent = agents[agentIndex];
+        if (!agent)
+            continue;
+
+        // Skip the excluded agent
+        // AnimatedDataCharacterNavMeshAgent inherits from AnimatedDataCharacter, so we can compare directly
+        if (excludeAgent && static_cast<const AnimatedDataCharacter *>(agent.get()) == excludeAgent)
+            continue;
+
+        // Get agent position and create a simple AABB for the agent
+        v2 agentPos = agent->getPosition();
+        float agentRadius = 32.0f; // Approximate agent size
+        CF_Aabb agentBox = cf_make_aabb(
+            cf_v2(agentPos.x - agentRadius, agentPos.y - agentRadius),
+            cf_v2(agentPos.x + agentRadius, agentPos.y + agentRadius));
+
+        // Check if agent overlaps with any of the areas
+        for (const auto &area : areas)
+        {
+            if (cf_overlaps(area, agentBox))
+            {
+                agentsInArea.push_back(agent.get());
+            }
+        }
+    }
+
+    return agentsInArea;
+}
 bool LevelV1::checkAgentsInArea(const std::vector<CF_Aabb> &areas, CF_Aabb areasBounds,
                                 const AnimatedDataCharacter *excludeAgent) const
 {
@@ -980,13 +1185,23 @@ void LevelV1::updateSpatialGrid()
 void LevelV1::rebuildSpatialGrid()
 {
     spatialGrid.clear();
-
+    // update agents in grid
     for (size_t i = 0; i < agents.size(); ++i)
     {
         if (agents[i])
         {
             v2 pos = agents[i]->getPosition();
             spatialGrid.insert(i, pos, 32.0f);
+        }
+    }
+
+    // update projectiles in grid above agents
+    for (size_t i = 0; i < projectiles.size(); ++i)
+    {
+        if (projectiles[i])
+        {
+            v2 pos = projectiles[i]->getPosition();
+            spatialGrid.insert(agents.size() + i, pos, 32.0f);
         }
     }
 }

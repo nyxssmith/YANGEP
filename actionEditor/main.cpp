@@ -198,7 +198,8 @@ int main(int argc, char *argv[])
     }
 
     // Create LevelV1 instance - handles all TMX and NavMesh initialization
-    LevelV1 level("/assets/Levels/actionEditor");
+    SpriteAnimationLoader spriteAnimationLoader;
+    LevelV1 level("/assets/Levels/actionEditor", &spriteAnimationLoader);
 
     if (!level.isInitialized())
     {
@@ -344,6 +345,7 @@ int main(int argc, char *argv[])
     printf("Player starting at tile (%.1f, %.1f) = world (%.1f, %.1f)\n",
            startTileX, startTileY, startWorldX, startWorldY);
 
+    playerCharacter.setSpriteAnimationLoader(&spriteAnimationLoader);
     if (!playerCharacter.init("assets/DataFiles/Entities/player"))
     {
         destroy_app();
@@ -923,11 +925,11 @@ int main(int argc, char *argv[])
                     }
 
                     // Load the hitbox.json file from VFS
-                    DataFile hitboxData(hitboxVFSPath);
+                    DataFile actionAuxData(hitboxVFSPath);
 
-                    if (hitboxData.contains("tiles") && hitboxData["tiles"].is_array())
+                    if (actionAuxData.contains("tiles") && actionAuxData["tiles"].is_array())
                     {
-                        auto &tiles = hitboxData["tiles"];
+                        auto &tiles = actionAuxData["tiles"];
 
                         // Check if this tile already exists
                         bool tileExists = false;
@@ -972,7 +974,7 @@ int main(int argc, char *argv[])
                             std::ofstream hitboxFile(hitboxRealPath);
                             if (hitboxFile.is_open())
                             {
-                                hitboxFile << hitboxData.dump(2);
+                                hitboxFile << actionAuxData.dump(2);
                                 hitboxFile.close();
                                 printf("Saved hitbox changes to %s\n", hitboxRealPath.c_str());
 

@@ -55,11 +55,11 @@ SpriteAnimationLoader::~SpriteAnimationLoader()
 void SpriteAnimationLoader::clearCache()
 {
     printf("SpriteAnimationLoader: Clearing PNG cache (%zu PNGs)\n", pngCache.size());
-    // std::vector manages its own memory, just clear the map
     pngCache.clear();
+    tableCache.clear();
 }
 
-// Load PNG file and cache it
+// Read a PNG file, decode it to RGBA8 once, and cache it
 bool SpriteAnimationLoader::loadAndCachePNG(const std::string &png_path)
 {
     if (isPNGCached(png_path))
@@ -95,23 +95,48 @@ bool SpriteAnimationLoader::loadAndCachePNG(const std::string &png_path)
         return false;
     }
 
-    // Copy the data to our cache
-    std::vector<uint8_t> png_data(file_size);
-    memcpy(png_data.data(), file_data, file_size);
+    spng_ctx *ctx = spng_ctx_new(0);
+    if (ctx == nullptr)
+    {
+        printf("SpriteAnimationLoader: Failed to create spng context\n");
+        cf_free(file_data);
+        return false;
+    }
 
-    // Free the original file data
+    DecodedPNG decoded;
+    struct spng_ihdr ihdr;
+    size_t image_size = 0;
+    int ret = spng_set_png_buffer(ctx, file_data, file_size);
+    if (ret == 0)
+        ret = spng_get_ihdr(ctx, &ihdr);
+    if (ret == 0)
+        ret = spng_decoded_image_size(ctx, SPNG_FMT_RGBA8, &image_size);
+    if (ret == 0)
+    {
+        decoded.rgba.resize(image_size);
+        ret = spng_decode_image(ctx, decoded.rgba.data(), image_size, SPNG_FMT_RGBA8, 0);
+    }
+
+    spng_ctx_free(ctx);
     cf_free(file_data);
 
-    // Store in cache
-    pngCache[png_path] = std::move(png_data);
+    if (ret != 0)
+    {
+        printf("SpriteAnimationLoader: Failed to decode PNG %s: %s\n", png_path.c_str(), spng_strerror(ret));
+        return false;
+    }
+
+    decoded.width = (int)ihdr.width;
+    decoded.height = (int)ihdr.height;
+    pngCache[png_path] = std::move(decoded);
 
     printf("SpriteAnimationLoader: Successfully cached PNG: %s (%zu bytes)\n",
-           png_path.c_str(), file_size);
+           png_path.c_str(), image_size);
     return true;
 }
 
-// Get cached PNG data
-const std::vector<uint8_t> *SpriteAnimationLoader::getCachedPNG(const std::string &png_path) const
+// Get cached decoded PNG
+const SpriteAnimationLoader::DecodedPNG *SpriteAnimationLoader::getCachedPNG(const std::string &png_path) const
 {
     auto it = pngCache.find(png_path);
     if (it != pngCache.end())
@@ -119,6 +144,18 @@ const std::vector<uint8_t> *SpriteAnimationLoader::getCachedPNG(const std::strin
         return &it->second;
     }
     return nullptr;
+}
+
+bool SpriteAnimationLoader::getPNGDimensions(const std::string &png_path, uint32_t &width, uint32_t &height)
+{
+    if (!loadAndCachePNG(png_path))
+        return false;
+    const DecodedPNG *png = getCachedPNG(png_path);
+    if (!png)
+        return false;
+    width = (uint32_t)png->width;
+    height = (uint32_t)png->height;
+    return true;
 }
 
 // Check if PNG is cached
@@ -133,7 +170,7 @@ size_t SpriteAnimationLoader::getCacheSize() const
     size_t total_size = 0;
     for (const auto &entry : pngCache)
     {
-        total_size += entry.second.size();
+        total_size += entry.second.rgba.size();
     }
     return total_size;
 }
@@ -143,7 +180,7 @@ size_t SpriteAnimationLoader::getCachedPNGCount() const
     return pngCache.size();
 }
 
-// Extract sprite frame from PNG using the proven system from tsx.cpp
+// Extract sprite frame from the cached, already-decoded PNG
 CF_Sprite SpriteAnimationLoader::extractSpriteFrame(const std::string &png_path,
                                                     int frame_x, int frame_y,
                                                     int frame_width, int frame_height)
@@ -151,81 +188,29 @@ CF_Sprite SpriteAnimationLoader::extractSpriteFrame(const std::string &png_path,
     printf("SpriteAnimationLoader: Extracting frame (%d, %d) size (%dx%d) from %s\n",
            frame_x, frame_y, frame_width, frame_height, png_path.c_str());
 
-    // Ensure PNG is loaded and cached
+    // Ensure PNG is loaded, decoded and cached
     if (!loadAndCachePNG(png_path))
     {
         printf("SpriteAnimationLoader: Failed to load PNG for frame extraction: %s\n", png_path.c_str());
         return cf_sprite_defaults();
     }
 
-    const std::vector<uint8_t> *png_data = getCachedPNG(png_path);
-    if (!png_data || png_data->empty())
+    const DecodedPNG *png = getCachedPNG(png_path);
+    if (!png || png->rgba.empty())
     {
         printf("SpriteAnimationLoader: No cached PNG data for: %s\n", png_path.c_str());
         return cf_sprite_defaults();
     }
 
-    // Initialize libspng context (same as tsx.cpp)
-    spng_ctx *ctx = spng_ctx_new(0);
-    if (ctx == nullptr)
-    {
-        printf("SpriteAnimationLoader: Failed to create spng context\n");
-        return cf_sprite_defaults();
-    }
-
-    // Set PNG data
-    int ret = spng_set_png_buffer(ctx, png_data->data(), png_data->size());
-    if (ret != 0)
-    {
-        printf("SpriteAnimationLoader: spng_set_png_buffer error: %s\n", spng_strerror(ret));
-        spng_ctx_free(ctx);
-        return cf_sprite_defaults();
-    }
-
-    // Get image header
-    struct spng_ihdr ihdr;
-    ret = spng_get_ihdr(ctx, &ihdr);
-    if (ret != 0)
-    {
-        printf("SpriteAnimationLoader: spng_get_ihdr error: %s\n", spng_strerror(ret));
-        spng_ctx_free(ctx);
-        return cf_sprite_defaults();
-    }
-
-    printf("SpriteAnimationLoader: PNG dimensions: %dx%d, bit depth: %d, color type: %d\n",
-           ihdr.width, ihdr.height, ihdr.bit_depth, ihdr.color_type);
-
     // Validate frame bounds
-    if (frame_x + frame_width > (int)ihdr.width || frame_y + frame_height > (int)ihdr.height)
+    if (frame_x + frame_width > png->width || frame_y + frame_height > png->height)
     {
         printf("SpriteAnimationLoader: Frame bounds exceed image dimensions. Frame: (%d,%d)+(%dx%d), Image: %dx%d\n",
-               frame_x, frame_y, frame_width, frame_height, ihdr.width, ihdr.height);
-        spng_ctx_free(ctx);
+               frame_x, frame_y, frame_width, frame_height, png->width, png->height);
         return cf_sprite_defaults();
     }
 
-    // Decode to RGBA8 (same as tsx.cpp)
-    size_t image_size;
-    ret = spng_decoded_image_size(ctx, SPNG_FMT_RGBA8, &image_size);
-    if (ret != 0)
-    {
-        printf("SpriteAnimationLoader: spng_decoded_image_size error: %s\n", spng_strerror(ret));
-        spng_ctx_free(ctx);
-        return cf_sprite_defaults();
-    }
-
-    // Allocate buffer for the full image
-    std::vector<uint8_t> full_image(image_size);
-    ret = spng_decode_image(ctx, full_image.data(), image_size, SPNG_FMT_RGBA8, 0);
-    if (ret != 0)
-    {
-        printf("SpriteAnimationLoader: spng_decode_image error: %s\n", spng_strerror(ret));
-        spng_ctx_free(ctx);
-        return cf_sprite_defaults();
-    }
-
-    // Clean up libspng resources
-    spng_ctx_free(ctx);
+    const std::vector<uint8_t> &full_image = png->rgba;
 
     // Create buffer for cropped frame (RGBA format)
     std::vector<CF_Pixel> frame_pixels(frame_width * frame_height);
@@ -237,7 +222,7 @@ CF_Sprite SpriteAnimationLoader::extractSpriteFrame(const std::string &png_path,
         {
             int src_x = frame_x + x;
             int src_y = frame_y + y;
-            int src_index = (src_y * ihdr.width + src_x) * 4; // 4 bytes per pixel (RGBA)
+            int src_index = (src_y * png->width + src_x) * 4; // 4 bytes per pixel (RGBA)
             int dst_index = y * frame_width + x;
 
             // Copy RGBA data with premultiply-at-load (rgb *= a)
@@ -453,6 +438,63 @@ AnimationTable SpriteAnimationLoader::loadAnimationTable(const std::string &base
     printf("SpriteAnimationLoader: Animation table loaded with %zu animations\n",
            table.getAnimationNames().size());
 
+    return table;
+}
+
+// Get (building on first request) the animation table for a character's layers
+std::shared_ptr<const AnimationTable> SpriteAnimationLoader::getCharacterAnimationTable(
+    const std::string &sheets_root, const std::vector<std::string> &layer_filenames, int tile_size)
+{
+    if (layer_filenames.empty() || tile_size <= 0)
+        return nullptr;
+
+    std::string key = sheets_root + "|" + std::to_string(tile_size);
+    for (const auto &fn : layer_filenames)
+        key += "|" + fn;
+
+    auto cached = tableCache.find(key);
+    if (cached != tableCache.end())
+        return cached->second;
+
+    // Discover every animation subfolder (idle, walkcycle, melee_right_claw, etc.) and compute its
+    // layout from PNG dimensions, so new animations don't require code changes.
+    std::vector<AnimationLayout> layouts;
+    const char **entries = cf_fs_enumerate_directory(sheets_root.c_str());
+    if (entries)
+    {
+        for (const char **entry = entries; *entry; ++entry)
+        {
+            std::string anim_name = *entry;
+            std::string folder = sheets_root + "/" + anim_name;
+
+            CF_Stat stat;
+            if (cf_is_error(cf_fs_stat(folder.c_str(), &stat)) || stat.type != CF_FILE_TYPE_DIRECTORY)
+                continue;
+
+            uint32_t w = 0, h = 0;
+            if (!getPNGDimensions(folder + "/" + layer_filenames[0], w, h))
+            {
+                printf("SpriteAnimationLoader: WARNING: Cannot read dimensions for animation '%s', skipping\n", anim_name.c_str());
+                continue;
+            }
+
+            layouts.emplace_back(
+                anim_name, layer_filenames, tile_size, tile_size, (int)w / tile_size, (int)h / tile_size,
+                std::vector<Direction>{Direction::UP, Direction::LEFT, Direction::DOWN, Direction::RIGHT});
+        }
+        cf_fs_free_enumerated_directory(entries);
+    }
+
+    if (layouts.empty())
+        return nullptr;
+
+    // loadAnimationTable builds "/" + base_path + "/" + name, so strip the leading slash
+    std::string base = sheets_root;
+    if (!base.empty() && base.front() == '/')
+        base.erase(0, 1);
+
+    auto table = std::make_shared<const AnimationTable>(loadAnimationTable(base, layouts));
+    tableCache[key] = table;
     return table;
 }
 

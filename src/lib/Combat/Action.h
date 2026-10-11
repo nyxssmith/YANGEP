@@ -4,15 +4,23 @@
 #include "Damage.h"
 #include <string>
 #include <cute.h>
+#include "SpriteAnimationLoader.h"
+
+enum ActionType
+{
+    tile,
+    projectile
+};
 
 // Forward declarations
 class HitBox;
 class AnimatedDataCharacter;
+struct ProjectilesData;
 
 class Action : public DataFile
 {
 private:
-    DataFile hitboxData;
+    DataFile actionAuxData;
     bool hasHitbox;
     HitBox *hitbox;
     float hitboxSize;
@@ -32,6 +40,8 @@ private:
     // Animation to play while this action is executing
     std::string animation;
     bool loopAnimation;
+    ActionType type = tile;
+    ProjectilesData *projectilesData = nullptr; // only set for projectile actions
 
 public:
     Action() = default;
@@ -59,6 +69,9 @@ public:
     bool getInCooldown() const;
     void doAction();
     void update(float dt);
+    void doTileActionInUpdate();
+    void doProjectileActionInUpdate();
+    Cute::v2 getProjectileMoveVector(Direction dir, float speed, float angle);
     void renderHitbox(CF_Color color, float border_opacity = 0.9f, float fill_opacity = 0.4f);
 
     // Character association
@@ -68,7 +81,8 @@ public:
     // Damage
     bool hasDamageData() const;
     Damage *getDamage() const;
-    void doDamage();
+    void doDamage(std::vector<AnimatedDataCharacter *> toDamage);
+    std::vector<AnimatedDataCharacter *> getCharactersInHitbox();
 
     // Animation to play while this action is executing (defaults to "melee_right_claw")
     const std::string &getAnimation() const;
@@ -81,4 +95,6 @@ public:
     // Global cooldown support
     float getGlobalCooldown() const;           // Get global_cooldown value from action.json (in ms, 0 if not set)
     void applyCooldown(float cooldownSeconds); // Apply cooldown only if less than current cooldown
+
+    ActionType getType() const { return type; }
 };

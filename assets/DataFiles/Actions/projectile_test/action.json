@@ -1,0 +1,10 @@
+{
+  "name": "projectile_test",
+  "type": "projectile",
+  "version": "1.0.0",
+  "description": "A test action for demonstration purposes",
+  "warmup": 0,
+  "cooldown": 0,
+  "damage": 5.0,
+  "animation": "melee_right_claw"
+}

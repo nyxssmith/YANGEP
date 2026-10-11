@@ -18,7 +18,7 @@ public:
     ~AnimatedDataCharacterNavMeshAgent();
 
     // Override init to also load state machines
-    bool init(const std::string &folderPath);
+    bool init(const std::string &folderPath) override;
 
     // Set the navmesh this agent is operating on
     void setNavMesh(NavMesh *navmesh);

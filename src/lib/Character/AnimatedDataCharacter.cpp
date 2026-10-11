@@ -14,41 +14,6 @@
 
 using namespace Cute;
 
-// Helper function to get PNG dimensions
-static bool getPNGDimensions(const std::string &path, uint32_t &width, uint32_t &height)
-{
-    size_t file_size = 0;
-    void *file_data = cf_fs_read_entire_file_to_memory(path.c_str(), &file_size);
-
-    if (!file_data)
-    {
-        return false;
-    }
-
-    spng_ctx *ctx = spng_ctx_new(0);
-    if (!ctx)
-    {
-        cf_free(file_data);
-        return false;
-    }
-
-    spng_set_png_buffer(ctx, file_data, file_size);
-
-    struct spng_ihdr ihdr;
-    int ret = spng_get_ihdr(ctx, &ihdr);
-
-    if (ret == 0)
-    {
-        width = ihdr.width;
-        height = ihdr.height;
-    }
-
-    spng_ctx_free(ctx);
-    cf_free(file_data);
-
-    return ret == 0;
-}
-
 // Constructor
 AnimatedDataCharacter::AnimatedDataCharacter()
     : initialized(false), demoTime(0.0f), directionChangeTime(0.0f), animationChangeTime(0.0f),
@@ -203,53 +168,16 @@ bool AnimatedDataCharacter::init(const std::string &folderPath)
     printf("AnimatedDataCharacter: Using %zu layers\n", layerFilenames.size());
     printf("AnimatedDataCharacter: Using tile size: %d\n", tileSize);
 
-    // Discover every animation subfolder under AnimationsSheets (idle, walkcycle, melee_right_claw, etc.)
-    // and compute its layout from PNG dimensions, so new animations don't require code changes.
-    std::vector<AnimationLayout> layouts;
-    const char *animSheetsRoot = "/assets/Art/AnimationsSheets";
-    const char **animEntries = cf_fs_enumerate_directory(animSheetsRoot);
-    if (animEntries)
+    if (!loader)
     {
-        for (const char **entry = animEntries; *entry; ++entry)
-        {
-            std::string animName = *entry;
-            std::string animFolderPath = std::string(animSheetsRoot) + "/" + animName;
-
-            CF_Stat animStat;
-            if (cf_is_error(cf_fs_stat(animFolderPath.c_str(), &animStat)) || animStat.type != CF_FILE_TYPE_DIRECTORY)
-                continue;
-
-            std::string bodyPath = "assets/Art/AnimationsSheets/" + animName + "/" + layerFilenames[0];
-            uint32_t animWidth = 0, animHeight = 0;
-            if (!getPNGDimensions(bodyPath, animWidth, animHeight))
-            {
-                printf("AnimatedDataCharacter: WARNING: Cannot read dimensions from %s, skipping animation '%s'\n", bodyPath.c_str(), animName.c_str());
-                continue;
-            }
-
-            int framesPerDirection = animWidth / tileSize;
-            int directionCount = animHeight / tileSize;
-
-            printf("AnimatedDataCharacter: %s dimensions: %ux%u (frames: %d, directions: %d)\n",
-                   animName.c_str(), animWidth, animHeight, framesPerDirection, directionCount);
-
-            layouts.emplace_back(
-                animName, layerFilenames, tileSize, tileSize, framesPerDirection, directionCount,
-                std::vector<Direction>{Direction::UP, Direction::LEFT, Direction::DOWN, Direction::RIGHT});
-        }
-        cf_fs_free_enumerated_directory(animEntries);
-    }
-
-    if (layouts.empty())
-    {
-        printf("AnimatedDataCharacter: ERROR: No animation folders found under %s\n", animSheetsRoot);
+        printf("AnimatedDataCharacter: ERROR: No SpriteAnimationLoader set (call setSpriteAnimationLoader before init)\n");
         return false;
     }
 
-    // Load the animation table using our new system
-    animationTable = loader.loadAnimationTable("assets/Art/AnimationsSheets", layouts);
+    // The loader discovers animation folders and decodes PNGs only the first time a given set of layers is requested
+    animationTable = loader->getCharacterAnimationTable("/assets/Art/AnimationsSheets", layerFilenames, tileSize);
 
-    if (animationTable.getAnimationNames().empty())
+    if (!animationTable || animationTable->getAnimationNames().empty())
     {
         printf("AnimatedDataCharacter: Failed to load animations from skeleton assets\n");
         return false;
@@ -360,7 +288,7 @@ void AnimatedDataCharacter::update(float dt, v2 moveVector)
     if (isDoingAction && activeAction && !activeAction->getInCooldown())
     {
         const std::string &actionAnimation = activeAction->getAnimation();
-        if (animationTable.hasAnimation(actionAnimation) && currentAnimation != actionAnimation)
+        if (animationTable->hasAnimation(actionAnimation) && currentAnimation != actionAnimation)
         {
             currentAnimation = actionAnimation;
             currentFrame = 0;
@@ -419,7 +347,7 @@ void AnimatedDataCharacter::handleInput()
 // Update animation state
 void AnimatedDataCharacter::updateAnimation(float dt)
 {
-    const Animation *anim = animationTable.getAnimation(currentAnimation);
+    const Animation *anim = animationTable->getAnimation(currentAnimation);
     if (!anim || anim->frames.empty())
         return;
 
@@ -522,7 +450,7 @@ void AnimatedDataCharacter::render(v2 renderPosition)
 // Render the current animation frame
 void AnimatedDataCharacter::renderCurrentFrame()
 {
-    const Animation *anim = animationTable.getAnimation(currentAnimation);
+    const Animation *anim = animationTable->getAnimation(currentAnimation);
     if (!anim || anim->frames.empty())
         return;
 
@@ -558,7 +486,7 @@ void AnimatedDataCharacter::renderCurrentFrame()
 // Render the current animation frame at a specific position
 void AnimatedDataCharacter::renderCurrentFrameAt(v2 renderPosition)
 {
-    const Animation *anim = animationTable.getAnimation(currentAnimation);
+    const Animation *anim = animationTable->getAnimation(currentAnimation);
     if (!anim || anim->frames.empty())
         return;
 
@@ -648,7 +576,7 @@ void AnimatedDataCharacter::renderDebugInfo()
 // Check if demo is valid
 bool AnimatedDataCharacter::isValid() const
 {
-    return initialized && !animationTable.getAnimationNames().empty();
+    return initialized && animationTable && !animationTable->getAnimationNames().empty();
 }
 
 // Get current position

@@ -111,7 +111,7 @@ int Scene::setupLevel()
     //=====================================================================================================
     //=====================================================================================================
     // Create LevelV1 instance - handles all TMX and NavMesh initialization
-    level = std::make_unique<LevelV1>(level_directory + level_name);
+    level = std::make_unique<LevelV1>(level_directory + level_name, &spriteAnimationLoader);
 
     if (!level->isInitialized())
     {
@@ -153,6 +153,7 @@ int Scene::setupLevel()
     printf("Player starting at tile (%.1f, %.1f) = world (%.1f, %.1f)\n",
            startTileX, startTileY, startWorldX, startWorldY);
 
+    playerCharacter.setSpriteAnimationLoader(&spriteAnimationLoader);
     if (!playerCharacter.init("assets/DataFiles/Entities/player"))
     {
         destroy_app();
@@ -725,6 +726,7 @@ void Scene::mainLoopLevel()
         fpsWindow->markSection("Player Input");
     }
     level->updateAgents(dt);
+    level->updateProjectiles(dt);
 
     if (fpsWindow)
     {
