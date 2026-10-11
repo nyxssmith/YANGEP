@@ -18,6 +18,13 @@ void Projectile::update(float dt, v2 ignoredMoveVector)
 
     // check if the projectile is on or off navmesh
     // TODO ^
+    if (!isOnWalkableArea())
+    {
+        printf("Projectile is not on a walkable area\n");
+        // get-culled idiot
+        setStageOfLife(StageOfLife::Dying);
+        return;
+    }
     // Check if this character is inside any active action hitbox in warmup phase
     std::vector<AnimatedDataCharacter *> agentsInArea = level->getAgentsInArea(characterHitbox->getBoxes(currentDirection, position),
                                                                                characterHitbox->getBoundingBox(currentDirection, position), this);
@@ -36,7 +43,8 @@ void Projectile::update(float dt, v2 ignoredMoveVector)
         }
         // Apply the action to each agent
         action->doDamage(std::vector<AnimatedDataCharacter *>{agent});
+        // destroy self
+        setStageOfLife(StageOfLife::Dying);
+        // TODO optional punch-through?
     }
 }
-
-// printf("Inside action hitbox: %d\n", insideActionHitbox);
