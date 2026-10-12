@@ -117,6 +117,7 @@ add_executable(
 	src/lib/Scenes/SceneManager.cpp
 	src/lib/Debug/DebugWindow.cpp
 	src/lib/Debug/DataFileDebugWindow.cpp
+	src/lib/Debug/DataFileBySchemaDebugWindow.cpp
 	src/lib/Debug/DebugWindowList.cpp
 	src/lib/Debug/DebugFPSWindow.cpp
 	src/lib/Debug/DebugJobWindow.cpp
@@ -237,6 +238,7 @@ add_executable(
 	src/lib/Scenes/SceneManager.cpp
 	src/lib/Debug/DebugWindow.cpp
 	src/lib/Debug/DataFileDebugWindow.cpp
+	src/lib/Debug/DataFileBySchemaDebugWindow.cpp
 	src/lib/Debug/DebugWindowList.cpp
 	src/lib/Debug/DebugFPSWindow.cpp
 	src/lib/Debug/DebugJobWindow.cpp

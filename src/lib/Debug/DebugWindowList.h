@@ -6,13 +6,14 @@
 #include <vector>
 #include <memory>
 
-class DataFileDebugWindow;
+class DebugWindow;
+enum class DataFileSchema;
 struct DebugWindowEntry
 {
     int id;
     std::string filepath;
     std::unique_ptr<DataFile> dataFile;
-    std::unique_ptr<DataFileDebugWindow> window;
+    std::unique_ptr<DebugWindow> window;
 
     DebugWindowEntry(int id, const std::string &path);
     // defaulted in the .cpp where DataFileDebugWindow is a complete type
@@ -38,6 +39,9 @@ public:
     // Returns the ID of the added window, or -1 if failed
     int add(const std::string &filepath);
 
+    // Same as add, but opens a schema-driven editor window for the file
+    int add(const std::string &filepath, DataFileSchema schema);
+
     // Remove debug window by ID
     bool removeByID(int id);
 
@@ -56,6 +60,8 @@ public:
 private:
     std::vector<DebugWindowEntry> m_windows;
     int m_nextID;
+
+    int addImpl(const std::string &filepath, const DataFileSchema *schema);
 
     // Find window index by ID
     int findIndexByID(int id) const;

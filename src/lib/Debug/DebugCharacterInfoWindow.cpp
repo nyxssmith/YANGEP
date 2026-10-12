@@ -1,5 +1,6 @@
 #include "DebugCharacterInfoWindow.h"
 #include "DebugStateMachineWindow.h"
+#include "DataFileBySchemaDebugWindow.h"
 #include "AnimatedDataCharacter.h"
 #include "AnimatedDataCharacterNavMeshAgent.h"
 #include "StateMachine.h"
@@ -7,6 +8,7 @@
 #include "LevelV1.h"
 #include <cute.h>
 #include <imgui.h>
+#include <filesystem>
 
 DebugCharacterInfoWindow::DebugCharacterInfoWindow(const std::string &title,
                                                    AnimatedDataCharacter *character,
@@ -33,9 +35,20 @@ void DebugCharacterInfoWindow::render()
     // Add button to open character data file window
     if (m_character)
     {
-        if (ImGui::Button("Open Datafile Window"))
+        if (ImGui::Button("Open Character.json Window"))
         {
-            m_debugWindowList->add(m_character->getDataFilePath());
+            m_debugWindowList->add(m_character->getDataFilePath(), DataFileSchema::EntitiesCharacter);
+        }
+
+        const std::string &charPath = m_character->getDataFilePath();
+        std::string stateMachinesPath = charPath;
+        stateMachinesPath.replace(stateMachinesPath.rfind("character.json"), 14, "state_machines.json");
+        if (cf_fs_file_exists(stateMachinesPath.c_str()))
+        {
+            if (ImGui::Button("Open state_machines.json Window"))
+            {
+                m_debugWindowList->add(stateMachinesPath, DataFileSchema::EntitiesStateMachines);
+            }
         }
         if (ImGui::Button("Re-Init"))
         {
