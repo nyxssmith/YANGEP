@@ -8,4 +8,4 @@ render order for structures not quite perfect
 need to allow action to ignore hitting agents 
 debug window referencing character crashes if character is destroyed
 need to decide if diagonal/combined movement is allowed (is with controller, not with kb for now, need to make it a toggle in window-config)
-datafile save window doesnt save with linked assets
+TODO state machine editor window needs to read schema and dropdown to select and have nice time inputting stuff for all planned new states
