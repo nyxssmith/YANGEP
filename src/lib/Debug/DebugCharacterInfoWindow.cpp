@@ -43,9 +43,22 @@ void DebugCharacterInfoWindow::render()
         const std::string &charPath = m_character->getDataFilePath();
         std::string stateMachinesPath = charPath;
         stateMachinesPath.replace(stateMachinesPath.rfind("character.json"), 14, "state_machines.json");
-        if (cf_fs_file_exists(stateMachinesPath.c_str()))
+        const bool stateMachinesExist = cf_fs_file_exists(stateMachinesPath.c_str());
+        if (ImGui::Button(stateMachinesExist ? "Open state_machines.json Window" : "Create state_machines.json"))
         {
-            if (ImGui::Button("Open state_machines.json Window"))
+            bool ready = stateMachinesExist;
+            if (!ready)
+            {
+                // Starter file that just uses the shared "wander" machine.
+                DataFile created;
+                static_cast<nlohmann::json &>(created) = {
+                    {"state_machines", nlohmann::json::array({"wander"})},
+                    {"default_state_machine", "wander"}};
+                ready = created.save(stateMachinesPath);
+                if (!ready)
+                    printf("Failed to create '%s'\n", stateMachinesPath.c_str());
+            }
+            if (ready)
             {
                 m_debugWindowList->add(stateMachinesPath, DataFileSchema::EntitiesStateMachines);
             }

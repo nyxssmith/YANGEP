@@ -15,7 +15,7 @@
     },
     "innate_actions": {
       "type": "array",
-      "description": "The actions (folder names) available to this character by default.",
+      "description": "The actions (folder name) available to this character by default.",
       "items": {
         "type": "string"
       }
@@ -30,7 +30,8 @@
             "type": "string"
           },
           "tile_size": {
-            "type": "integer"
+            "type": "integer",
+            "default": 128
           }
         },
         "required": ["filename", "tile_size"]

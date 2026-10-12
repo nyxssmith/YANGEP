@@ -126,6 +126,8 @@ add_executable(
 	src/lib/Debug/DebugCoordinatorWindow.cpp
 	src/lib/Debug/DebugInputInfoWindow.cpp
 	src/lib/Debug/DebugSceneSwitcherWindow.cpp
+	src/lib/Debug/DebugLevelEditorWindow.cpp
+	src/lib/Debug/DebugEntityEditorWindow.cpp
 	src/lib/Debug/DebugStateMachineWindow.cpp
 	src/lib/Debug/DebugStateWindow.cpp
 	src/lib/Level/FileHandling/tsx.cpp
@@ -249,6 +251,8 @@ add_executable(
 	src/lib/Debug/DebugStateMachineWindow.cpp
 	src/lib/Debug/DebugStateWindow.cpp
 	src/lib/Debug/DebugSceneSwitcherWindow.cpp
+	src/lib/Debug/DebugLevelEditorWindow.cpp
+	src/lib/Debug/DebugEntityEditorWindow.cpp
 	src/lib/Level/FileHandling/tsx.cpp
 	src/lib/Level/FileHandling/tmx.cpp
 	src/lib/Level/GameLogic/LevelMap.cpp

@@ -88,6 +88,16 @@ void DataFileBySchemaDebugWindow::applyToDataFile()
     static_cast<nlohmann::json &>(m_dataFile) = m_working;
 }
 
+bool DataFileBySchemaDebugWindow::getValidWorking(nlohmann::json &out)
+{
+    std::vector<std::string> errors;
+    validate(m_working, m_schema, "", errors);
+    if (!m_schemaError.empty() || !errors.empty())
+        return false;
+    out = m_working;
+    return true;
+}
+
 std::string DataFileBySchemaDebugWindow::schemaType(const nlohmann::json &schema)
 {
     if (schema.is_object() && schema.contains("type") && schema["type"].is_string())
@@ -136,6 +146,8 @@ nlohmann::json DataFileBySchemaDebugWindow::defaultForSchema(const nlohmann::jso
 {
     const nlohmann::json &schema = resolveSchema(schemaIn, nlohmann::json());
     std::string type = schemaType(schema);
+    if (schema.contains("default"))
+        return schema["default"];
     if (schema.contains("enum") && schema["enum"].is_array() && !schema["enum"].empty())
         return schema["enum"][0];
     if (type == "string")
@@ -372,6 +384,9 @@ void DataFileBySchemaDebugWindow::renderNode(const std::string &label, nlohmann:
             ImGui::EndCombo();
         }
     }
+    else if (renderCustomField(id, value, widget))
+    {
+    }
     else if (type == "string" && value.is_string())
     {
         char buf[512];
@@ -465,4 +480,9 @@ void DataFileBySchemaDebugWindow::render()
 
 void DataFileBySchemaDebugWindow::renderFooter()
 {
+}
+
+bool DataFileBySchemaDebugWindow::renderCustomField(const std::string &, nlohmann::json &, const std::string &)
+{
+    return false;
 }

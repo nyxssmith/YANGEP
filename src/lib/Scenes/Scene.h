@@ -94,6 +94,7 @@ public:
     void setDebugEntityEditorWindow(DebugEntityEditorWindow *value) { debugEntityEditorWindow = value; }
     void setShowSceneSwitcherWindow(bool value) { ShowSceneSwitcherWindow = value; }
     void setDoEntityProcessing(bool value) { doEntityProcessing = value; }
+    void setShowLevelEditorWindow(bool value) { ShowLevelEditorWindow = value; }
     // Camera is owned by SceneManager so it survives scene swaps; this just points at it.
     void setCfCamera(CFNativeCamera &value) { cfCamera = &value; }
 
@@ -132,6 +133,7 @@ private:
     bool ShowCoordinatorInfo = false;
     bool ShowInputInfo = false;
     bool showAgents = false;
+    bool ShowLevelEditorWindow = false;
     std::vector<std::unique_ptr<DebugCharacterInfoWindow>> characterInfoWindows;
     bool recordInputInfo = false;
     std::ofstream inputLogFile;
@@ -139,7 +141,7 @@ private:
     bool showNavMesh;
     bool hud_inventory_open = false;
     bool ShowSceneSwitcherWindow = false;
-    bool doEntityProcessing = false;
+    bool doEntityProcessing = true;
     // objects used by level scenes
     // Declared first so it outlives the level and characters that use it
     SpriteAnimationLoader spriteAnimationLoader;

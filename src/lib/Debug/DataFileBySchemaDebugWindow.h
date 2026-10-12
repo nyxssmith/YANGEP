@@ -29,7 +29,11 @@ public:
 
 protected:
     virtual void renderFooter();
+    // Lets subclasses draw their own widget for the field at `id`; return true if handled.
+    virtual bool renderCustomField(const std::string &id, nlohmann::json &value, const std::string &widget);
     void loadFromDataFile();
+    // Copies the form's current content into `out` if it satisfies the schema.
+    bool getValidWorking(nlohmann::json &out);
 
 private:
     DataFile &m_dataFile;

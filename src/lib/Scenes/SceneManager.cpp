@@ -79,6 +79,7 @@ bool SceneManager::LoadScene(const std::string &scene_name)
     currentScene->setShowInputInfo(ShowInputInfo);
     currentScene->setShowCoordinatorInfo(ShowCoordinatorInfo);
     currentScene->setDebugSceneSwitcherWindow(debugSceneSwitcherWindow.get());
+    currentScene->setShowLevelEditorWindow(ShowLevelEditorWindow);
     currentScene->setDebugLevelEditorWindow(debugLevelEditorWindow.get());
     currentScene->setDebugEntityEditorWindow(debugEntityEditorWindow.get());
     currentScene->setShowSceneSwitcherWindow(ShowSceneSwitcherWindow);
@@ -121,6 +122,8 @@ void SceneManager::SetDebugVariablesFromWindowConfig()
     debugHighlightCoordinatorInfo = false;           // Default: don't show coordinator info
     debugHighlightPlayerNavmeshCollisionBox = false; // Default: don't show player navmesh collision box
     clickToInspectCharacter = false;                 // Default: don't inspect character on click
+    doEntityProcessing = true;
+    ShowLevelEditorWindow = false;
     debugEntityScale = 1.0f;
     if (windowConfig.contains("Debug"))
     {
@@ -389,6 +392,7 @@ void SceneManager::SharedSetup(int windowWidth, int windowHeight)
     debugSceneSwitcherWindow = std::make_unique<DebugSceneSwitcherWindow>("Scene Switcher", *this);
     debugLevelEditorWindow = std::make_unique<DebugLevelEditorWindow>();
     debugEntityEditorWindow = std::make_unique<DebugEntityEditorWindow>(entityEditorData);
+    debugLevelEditorWindow->setEntityEditorWindow(debugEntityEditorWindow.get());
 
     // Input recording setup
     bool recordInputInfo = false;
@@ -420,7 +424,12 @@ void SceneManager::Setup()
         currentScene->setup();
         if (debugLevelEditorWindow && currentScene->getLevelData())
         {
-            debugLevelEditorWindow->setLevel(*currentScene->getLevelData());
+            const std::string levelDirectory = "assets/Levels/" + currentScene->getLevel();
+            debugLevelEditorWindow->setLevel(*currentScene->getLevelData(), levelDirectory);
+            if (debugEntityEditorWindow)
+            {
+                debugEntityEditorWindow->setLevelDirectory(levelDirectory);
+            }
         }
     }
 }

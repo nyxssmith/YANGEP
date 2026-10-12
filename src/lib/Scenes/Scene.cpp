@@ -747,7 +747,7 @@ void Scene::mainLoopLevel()
     {
         debugSceneSwitcherWindow->render();
     }
-    if (debugLevelEditorWindow)
+    if (ShowLevelEditorWindow)
     {
         debugLevelEditorWindow->render();
     }

@@ -33,6 +33,7 @@ public:
     bool clickToCreateEntity;
     bool debugHighlightTileUnderCursor;
     bool doEntityProcessing;
+    bool ShowLevelEditorWindow;
 
 private:
     // used for scene switching
