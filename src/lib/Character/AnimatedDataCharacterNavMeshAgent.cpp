@@ -351,8 +351,14 @@ bool AnimatedDataCharacterNavMeshAgent::loadStateMachinesFromFolder(const std::s
             DataFile stateMachineFile;
             if (!stateMachineFile.load(stateMachinePath))
             {
-                printf("  - WARNING: Failed to load state machine file '%s'\n", stateMachinePath.c_str());
-                continue;
+                // Level entities can also use state machines defined globally
+                const std::string globalPath = "/assets/DataFiles/StateMachines/" + stateMachineName + ".json";
+                if (globalPath == stateMachinePath || !stateMachineFile.load(globalPath))
+                {
+                    printf("  - WARNING: Failed to load state machine file '%s'\n", stateMachinePath.c_str());
+                    continue;
+                }
+                printf("  - Using global state machine '%s'\n", globalPath.c_str());
             }
 
             // Create a StateMachine from the loaded file (DataFile inherits from nlohmann::json)
