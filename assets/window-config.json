@@ -42,6 +42,7 @@
     "ShowInputInfo": false,
     "RecordInputInfo": false,
     "ShowAtlasLabeler": false,
-    "ShowSceneSwitcherWindow": true
+    "ShowSceneSwitcherWindow": true,
+    "doEntityProcessing": true
   }
 }

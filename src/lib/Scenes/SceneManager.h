@@ -6,6 +6,8 @@
 #include <string>
 
 class DebugSceneSwitcherWindow;
+class DebugLevelEditorWindow;
+class DebugEntityEditorWindow;
 
 class SceneManager
 {
@@ -30,6 +32,7 @@ public:
     bool clickToInspectCharacter;
     bool clickToCreateEntity;
     bool debugHighlightTileUnderCursor;
+    bool doEntityProcessing;
 
 private:
     // used for scene switching
@@ -51,7 +54,10 @@ private:
     bool debugHighlightPlayerNavmeshCollisionBox;
 
     float debugEntityScale;
+    DataFile entityEditorData;
     std::unique_ptr<DebugSceneSwitcherWindow> debugSceneSwitcherWindow;
+    std::unique_ptr<DebugLevelEditorWindow> debugLevelEditorWindow;
+    std::unique_ptr<DebugEntityEditorWindow> debugEntityEditorWindow;
     DebugWindowList debugWindows;
     AtlasLabelerWindow atlasLabeler;
     bool atlas_labeler_open;
@@ -60,6 +66,7 @@ private:
     bool ShowPlayerInfo;
     bool ShowCoordinatorInfo;
     bool ShowInputInfo;
+    bool ShowSceneSwitcherWindow;
     std::vector<std::unique_ptr<DebugCharacterInfoWindow>> characterInfoWindows;
     bool recordInputInfo;
     std::ofstream inputLogFile;

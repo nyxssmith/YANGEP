@@ -15,6 +15,8 @@
 #include "DebugCoordinatorWindow.h"
 #include "DebugInputInfoWindow.h"
 #include "DebugSceneSwitcherWindow.h"
+#include "DebugLevelEditorWindow.h"
+#include "DebugEntityEditorWindow.h"
 #include "OnScreenChecks.h"
 #include "Coordinator.h"
 #include "Utils.h"
@@ -77,6 +79,10 @@ bool SceneManager::LoadScene(const std::string &scene_name)
     currentScene->setShowInputInfo(ShowInputInfo);
     currentScene->setShowCoordinatorInfo(ShowCoordinatorInfo);
     currentScene->setDebugSceneSwitcherWindow(debugSceneSwitcherWindow.get());
+    currentScene->setDebugLevelEditorWindow(debugLevelEditorWindow.get());
+    currentScene->setDebugEntityEditorWindow(debugEntityEditorWindow.get());
+    currentScene->setShowSceneSwitcherWindow(ShowSceneSwitcherWindow);
+    currentScene->setDoEntityProcessing(doEntityProcessing);
     currentScene->setCharacterInfoWindows(characterInfoWindows);
     currentScene->setRecordInputInfo(recordInputInfo);
     currentScene->setInputLogFile(inputLogFile);
@@ -368,9 +374,21 @@ void SceneManager::SharedSetup(int windowWidth, int windowHeight)
             atlas_labeler_open = debug["ShowAtlasLabeler"];
             printf("Debug ShowAtlasLabeler: %s\n", atlas_labeler_open ? "enabled" : "disabled");
         }
+        if (debug.contains("ShowSceneSwitcherWindow"))
+        {
+            ShowSceneSwitcherWindow = debug["ShowSceneSwitcherWindow"];
+            printf("Debug ShowSceneSwitcherWindow: %s\n", ShowSceneSwitcherWindow ? "enabled" : "disabled");
+        }
+        if (debug.contains("doEntityProcessing"))
+        {
+            doEntityProcessing = debug["doEntityProcessing"];
+            printf("Debug doEntityProcessing: %s\n", doEntityProcessing ? "enabled" : "disabled");
+        }
     }
 
     debugSceneSwitcherWindow = std::make_unique<DebugSceneSwitcherWindow>("Scene Switcher", *this);
+    debugLevelEditorWindow = std::make_unique<DebugLevelEditorWindow>();
+    debugEntityEditorWindow = std::make_unique<DebugEntityEditorWindow>(entityEditorData);
 
     // Input recording setup
     bool recordInputInfo = false;
@@ -400,6 +418,10 @@ void SceneManager::Setup()
     if (currentScene && !currentScene->getHasSetup())
     {
         currentScene->setup();
+        if (debugLevelEditorWindow && currentScene->getLevelData())
+        {
+            debugLevelEditorWindow->setLevel(*currentScene->getLevelData());
+        }
     }
 }
 
