@@ -35,7 +35,6 @@ protected:
     // Copies the form's current content into `out` if it satisfies the schema.
     bool getValidWorking(nlohmann::json &out);
 
-private:
     DataFile &m_dataFile;
     DataFileSchema m_schemaType;
     nlohmann::json m_schema;
@@ -45,7 +44,7 @@ private:
     std::map<std::string, std::string> m_rawBuffers;
 
     void loadSchema();
-    void applyToDataFile();
+    virtual void applyToDataFile();
 
     static nlohmann::json defaultForSchema(const nlohmann::json &schema);
     static const nlohmann::json &resolveSchema(const nlohmann::json &schema, const nlohmann::json &value);
@@ -54,7 +53,7 @@ private:
     static void normalize(nlohmann::json &value, const nlohmann::json &schema);
     static void validate(const nlohmann::json &value, const nlohmann::json &schema, const std::string &path, std::vector<std::string> &errors);
 
-    void renderNode(const std::string &label, nlohmann::json &value, const nlohmann::json &schema, const std::string &id);
-    void renderObjectBody(nlohmann::json &value, const nlohmann::json &schema, const std::string &id);
-    void renderArrayBody(nlohmann::json &value, const nlohmann::json &schema, const std::string &id);
+    virtual void renderNode(const std::string &label, nlohmann::json &value, const nlohmann::json &schema, const std::string &id);
+    virtual void renderObjectBody(nlohmann::json &value, const nlohmann::json &schema, const std::string &id);
+    virtual void renderArrayBody(nlohmann::json &value, const nlohmann::json &schema, const std::string &id);
 };

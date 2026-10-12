@@ -18,6 +18,7 @@
 #include "DebugSceneSwitcherWindow.h"
 #include "DebugLevelEditorWindow.h"
 #include "DebugEntityEditorWindow.h"
+#include "DebugStateMachineEditorWindow.h"
 #include "OnScreenChecks.h"
 #include "Coordinator.h"
 #include "Utils.h"
@@ -754,6 +755,10 @@ void Scene::mainLoopLevel()
     if (debugEntityEditorWindow)
     {
         debugEntityEditorWindow->render();
+    }
+    if (debugStateMachineEditorWindow)
+    {
+        debugStateMachineEditorWindow->render();
     }
 
     if (atlas_labeler_open)

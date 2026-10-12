@@ -21,6 +21,7 @@ class DebugInputInfoWindow;
 class DebugSceneSwitcherWindow;
 class DebugLevelEditorWindow;
 class DebugEntityEditorWindow;
+class DebugStateMachineEditorWindow;
 class CFNativeCamera;
 
 // Represents a scene loaded from assets/DataFiles/Scenes/<name>.json
@@ -92,6 +93,7 @@ public:
     void setDebugSceneSwitcherWindow(DebugSceneSwitcherWindow *value) { debugSceneSwitcherWindow = value; }
     void setDebugLevelEditorWindow(DebugLevelEditorWindow *value) { debugLevelEditorWindow = value; }
     void setDebugEntityEditorWindow(DebugEntityEditorWindow *value) { debugEntityEditorWindow = value; }
+    void setDebugStateMachineEditorWindow(DebugStateMachineEditorWindow *value) { debugStateMachineEditorWindow = value; }
     void setShowSceneSwitcherWindow(bool value) { ShowSceneSwitcherWindow = value; }
     void setDoEntityProcessing(bool value) { doEntityProcessing = value; }
     void setShowLevelEditorWindow(bool value) { ShowLevelEditorWindow = value; }
@@ -154,6 +156,7 @@ private:
     DebugSceneSwitcherWindow *debugSceneSwitcherWindow = nullptr;
     DebugLevelEditorWindow *debugLevelEditorWindow = nullptr;
     DebugEntityEditorWindow *debugEntityEditorWindow = nullptr;
+    DebugStateMachineEditorWindow *debugStateMachineEditorWindow = nullptr;
     CFNativeCamera *cfCamera = nullptr; // owned by SceneManager, shared via setCfCamera
     AnimatedDataCharacterNavMeshPlayer playerCharacter;
     HudUI hud_ui;

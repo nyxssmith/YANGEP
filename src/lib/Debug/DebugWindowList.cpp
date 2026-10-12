@@ -1,6 +1,7 @@
 #include "DebugWindowList.h"
 #include "DataFileDebugWindow.h"
 #include "DataFileBySchemaDebugWindow.h"
+#include "DebugStateMachineEditorWindow.h"
 #include <stdio.h>
 
 DebugWindowEntry::DebugWindowEntry(int id, const std::string &path)
@@ -57,7 +58,12 @@ int DebugWindowList::addImpl(const std::string &filepath, const DataFileSchema *
         // Create debug window with title
         std::string title = "Debug: " + filename;
         if (schema)
-            entry.window = std::make_unique<DataFileBySchemaDebugWindow>(title, *entry.dataFile, *schema);
+        {
+            if (*schema == DataFileSchema::StateMachine)
+                entry.window = std::make_unique<DebugStateMachineEditorWindow>(title, *entry.dataFile);
+            else
+                entry.window = std::make_unique<DataFileBySchemaDebugWindow>(title, *entry.dataFile, *schema);
+        }
         else
             entry.window = std::make_unique<DataFileDebugWindow>(title, *entry.dataFile);
 

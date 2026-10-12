@@ -1,5 +1,6 @@
 #include "DebugLevelEditorWindow.h"
 #include "DebugEntityEditorWindow.h"
+#include "DebugStateMachineEditorWindow.h"
 #include "LevelV1.h"
 #include <algorithm>
 #include <filesystem>
@@ -67,5 +68,17 @@ void DebugLevelEditorWindow::renderFooter()
     if (ImGui::Button("Create new entity") && m_entityEditorWindow)
     {
         m_entityEditorWindow->show();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("State Machine Editor"))
+    {
+        if (m_stateMachineEditorWindow)
+        {
+            m_stateMachineEditorWindow->show();
+        }
+        else
+        {
+            printf("DebugLevelEditorWindow: m_stateMachineEditorWindow is null\n");
+        }
     }
 }

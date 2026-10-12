@@ -17,6 +17,7 @@
 #include "DebugSceneSwitcherWindow.h"
 #include "DebugLevelEditorWindow.h"
 #include "DebugEntityEditorWindow.h"
+#include "DebugStateMachineEditorWindow.h"
 #include "OnScreenChecks.h"
 #include "Coordinator.h"
 #include "Utils.h"
@@ -82,6 +83,7 @@ bool SceneManager::LoadScene(const std::string &scene_name)
     currentScene->setShowLevelEditorWindow(ShowLevelEditorWindow);
     currentScene->setDebugLevelEditorWindow(debugLevelEditorWindow.get());
     currentScene->setDebugEntityEditorWindow(debugEntityEditorWindow.get());
+    currentScene->setDebugStateMachineEditorWindow(debugStateMachineEditorWindow.get());
     currentScene->setShowSceneSwitcherWindow(ShowSceneSwitcherWindow);
     currentScene->setDoEntityProcessing(doEntityProcessing);
     currentScene->setCharacterInfoWindows(characterInfoWindows);
@@ -392,7 +394,9 @@ void SceneManager::SharedSetup(int windowWidth, int windowHeight)
     debugSceneSwitcherWindow = std::make_unique<DebugSceneSwitcherWindow>("Scene Switcher", *this);
     debugLevelEditorWindow = std::make_unique<DebugLevelEditorWindow>();
     debugEntityEditorWindow = std::make_unique<DebugEntityEditorWindow>(entityEditorData);
+    debugStateMachineEditorWindow = std::make_unique<DebugStateMachineEditorWindow>(stateMachineEditorData);
     debugLevelEditorWindow->setEntityEditorWindow(debugEntityEditorWindow.get());
+    debugLevelEditorWindow->setStateMachineEditorWindow(debugStateMachineEditorWindow.get());
 
     // Input recording setup
     bool recordInputInfo = false;
@@ -429,6 +433,10 @@ void SceneManager::Setup()
             if (debugEntityEditorWindow)
             {
                 debugEntityEditorWindow->setLevelDirectory(levelDirectory);
+            }
+            if (debugStateMachineEditorWindow)
+            {
+                debugStateMachineEditorWindow->setLevelDirectory(levelDirectory);
             }
         }
     }

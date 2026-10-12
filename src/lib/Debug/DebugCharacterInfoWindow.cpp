@@ -63,6 +63,22 @@ void DebugCharacterInfoWindow::render()
                 m_debugWindowList->add(stateMachinesPath, DataFileSchema::EntitiesStateMachines);
             }
         }
+
+        std::string currentSMName = "wander";
+        AnimatedDataCharacterNavMeshAgent *agent = dynamic_cast<AnimatedDataCharacterNavMeshAgent *>(m_character);
+        if (agent && agent->getStateMachineController())
+        {
+            std::string smName = agent->getStateMachineController()->getCurrentStateMachineName();
+            if (!smName.empty())
+                currentSMName = smName;
+        }
+        std::string smButtonText = "Open State Machine Editor (" + currentSMName + ")";
+        if (ImGui::Button(smButtonText.c_str()))
+        {
+            std::string smPath = "/assets/DataFiles/StateMachines/" + currentSMName + ".json";
+            m_debugWindowList->add(smPath, DataFileSchema::StateMachine);
+        }
+
         if (ImGui::Button("Re-Init"))
         {
             // get folder path and re-init the character

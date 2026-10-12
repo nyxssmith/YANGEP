@@ -8,6 +8,7 @@
 class DebugSceneSwitcherWindow;
 class DebugLevelEditorWindow;
 class DebugEntityEditorWindow;
+class DebugStateMachineEditorWindow;
 
 class SceneManager
 {
@@ -56,9 +57,11 @@ private:
 
     float debugEntityScale;
     DataFile entityEditorData;
+    DataFile stateMachineEditorData;
     std::unique_ptr<DebugSceneSwitcherWindow> debugSceneSwitcherWindow;
     std::unique_ptr<DebugLevelEditorWindow> debugLevelEditorWindow;
     std::unique_ptr<DebugEntityEditorWindow> debugEntityEditorWindow;
+    std::unique_ptr<DebugStateMachineEditorWindow> debugStateMachineEditorWindow;
     DebugWindowList debugWindows;
     AtlasLabelerWindow atlasLabeler;
     bool atlas_labeler_open;
