@@ -24,13 +24,13 @@ run: build
 	@echo "Running "
 	./scripts/run.sh
 
-run_link_assets: build
+run_modify_assets: build
 	@echo "Removing build assets..."
 	./scripts/remove_build_assets.sh
 	@echo "Copying fresh assets..."
 	./scripts/copy_assets_to_build.sh
 	@echo "Running "
-	./scripts/run_link_assets.sh
+	./scripts/run_modify_assets.sh
 
 run_action_editor: build
 	@echo "Removing build assets..."
