@@ -35,7 +35,7 @@ void PrintState::update(float dt)
     }
 
     // Print the text to stdout
-    // printf("%s\n", to_print.c_str());
+    printf("%s\n", to_print.c_str());
 
     // Mark as complete
     setIsRunning(false);

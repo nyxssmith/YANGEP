@@ -90,6 +90,7 @@ void StateMachine::initFromJson()
                 state->setDefaultValues(inputs);
             }
             state->setName(stateName);
+            state->setStateMachine(this);
             states.push_back(std::move(state));
             printf("StateMachine '%s': Added state '%s'\n", name.c_str(), stateName.c_str());
         }
