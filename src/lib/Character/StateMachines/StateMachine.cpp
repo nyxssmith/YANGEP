@@ -1,4 +1,8 @@
 #include "StateMachine.h"
+#include <cute.h>
+#include <cute_math.h>
+#include "AnimatedDataCharacterNavMeshAgent.h"
+#include "LevelV1.h"
 
 StateMachine::StateMachine()
     : DataFile(), name(""), currentStateIndex(-1), loopCounter(0)
@@ -152,6 +156,15 @@ void StateMachine::update(float dt)
     {
         return;
     }
+    // if home is not set, ask agent for it
+    if (!isHomeSet())
+    {
+        // get the current position of this agent
+        Cute::v2 currentPosition = agent->getPosition();
+        // get tile width from agents level
+        int tileWidth = agent->getLevel()->getTileWidth();
+        setHome(static_cast<int>(currentPosition.x) / tileWidth, static_cast<int>(currentPosition.y) / tileWidth);
+    }
 
     // Update the current state
     currentState->update(dt);
@@ -218,4 +231,67 @@ void StateMachine::setAgent(AnimatedDataCharacterNavMeshAgent *agent)
             state->setAgent(agent);
         }
     }
+    // save for self too
+    this->agent = agent;
+}
+
+int StateMachine::getHomeTileX() const
+{
+    return home_tile_X;
+}
+
+int StateMachine::getHomeTileY() const
+{
+    return home_tile_Y;
+}
+
+bool StateMachine::getRegisterA() const
+{
+    return register_A;
+}
+
+float StateMachine::getRegisterB() const
+{
+    return register_B;
+}
+
+const std::string &StateMachine::getRegisterC() const
+{
+    return register_C;
+}
+
+void StateMachine::setHomeTileX(int value)
+{
+    home_tile_X = value;
+}
+
+void StateMachine::setHomeTileY(int value)
+{
+    home_tile_Y = value;
+}
+
+void StateMachine::setRegisterA(bool value)
+{
+    register_A = value;
+}
+
+void StateMachine::setRegisterB(float value)
+{
+    register_B = value;
+}
+
+void StateMachine::setRegisterC(const std::string &value)
+{
+    register_C = value;
+}
+bool StateMachine::isHomeSet() const
+{
+    return home_set;
+}
+
+void StateMachine::setHome(int x, int y)
+{
+    home_tile_X = x;
+    home_tile_Y = y;
+    home_set = true;
 }

@@ -62,12 +62,43 @@ public:
     // Get the loop counter (how many times the state machine has cycled)
     int getLoopCounter() const;
 
+    // Get the home position of the agent
+    int getHomeTileX() const;
+    int getHomeTileY() const;
+
+    // Get the registers
+    bool getRegisterA() const;
+    float getRegisterB() const;
+    const std::string &getRegisterC() const;
+
+    // Set the registers
+    void setRegisterA(bool value);
+    void setRegisterB(float value);
+    void setRegisterC(const std::string &value);
+
+    // Set the home position of the agent
+    void setHomeTileX(int value);
+    void setHomeTileY(int value);
+    bool isHomeSet() const;
+    void setHome(int x, int y);
+
 private:
     std::string name;
     StateLibrary stateLibrary;
     std::vector<std::unique_ptr<State>> states;
     int currentStateIndex; // -1 if no state is active
     int loopCounter;       // Increments each time the state machine cycles back to first state
+    // agent the machine is controlling
+    AnimatedDataCharacterNavMeshAgent *agent;
+    // home position of the agent
+    int home_tile_X;
+    int home_tile_Y;
+    bool home_set = false;
+
+    // registers A, B, C
+    bool register_A;
+    float register_B;
+    std::string register_C;
 
     // Common initialization from json data
     void initFromJson();
