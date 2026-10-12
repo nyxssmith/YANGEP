@@ -1,0 +1,43 @@
+{
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The name used to identify this action."
+    },
+    "type": {
+      "type": "string",
+      "description": "The kind of action implementation to use.",
+      "enum": ["tile", "projectile", "statemachine"]
+    },
+    "description": {
+      "type": "string",
+      "description": "A human-readable explanation of what the action does."
+    },
+    "warmup": {
+      "type": "integer",
+      "description": "The delay before the action takes effect. Is added to cooldown for player"
+    },
+    "cooldown": {
+      "type": "integer",
+      "description": "The delay after the action before it can be used again."
+    },
+    "damage": {
+      "type": "float",
+      "description": "The amount of damage dealt by the action."
+    },
+    "animation": {
+      "type": "string",
+      "description": "The name of the animation played for this action."
+    }
+  },
+  "required": [
+    "name",
+    "type",
+    "description",
+    "warmup",
+    "cooldown",
+    "damage",
+    "animation"
+  ]
+}

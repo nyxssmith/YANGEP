@@ -1,0 +1,14 @@
+{
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The name used to identify this item."
+    },
+    "description": {
+      "type": "string",
+      "description": "A human-readable explanation of the item."
+    }
+  },
+  "required": ["name", "description"]
+}

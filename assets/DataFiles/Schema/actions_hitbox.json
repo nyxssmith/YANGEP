@@ -1,0 +1,25 @@
+{
+  "type": "object",
+  "properties": {
+    "tiles": {
+      "type": "array",
+      "description": "The tiles covered by the action's hitbox and the damage modifier for each tile. Use action editor to make actions",
+      "items": {
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "integer"
+          },
+          "y": {
+            "type": "integer"
+          },
+          "damage_modifier": {
+            "type": "float"
+          }
+        },
+        "required": ["x", "y", "damage_modifier"]
+      }
+    }
+  },
+  "required": ["tiles"]
+}
