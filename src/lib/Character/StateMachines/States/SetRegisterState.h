@@ -3,12 +3,13 @@
 
 #include "State.h"
 #include <string>
+#include "StateMachine.h"
 
 enum RegisterToSet
 {
-    REGISTER_A,
-    REGISTER_B,
-    REGISTER_C
+    SET_REGISTER_A,
+    SET_REGISTER_B,
+    SET_REGISTER_C
 };
 
 class SetRegisterState : public State
@@ -29,9 +30,9 @@ protected:
 
 private:
     RegisterToSet to_set; // Register to set
-    bool A_value; // Value for register A
-    float B_value; // Value for register B
-    std::string C_value; // Value for register C
+    bool A_value;         // Value for register A
+    float B_value;        // Value for register B
+    std::string C_value;  // Value for register C
 };
 
 #endif // SET_REGISTER_STATE_H

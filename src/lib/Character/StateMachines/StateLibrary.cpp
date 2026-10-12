@@ -4,6 +4,17 @@
 #include "States/WanderNewPositionState.h"
 #include "States/MoveToPositionState.h"
 #include "States/GoToTilePositionState.h"
+#include "States/SetRegisterState.h"
+#include "States/SayInBubbleState.h"
+#include "States/DoActionState.h"
+#include "States/DoActionFromCoordinatorState.h"
+#include "States/GetNewPositionFromCoordinatorState.h"
+#include "States/IfState.h"
+#include "States/EndIfState.h"
+#include "States/GetDistanceFromHomeState.h"
+#include "States/GetDistanceFromPlayerState.h"
+#include "States/GetEntitiesInBoxState.h"
+#include "States/JumpState.h"
 #include <cstdio>
 
 StateLibrary::StateLibrary()
@@ -84,19 +95,48 @@ void StateLibrary::initializeBuiltInStates()
     // takes in tile x and y and then needs move_to_position to actually move the character after that
     registerState("go_to_tile_position", []() -> std::unique_ptr<State>
                   { return std::make_unique<GoToTilePositionState>(); });
+    // Register SetRegisterState
+    registerState("set", []() -> std::unique_ptr<State>
+                  { return std::make_unique<SetRegisterState>(); });
 
-    // planned states
-    //  do_action input:action ; makes the character do that action if they can
-    //  get_path_from_coordinator ; uses getnewpath to ask the coordinator where its attack the player position is, and gets a path there (also needs move_to_position after to move)
-    //  do_action_from_coordinator ; makes the character do an action based on instructions from the coordinator if possible (default to 0th action in list)
-    //  say_in_bubble ; makes the character display a speech bubble with the given text
-    //  NEXT STATES REQUIRE REGISTERS TO BE ADDED
-    // plan is to add registers for A, B, C where A is a bool, B is a float and C is a string, and their value can be used with $A, $B, $C respectively as state inputs
-    //  set : input is {A:<new bool>, B:<new float>, C:<new string>} Sets the value of either A, B, or C to the specified new value
-    // TODO add and handle the following states and implement todos in others
-    //  if : input is {A:<bool>, B:<float>, C:<string>, operation:<string for > >= == != < <=} Compares the value of either A, B, or C based on the operation specified, if the comparison is true, the next state is executed, otherwise it skips to the next else state
-    //  endif : takes no inputs, is used as a skip to here if if is false
-    //  get_distance_from_player ; gets the distance from the player character and sets it in the B register
-    //  get_distance_from_home ; gets the distance from the character's home position (where it spawned, TODO need to add this to be set when state machine starts up) and sets it in the B register
-    //  jump : input is index of state to jump to in the state machine's list of states
+    // Register SayInBubbleState
+    registerState("say_in_bubble", []() -> std::unique_ptr<State>
+                  { return std::make_unique<SayInBubbleState>(); });
+
+    // Register DoActionState
+    registerState("do_action", []() -> std::unique_ptr<State>
+                  { return std::make_unique<DoActionState>(); });
+
+    // Register DoActionFromCoordinatorState
+    registerState("do_action_from_coordinator", []() -> std::unique_ptr<State>
+                  { return std::make_unique<DoActionFromCoordinatorState>(); });
+
+    // Register GetNewPositionFromCoordinatorState
+    registerState("get_new_position_from_coordinator", []() -> std::unique_ptr<State>
+                  { return std::make_unique<GetNewPositionFromCoordinatorState>(); });
+
+    // Register IfState
+    registerState("if", []() -> std::unique_ptr<State>
+                  { return std::make_unique<IfState>(); });
+
+    // Register EndIfState
+    registerState("endif", []() -> std::unique_ptr<State>
+                  { return std::make_unique<EndIfState>(); });
+
+    // Register GetDistanceFromHomeState
+    registerState("get_distance_from_home", []() -> std::unique_ptr<State>
+                  { return std::make_unique<GetDistanceFromHomeState>(); });
+
+    // Register GetDistanceFromPlayerState
+    registerState("get_distance_from_player", []() -> std::unique_ptr<State>
+                  { return std::make_unique<GetDistanceFromPlayerState>(); });
+
+    // Register GetEntitiesInBoxState
+    registerState("get_entities_in_box", []() -> std::unique_ptr<State>
+                  { return std::make_unique<GetEntitiesInBoxState>(); });
+
+    // Register JumpState
+    // input is index of state to jump to in the state machine's list of states
+    registerState("jump", []() -> std::unique_ptr<State>
+                  { return std::make_unique<JumpState>(); });
 }

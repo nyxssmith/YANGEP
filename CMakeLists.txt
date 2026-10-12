@@ -157,6 +157,17 @@ add_executable(
 	src/lib/Character/StateMachines/States/WanderNewPositionState.cpp
 	src/lib/Character/StateMachines/States/MoveToPositionState.cpp
 	src/lib/Character/StateMachines/States/GoToTilePositionState.cpp
+	src/lib/Character/StateMachines/States/SetRegisterState.cpp
+	src/lib/Character/StateMachines/States/SayInBubbleState.cpp
+	src/lib/Character/StateMachines/States/DoActionState.cpp
+	src/lib/Character/StateMachines/States/DoActionFromCoordinatorState.cpp
+	src/lib/Character/StateMachines/States/GetNewPositionFromCoordinatorState.cpp
+	src/lib/Character/StateMachines/States/IfState.cpp
+	src/lib/Character/StateMachines/States/EndIfState.cpp
+	src/lib/Character/StateMachines/States/GetDistanceFromHomeState.cpp
+	src/lib/Character/StateMachines/States/GetDistanceFromPlayerState.cpp
+	src/lib/Character/StateMachines/States/GetEntitiesInBoxState.cpp
+	src/lib/Character/StateMachines/States/JumpState.cpp
 	src/lib/Combat/HitBox.cpp
 	src/lib/Combat/Action.cpp
 	src/lib/Combat/Projectile.cpp
@@ -280,6 +291,17 @@ add_executable(
 	src/lib/Character/StateMachines/States/WanderNewPositionState.cpp
 	src/lib/Character/StateMachines/States/MoveToPositionState.cpp
 	src/lib/Character/StateMachines/States/GoToTilePositionState.cpp
+	src/lib/Character/StateMachines/States/SetRegisterState.cpp
+	src/lib/Character/StateMachines/States/SayInBubbleState.cpp
+	src/lib/Character/StateMachines/States/DoActionState.cpp
+	src/lib/Character/StateMachines/States/DoActionFromCoordinatorState.cpp
+	src/lib/Character/StateMachines/States/GetNewPositionFromCoordinatorState.cpp
+	src/lib/Character/StateMachines/States/IfState.cpp
+	src/lib/Character/StateMachines/States/EndIfState.cpp
+	src/lib/Character/StateMachines/States/GetDistanceFromHomeState.cpp
+	src/lib/Character/StateMachines/States/GetDistanceFromPlayerState.cpp
+	src/lib/Character/StateMachines/States/GetEntitiesInBoxState.cpp
+	src/lib/Character/StateMachines/States/JumpState.cpp
 	src/lib/Combat/HitBox.cpp
 	src/lib/Combat/Action.cpp
 	src/lib/Combat/Projectile.cpp
