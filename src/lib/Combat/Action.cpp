@@ -53,6 +53,8 @@ Action::Action(const Action &other)
       hasDamage(other.hasDamage),
       animation(other.animation),
       loopAnimation(other.loopAnimation),
+      max_uses(other.max_uses),
+      remaining_uses(other.remaining_uses),
       type(other.type),
       projectilesData(other.projectilesData ? new ProjectilesData(*other.projectilesData) : nullptr)
 {
@@ -105,6 +107,8 @@ Action &Action::operator=(const Action &other)
         hasDamage = other.hasDamage;
         animation = other.animation;
         loopAnimation = other.loopAnimation;
+        max_uses = other.max_uses;
+        remaining_uses = other.remaining_uses;
         type = other.type;
         if (other.projectilesData)
         {
@@ -180,6 +184,14 @@ bool Action::loadFromFolder(const std::string &folderPath, float hitboxSize, flo
     {
         animation = (*this)["animation"].get<std::string>();
     }
+
+    // Load uses (defaults to 10) and start with all uses remaining
+    max_uses = 10;
+    if (actionLoaded && contains("uses") && (*this)["uses"].is_number_integer())
+    {
+        max_uses = (*this)["uses"].get<int>();
+    }
+    remaining_uses = max_uses;
 
     // Load loop_animation flag if present in action.json, otherwise keep the default (play once)
     if (actionLoaded && contains("loop_animation") && (*this)["loop_animation"].is_boolean())
@@ -332,6 +344,18 @@ void Action::doAction()
         printf("Action: Warning - Attempting to doAction while already active\n");
         return;
     }
+    if (remaining_uses > 0)
+    {
+        // TODO dont decrement if holder of item is npc
+        remaining_uses--;
+    }
+    else if (remaining_uses == 0)
+    {
+        // TODO flash UI or something
+        printf("Action: Warning - No remaining uses for this action\n");
+        return;
+    } // set to -1 for unlimited uses
+
     setActive(true);
 }
 

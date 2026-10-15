@@ -22,6 +22,11 @@
       "type": "integer",
       "description": "The delay after the action before it can be used again."
     },
+    "uses": {
+      "type": "integer",
+      "description": "The maximum number of times the action can be used.",
+      "default": 10
+    },
     "damage": {
       "type": "float",
       "description": "The amount of damage dealt by the action."
@@ -37,6 +42,7 @@
     "description",
     "warmup",
     "cooldown",
+    "uses",
     "damage",
     "animation"
   ]
