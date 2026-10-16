@@ -213,7 +213,8 @@ bool Action::loadFromFolder(const std::string &folderPath, float hitboxSize, flo
             // Clean up existing hitbox if any
             if (hitbox)
             {
-                delete hitbox;
+                // TODO properly delete the hitbox, but rn it crashes
+                // delete hitbox;
                 hitbox = nullptr;
             }
 

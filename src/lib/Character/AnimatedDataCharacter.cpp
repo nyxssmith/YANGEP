@@ -63,6 +63,8 @@ bool AnimatedDataCharacter::init(const std::string &folderPath)
         return false;
     }
 
+    // TODO for innate actions and items need to also search level for level defined ones as well
+
     // Load innate actions if specified in JSON
     if (datafile.contains("innate_actions") && datafile["innate_actions"].is_array())
     {
@@ -80,6 +82,28 @@ bool AnimatedDataCharacter::init(const std::string &folderPath)
                 else
                 {
                     printf("AnimatedDataCharacter: WARNING: Failed to load innate action '%s' from '%s'\n", actionName.c_str(), fullPath.c_str());
+                }
+            }
+        }
+    }
+    // load items
+    if (datafile.contains("items") && datafile["items"].is_array())
+    {
+
+        for (const auto &itemPath : datafile["items"])
+        {
+            if (itemPath.is_string())
+            {
+                std::string itemName = itemPath;
+                // Build full path to item folder
+                std::string fullPath = "/assets/DataFiles/Items/" + itemName + ".json";
+                if (getInventory().addItem(fullPath))
+                {
+                    printf("AnimatedDataCharacter: Loaded item '%s' from '%s'\n", itemName.c_str(), fullPath.c_str());
+                }
+                else
+                {
+                    printf("AnimatedDataCharacter: WARNING: Failed to load item '%s' from '%s'\n", itemName.c_str(), fullPath.c_str());
                 }
             }
         }

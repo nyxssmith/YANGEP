@@ -8,5 +8,5 @@ render order for structures not quite perfect
 need to allow action to ignore hitting agents 
 debug window referencing character crashes if character is destroyed
 need to decide if diagonal/combined movement is allowed (is with controller, not with kb for now, need to make it a toggle in window-config)
-TODO make actions/weapons have usage for the player 20shots
 clicking on window still does stuff to level, as does typing
+innate_actions and items of entities can only load global, not also level specific actions or items (maybe fix?)
