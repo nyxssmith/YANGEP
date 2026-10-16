@@ -8,6 +8,10 @@
     "description": {
       "type": "string",
       "description": "A human-readable explanation of the item."
+    },
+    "provides_action": {
+      "type": "string",
+      "description": "Optional name of the folder under Actions that this item provides."
     }
   },
   "required": ["name", "description"]

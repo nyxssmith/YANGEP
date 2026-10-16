@@ -3,6 +3,7 @@
   "hitbox_distance": 0,
   "hitbox_size": 32,
   "innate_actions": ["OneTile"],
+  "items": [],
   "layers": [
     {
       "filename": "blue_red_legs.png",

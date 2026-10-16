@@ -164,10 +164,10 @@ int Scene::setupLevel()
     }
 
     // add debug items to the player
-    Item itemA("assets/DataFiles/Items/item-a.json");
-    Item itemB("assets/DataFiles/Items/item-b.json");
+    Item itemA("/assets/DataFiles/Items/melee_claw.json");
+    // Item itemB("assets/DataFiles/Items/item-b.json");
     playerCharacter.getInventory().addItem(itemA);
-    playerCharacter.getInventory().addItem(itemB);
+    // playerCharacter.getInventory().addItem(itemB);
     bool hud_inventory_open = false;
 
     // HUD init (loads atlas/background)

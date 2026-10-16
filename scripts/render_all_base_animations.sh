@@ -50,3 +50,6 @@ for base_animation_name in "${base_animation_names[@]}"; do
     echo "Copying $base_animation_name to assets"
     cp "$ANIMATION_TOOLS_DIR/output_imgs/$base_animation_name"/*.png "assets/Art/AnimationsSheets/$base_animation_name"
 done
+
+# copy all the right facing claw imgs as Item Icons
+cp $ANIMATION_TOOLS_DIR/mapped_imgs/claw_facing_right*.png "assets/Art/ItemIcons/"

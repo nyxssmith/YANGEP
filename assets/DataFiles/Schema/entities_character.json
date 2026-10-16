@@ -20,6 +20,13 @@
         "type": "string"
       }
     },
+    "items": {
+      "type": "array",
+      "description": "The names of items (item data file names) this character starts with.",
+      "items": {
+        "type": "string"
+      }
+    },
     "layers": {
       "type": "array",
       "description": "The visual layers used to compose the character's appearance.",

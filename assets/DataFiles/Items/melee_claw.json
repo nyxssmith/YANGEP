@@ -1,0 +1,6 @@
+{
+  "name": "Melee Claw",
+  "description": "A basic melee claw used for close combat.",
+  "provides_action": "ThreeWide",
+  "icon": "claw_facing_right.png"
+}
