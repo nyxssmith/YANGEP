@@ -928,6 +928,11 @@ const std::vector<Action> &AnimatedDataCharacter::getActions() const
     return actionsList;
 }
 
+std::vector<Action> &AnimatedDataCharacter::getActions()
+{
+    return actionsList;
+}
+
 // Set action pointer A to a specific index
 void AnimatedDataCharacter::setActionPointerA(size_t index)
 {

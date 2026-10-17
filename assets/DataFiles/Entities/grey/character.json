@@ -1,0 +1,12 @@
+{
+  "name": "grey",
+  "hitbox_size": 32,
+  "hitbox_distance": 0,
+  "innate_actions": [],
+  "layers": [
+    {
+      "filename": "grey.png",
+      "tile_size": 128
+    }
+  ]
+}

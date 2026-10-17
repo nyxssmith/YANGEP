@@ -1,0 +1,3 @@
+{
+  "projectiles": [{ "speed": 200.0, "entity": "turret_crab", "angle": 0.0 }]
+}

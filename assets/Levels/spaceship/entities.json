@@ -1,28 +1,36 @@
 {
-    "entities": [
-        {
-            "name": "test_enemy_crab",
-            "path": "/assets/DataFiles/Entities/test_enemy_crab",
-            "position": {
-                "x": 10,
-                "y": 10
-            }
-        },
-        {
-            "name": "another",
-            "path": "/assets/Levels/spaceship/DataFiles/Entities/another",
-            "position": {
-                "x": 12,
-                "y": 10
-            }
-        },
-        {
-            "name": "bobb",
-            "path": "/assets/Levels/spaceship/DataFiles/Entities/bob",
-            "position": {
-                "x": 12,
-                "y": 12
-            }
-        }
-    ]
+  "entities": [
+    {
+      "name": "turret_crab",
+      "path": "/assets/DataFiles/Entities/turret_crab",
+      "position": {
+        "x": 26,
+        "y": 16
+      }
+    },
+    {
+      "name": "test_enemy_crab",
+      "path": "/assets/DataFiles/Entities/test_enemy_crab",
+      "position": {
+        "x": 10,
+        "y": 10
+      }
+    },
+    {
+      "name": "another",
+      "path": "/assets/Levels/spaceship/DataFiles/Entities/another",
+      "position": {
+        "x": 12,
+        "y": 10
+      }
+    },
+    {
+      "name": "bobb",
+      "path": "/assets/Levels/spaceship/DataFiles/Entities/bob",
+      "position": {
+        "x": 12,
+        "y": 12
+      }
+    }
+  ]
 }

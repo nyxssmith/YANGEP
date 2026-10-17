@@ -114,6 +114,7 @@ public:
     bool addAction(const std::string &folderPath);
     bool removeAction(const std::string &actionName);
     const std::vector<Action> &getActions() const;
+    std::vector<Action> &getActions();
     bool addActionDirectly(Action &action);
     // Action pointer management
     virtual void setActionPointerA(size_t index);

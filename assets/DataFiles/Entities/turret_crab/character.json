@@ -1,0 +1,13 @@
+{
+  "name": "turret_crab",
+  "hitbox_size": 32,
+  "hitbox_distance": 0,
+  "innate_actions": [],
+  "layers": [
+    {
+      "filename": "grey.png",
+      "tile_size": 128
+    }
+  ],
+  "items": ["turret_claw"]
+}

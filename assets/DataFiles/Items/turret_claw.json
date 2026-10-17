@@ -1,0 +1,6 @@
+{
+  "name": "Turret Claw",
+  "description": "Turret claw used for firing projectiles.",
+  "provides_action": "turret_fire",
+  "icon": "claw_facing_right_grey.png"
+}

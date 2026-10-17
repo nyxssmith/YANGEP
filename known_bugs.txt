@@ -11,3 +11,4 @@ need to decide if diagonal/combined movement is allowed (is with controller, not
 clicking on window still does stuff to level, as does typing
 innate_actions and items of entities can only load global, not also level specific actions or items (maybe fix?)
 heart and shield icons not centered
+FaceDirectionState looks wrong for turret_crab, might be a texture issue instead, need to check tools dir for config etc

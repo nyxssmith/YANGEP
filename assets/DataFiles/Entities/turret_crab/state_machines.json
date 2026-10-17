@@ -1,0 +1,13 @@
+{
+  "state_machines": [
+    {
+      "name": "turret_test",
+      "states": [
+        { "name": "face_direction", "inputs": { "direction": "down" } },
+        { "name": "wait", "inputs": { "ms": 3000 } },
+        { "name": "do_action", "inputs": { "action": "turret_fire" } }
+      ]
+    }
+  ],
+  "default_state_machine": "turret_test"
+}

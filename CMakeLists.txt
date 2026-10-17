@@ -169,6 +169,7 @@ add_executable(
 	src/lib/Character/StateMachines/States/GetDistanceFromPlayerState.cpp
 	src/lib/Character/StateMachines/States/GetEntitiesInBoxState.cpp
 	src/lib/Character/StateMachines/States/JumpState.cpp
+	src/lib/Character/StateMachines/States/FaceDirectionState.cpp
 	src/lib/Combat/HitBox.cpp
 	src/lib/Combat/Action.cpp
 	src/lib/Combat/Projectile.cpp
@@ -305,6 +306,7 @@ add_executable(
 	src/lib/Character/StateMachines/States/GetDistanceFromPlayerState.cpp
 	src/lib/Character/StateMachines/States/GetEntitiesInBoxState.cpp
 	src/lib/Character/StateMachines/States/JumpState.cpp
+	src/lib/Character/StateMachines/States/FaceDirectionState.cpp
 	src/lib/Combat/HitBox.cpp
 	src/lib/Combat/Action.cpp
 	src/lib/Combat/Projectile.cpp
