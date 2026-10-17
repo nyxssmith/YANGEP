@@ -1,11 +1,11 @@
 #include "Damage.h"
 
 Damage::Damage()
-    : value(0.0f)
+    : value(0)
 {
 }
 
-Damage::Damage(float damageValue)
+Damage::Damage(int damageValue)
     : value(damageValue)
 {
 }
@@ -14,8 +14,9 @@ Damage::~Damage()
 {
 }
 
-void Damage::doDamage(float multiplier)
+int Damage::getDamageTo(int multiplier, AnimatedDataCharacter *character)
 {
-    // Empty for now
+    int damage = value * multiplier;
     // todo extend this for damage types and do stuff with health etc
+    return damage;
 }

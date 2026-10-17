@@ -2,6 +2,7 @@
 #define ANIMATED_DATA_CHARACTER_H
 
 #include <cute.h>
+#include <cute_math.h>
 #include "SpriteAnimationLoader.h"
 #include "DataFile.h"
 #include "HitBox.h"
@@ -155,6 +156,16 @@ public:
     virtual bool addItemToInventory(std::string fullPath);
 
     bool is_player = false;
+
+    // health system and defaults
+    int currentHealth = 1;
+    int maxHealth = 1;
+    int currentShields = 0;
+    int maxShields = 0;
+    float timeBetweenShieldRecharge = 10.0f;
+    float shieldRechargerTimer = 0.0f;
+
+    void updateShieldRecharge(float dt);
 
 protected:
     // Inventory - character's item inventory

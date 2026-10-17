@@ -6,6 +6,6 @@
   "warmup": 0,
   "cooldown": 0,
   "uses": 10,
-  "damage": 5.0,
+  "damage": 1,
   "animation": "melee_right_claw"
 }

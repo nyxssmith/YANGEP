@@ -178,6 +178,7 @@ add_executable(
 	src/lib/JobSystem/OnScreenChecks.cpp
 	src/lib/Effects/RedFlashEffect.cpp
 	src/lib/Effects/GreenFlashEffect.cpp
+	src/lib/Effects/BlueFlashEffect.cpp
 	src/lib/Effects/EffectFactory.cpp
 	src/lib/Effects/ShaderRegistry.cpp
 	src/lib/Effects/TrailGhostEffect.cpp
@@ -313,6 +314,7 @@ add_executable(
 	src/lib/JobSystem/OnScreenChecks.cpp
 	src/lib/Effects/RedFlashEffect.cpp
 	src/lib/Effects/GreenFlashEffect.cpp
+	src/lib/Effects/BlueFlashEffect.cpp
 	src/lib/Effects/EffectFactory.cpp
 	src/lib/Effects/ShaderRegistry.cpp
 	src/lib/Effects/TrailGhostEffect.cpp

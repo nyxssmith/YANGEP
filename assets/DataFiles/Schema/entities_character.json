@@ -13,6 +13,14 @@
       "type": "integer",
       "description": "The distance from the character used to position its hitbox. Unused?"
     },
+    "health": {
+      "type": "integer",
+      "description": "The character's starting and maximum health."
+    },
+    "shields": {
+      "type": "integer",
+      "description": "The character's starting and maximum shields."
+    },
     "innate_actions": {
       "type": "array",
       "description": "The actions (folder name) available to this character by default.",

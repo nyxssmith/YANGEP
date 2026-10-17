@@ -1,16 +1,18 @@
 #ifndef DAMAGE_H
 #define DAMAGE_H
 
+class AnimatedDataCharacter;
+
 class Damage
 {
 public:
     Damage();
-    Damage(float damageValue);
+    Damage(int damageValue);
     ~Damage();
 
-    float value;
+    int value;
 
-    void doDamage(float multiplier);
+    int getDamageTo(int multiplier, AnimatedDataCharacter *character);
 
 private:
 };
