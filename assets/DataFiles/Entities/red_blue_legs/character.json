@@ -3,6 +3,7 @@
   "hitbox_size": 32,
   "hitbox_distance": 0,
   "innate_actions": [],
+  "items": [],
   "layers": [
     {
       "filename": "red_blue_legs.png",

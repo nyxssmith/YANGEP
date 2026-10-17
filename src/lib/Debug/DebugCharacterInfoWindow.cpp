@@ -1,5 +1,6 @@
 #include "DebugCharacterInfoWindow.h"
 #include "DebugStateMachineWindow.h"
+#include "DataFileBySchemaDebugWindow.h"
 #include "AnimatedDataCharacter.h"
 #include "AnimatedDataCharacterNavMeshAgent.h"
 #include "StateMachine.h"
@@ -7,6 +8,7 @@
 #include "LevelV1.h"
 #include <cute.h>
 #include <imgui.h>
+#include <filesystem>
 
 DebugCharacterInfoWindow::DebugCharacterInfoWindow(const std::string &title,
                                                    AnimatedDataCharacter *character,
@@ -33,10 +35,50 @@ void DebugCharacterInfoWindow::render()
     // Add button to open character data file window
     if (m_character)
     {
-        if (ImGui::Button("Open Datafile Window"))
+        if (ImGui::Button("Open Character.json Window"))
         {
-            m_debugWindowList->add(m_character->getDataFilePath());
+            m_debugWindowList->add(m_character->getDataFilePath(), DataFileSchema::EntitiesCharacter);
         }
+
+        const std::string &charPath = m_character->getDataFilePath();
+        std::string stateMachinesPath = charPath;
+        stateMachinesPath.replace(stateMachinesPath.rfind("character.json"), 14, "state_machines.json");
+        const bool stateMachinesExist = cf_fs_file_exists(stateMachinesPath.c_str());
+        if (ImGui::Button(stateMachinesExist ? "Open state_machines.json Window" : "Create state_machines.json"))
+        {
+            bool ready = stateMachinesExist;
+            if (!ready)
+            {
+                // Starter file that just uses the shared "wander" machine.
+                DataFile created;
+                static_cast<nlohmann::json &>(created) = {
+                    {"state_machines", nlohmann::json::array({"wander"})},
+                    {"default_state_machine", "wander"}};
+                ready = created.save(stateMachinesPath);
+                if (!ready)
+                    printf("Failed to create '%s'\n", stateMachinesPath.c_str());
+            }
+            if (ready)
+            {
+                m_debugWindowList->add(stateMachinesPath, DataFileSchema::EntitiesStateMachines);
+            }
+        }
+
+        std::string currentSMName = "wander";
+        AnimatedDataCharacterNavMeshAgent *agent = dynamic_cast<AnimatedDataCharacterNavMeshAgent *>(m_character);
+        if (agent && agent->getStateMachineController())
+        {
+            std::string smName = agent->getStateMachineController()->getCurrentStateMachineName();
+            if (!smName.empty())
+                currentSMName = smName;
+        }
+        std::string smButtonText = "Open State Machine Editor (" + currentSMName + ")";
+        if (ImGui::Button(smButtonText.c_str()))
+        {
+            std::string smPath = "/assets/DataFiles/StateMachines/" + currentSMName + ".json";
+            m_debugWindowList->add(smPath, DataFileSchema::StateMachine);
+        }
+
         if (ImGui::Button("Re-Init"))
         {
             // get folder path and re-init the character

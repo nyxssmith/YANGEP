@@ -1,0 +1,59 @@
+{
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The name used to identify this character entity."
+    },
+    "hitbox_size": {
+      "type": "integer",
+      "description": "The size of the character's collision hitbox in pixels at tile scale, must be multiple of 2"
+    },
+    "hitbox_distance": {
+      "type": "integer",
+      "description": "The distance from the character used to position its hitbox. Unused?"
+    },
+    "innate_actions": {
+      "type": "array",
+      "description": "The actions (folder name) available to this character by default.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "items": {
+      "type": "array",
+      "description": "The names of items (item data file names) this character starts with.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "layers": {
+      "type": "array",
+      "description": "The visual layers used to compose the character's appearance.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "filename": {
+            "type": "string"
+          },
+          "tile_size": {
+            "type": "integer",
+            "default": 128
+          }
+        },
+        "required": ["filename", "tile_size"]
+      }
+    },
+    "entity_scale": {
+      "type": "float",
+      "description": "The scale applied when rendering the character entity."
+    }
+  },
+  "required": [
+    "name",
+    "hitbox_size",
+    "hitbox_distance",
+    "innate_actions",
+    "layers"
+  ]
+}

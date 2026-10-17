@@ -1,0 +1,25 @@
+{
+  "type": "object",
+  "properties": {
+    "projectiles": {
+      "type": "array",
+      "description": "The entity (folder name) spawned by this action and its launch settings.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "speed": {
+            "type": "float"
+          },
+          "entity": {
+            "type": "string"
+          },
+          "angle": {
+            "type": "float"
+          }
+        },
+        "required": ["speed", "entity", "angle"]
+      }
+    }
+  },
+  "required": ["projectiles"]
+}

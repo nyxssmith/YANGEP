@@ -117,6 +117,7 @@ add_executable(
 	src/lib/Scenes/SceneManager.cpp
 	src/lib/Debug/DebugWindow.cpp
 	src/lib/Debug/DataFileDebugWindow.cpp
+	src/lib/Debug/DataFileBySchemaDebugWindow.cpp
 	src/lib/Debug/DebugWindowList.cpp
 	src/lib/Debug/DebugFPSWindow.cpp
 	src/lib/Debug/DebugJobWindow.cpp
@@ -125,6 +126,9 @@ add_executable(
 	src/lib/Debug/DebugCoordinatorWindow.cpp
 	src/lib/Debug/DebugInputInfoWindow.cpp
 	src/lib/Debug/DebugSceneSwitcherWindow.cpp
+	src/lib/Debug/DebugLevelEditorWindow.cpp
+	src/lib/Debug/DebugEntityEditorWindow.cpp
+	src/lib/Debug/DebugStateMachineEditorWindow.cpp
 	src/lib/Debug/DebugStateMachineWindow.cpp
 	src/lib/Debug/DebugStateWindow.cpp
 	src/lib/Level/FileHandling/tsx.cpp
@@ -154,6 +158,17 @@ add_executable(
 	src/lib/Character/StateMachines/States/WanderNewPositionState.cpp
 	src/lib/Character/StateMachines/States/MoveToPositionState.cpp
 	src/lib/Character/StateMachines/States/GoToTilePositionState.cpp
+	src/lib/Character/StateMachines/States/SetRegisterState.cpp
+	src/lib/Character/StateMachines/States/SayInBubbleState.cpp
+	src/lib/Character/StateMachines/States/DoActionState.cpp
+	src/lib/Character/StateMachines/States/DoActionFromCoordinatorState.cpp
+	src/lib/Character/StateMachines/States/GetNewPositionFromCoordinatorState.cpp
+	src/lib/Character/StateMachines/States/IfState.cpp
+	src/lib/Character/StateMachines/States/EndIfState.cpp
+	src/lib/Character/StateMachines/States/GetDistanceFromHomeState.cpp
+	src/lib/Character/StateMachines/States/GetDistanceFromPlayerState.cpp
+	src/lib/Character/StateMachines/States/GetEntitiesInBoxState.cpp
+	src/lib/Character/StateMachines/States/JumpState.cpp
 	src/lib/Combat/HitBox.cpp
 	src/lib/Combat/Action.cpp
 	src/lib/Combat/Projectile.cpp
@@ -237,6 +252,7 @@ add_executable(
 	src/lib/Scenes/SceneManager.cpp
 	src/lib/Debug/DebugWindow.cpp
 	src/lib/Debug/DataFileDebugWindow.cpp
+	src/lib/Debug/DataFileBySchemaDebugWindow.cpp
 	src/lib/Debug/DebugWindowList.cpp
 	src/lib/Debug/DebugFPSWindow.cpp
 	src/lib/Debug/DebugJobWindow.cpp
@@ -246,7 +262,10 @@ add_executable(
 	src/lib/Debug/DebugInputInfoWindow.cpp
 	src/lib/Debug/DebugStateMachineWindow.cpp
 	src/lib/Debug/DebugStateWindow.cpp
+	src/lib/Debug/DebugStateMachineEditorWindow.cpp
 	src/lib/Debug/DebugSceneSwitcherWindow.cpp
+	src/lib/Debug/DebugLevelEditorWindow.cpp
+	src/lib/Debug/DebugEntityEditorWindow.cpp
 	src/lib/Level/FileHandling/tsx.cpp
 	src/lib/Level/FileHandling/tmx.cpp
 	src/lib/Level/GameLogic/LevelMap.cpp
@@ -274,6 +293,17 @@ add_executable(
 	src/lib/Character/StateMachines/States/WanderNewPositionState.cpp
 	src/lib/Character/StateMachines/States/MoveToPositionState.cpp
 	src/lib/Character/StateMachines/States/GoToTilePositionState.cpp
+	src/lib/Character/StateMachines/States/SetRegisterState.cpp
+	src/lib/Character/StateMachines/States/SayInBubbleState.cpp
+	src/lib/Character/StateMachines/States/DoActionState.cpp
+	src/lib/Character/StateMachines/States/DoActionFromCoordinatorState.cpp
+	src/lib/Character/StateMachines/States/GetNewPositionFromCoordinatorState.cpp
+	src/lib/Character/StateMachines/States/IfState.cpp
+	src/lib/Character/StateMachines/States/EndIfState.cpp
+	src/lib/Character/StateMachines/States/GetDistanceFromHomeState.cpp
+	src/lib/Character/StateMachines/States/GetDistanceFromPlayerState.cpp
+	src/lib/Character/StateMachines/States/GetEntitiesInBoxState.cpp
+	src/lib/Character/StateMachines/States/JumpState.cpp
 	src/lib/Combat/HitBox.cpp
 	src/lib/Combat/Action.cpp
 	src/lib/Combat/Projectile.cpp

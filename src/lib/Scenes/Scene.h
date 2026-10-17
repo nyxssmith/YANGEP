@@ -19,6 +19,9 @@ class DebugFPSWindow;
 class DebugJobWindow;
 class DebugInputInfoWindow;
 class DebugSceneSwitcherWindow;
+class DebugLevelEditorWindow;
+class DebugEntityEditorWindow;
+class DebugStateMachineEditorWindow;
 class CFNativeCamera;
 
 // Represents a scene loaded from assets/DataFiles/Scenes/<name>.json
@@ -34,6 +37,8 @@ public:
     const std::string &getName() const;
     const std::string &getType() const;
     const std::string &getLevel() const;
+    // The loaded level for level scenes (null for other scene types or before setup).
+    const LevelV1 *getLevelData() const { return level.get(); }
     bool getIsValid() const;
 
     void setup();
@@ -86,6 +91,12 @@ public:
     void setRecordInputInfo(bool value) { recordInputInfo = value; }
     void setInputLogFile(std::ofstream &value) { inputLogFile = std::move(value); }
     void setDebugSceneSwitcherWindow(DebugSceneSwitcherWindow *value) { debugSceneSwitcherWindow = value; }
+    void setDebugLevelEditorWindow(DebugLevelEditorWindow *value) { debugLevelEditorWindow = value; }
+    void setDebugEntityEditorWindow(DebugEntityEditorWindow *value) { debugEntityEditorWindow = value; }
+    void setDebugStateMachineEditorWindow(DebugStateMachineEditorWindow *value) { debugStateMachineEditorWindow = value; }
+    void setShowSceneSwitcherWindow(bool value) { ShowSceneSwitcherWindow = value; }
+    void setDoEntityProcessing(bool value) { doEntityProcessing = value; }
+    void setShowLevelEditorWindow(bool value) { ShowLevelEditorWindow = value; }
     // Camera is owned by SceneManager so it survives scene swaps; this just points at it.
     void setCfCamera(CFNativeCamera &value) { cfCamera = &value; }
 
@@ -124,12 +135,15 @@ private:
     bool ShowCoordinatorInfo = false;
     bool ShowInputInfo = false;
     bool showAgents = false;
+    bool ShowLevelEditorWindow = false;
     std::vector<std::unique_ptr<DebugCharacterInfoWindow>> characterInfoWindows;
     bool recordInputInfo = false;
     std::ofstream inputLogFile;
     bool showNavMeshPoints;
     bool showNavMesh;
     bool hud_inventory_open = false;
+    bool ShowSceneSwitcherWindow = false;
+    bool doEntityProcessing = true;
     // objects used by level scenes
     // Declared first so it outlives the level and characters that use it
     SpriteAnimationLoader spriteAnimationLoader;
@@ -140,6 +154,9 @@ private:
     std::unique_ptr<DebugJobWindow> jobWindow;
     std::unique_ptr<DebugInputInfoWindow> inputInfoWindow;
     DebugSceneSwitcherWindow *debugSceneSwitcherWindow = nullptr;
+    DebugLevelEditorWindow *debugLevelEditorWindow = nullptr;
+    DebugEntityEditorWindow *debugEntityEditorWindow = nullptr;
+    DebugStateMachineEditorWindow *debugStateMachineEditorWindow = nullptr;
     CFNativeCamera *cfCamera = nullptr; // owned by SceneManager, shared via setCfCamera
     AnimatedDataCharacterNavMeshPlayer playerCharacter;
     HudUI hud_ui;

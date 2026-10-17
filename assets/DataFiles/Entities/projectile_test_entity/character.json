@@ -3,6 +3,7 @@
   "hitbox_size": 8,
   "hitbox_distance": 0,
   "innate_actions": [],
+  "items": [],
   "layers": [
     {
       "filename": "laser_demo_crab.png",

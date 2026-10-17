@@ -1,5 +1,7 @@
 #include "DebugWindowList.h"
 #include "DataFileDebugWindow.h"
+#include "DataFileBySchemaDebugWindow.h"
+#include "DebugStateMachineEditorWindow.h"
 #include <stdio.h>
 
 DebugWindowEntry::DebugWindowEntry(int id, const std::string &path)
@@ -19,6 +21,16 @@ DebugWindowList::DebugWindowList(DebugWindowList &&) noexcept = default;
 DebugWindowList &DebugWindowList::operator=(DebugWindowList &&) noexcept = default;
 
 int DebugWindowList::add(const std::string &filepath)
+{
+    return addImpl(filepath, nullptr);
+}
+
+int DebugWindowList::add(const std::string &filepath, DataFileSchema schema)
+{
+    return addImpl(filepath, &schema);
+}
+
+int DebugWindowList::addImpl(const std::string &filepath, const DataFileSchema *schema)
 {
     // Check if this filepath already exists
     if (findIndexByPath(filepath) != -1)
@@ -45,7 +57,15 @@ int DebugWindowList::add(const std::string &filepath)
 
         // Create debug window with title
         std::string title = "Debug: " + filename;
-        entry.window = std::make_unique<DataFileDebugWindow>(title, *entry.dataFile);
+        if (schema)
+        {
+            if (*schema == DataFileSchema::StateMachine)
+                entry.window = std::make_unique<DebugStateMachineEditorWindow>(title, *entry.dataFile);
+            else
+                entry.window = std::make_unique<DataFileBySchemaDebugWindow>(title, *entry.dataFile, *schema);
+        }
+        else
+            entry.window = std::make_unique<DataFileDebugWindow>(title, *entry.dataFile);
 
         int assignedID = m_nextID;
         m_windows.push_back(std::move(entry));

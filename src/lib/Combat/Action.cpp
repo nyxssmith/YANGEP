@@ -53,6 +53,8 @@ Action::Action(const Action &other)
       hasDamage(other.hasDamage),
       animation(other.animation),
       loopAnimation(other.loopAnimation),
+      max_uses(other.max_uses),
+      remaining_uses(other.remaining_uses),
       type(other.type),
       projectilesData(other.projectilesData ? new ProjectilesData(*other.projectilesData) : nullptr)
 {
@@ -105,6 +107,8 @@ Action &Action::operator=(const Action &other)
         hasDamage = other.hasDamage;
         animation = other.animation;
         loopAnimation = other.loopAnimation;
+        max_uses = other.max_uses;
+        remaining_uses = other.remaining_uses;
         type = other.type;
         if (other.projectilesData)
         {
@@ -181,6 +185,14 @@ bool Action::loadFromFolder(const std::string &folderPath, float hitboxSize, flo
         animation = (*this)["animation"].get<std::string>();
     }
 
+    // Load uses (defaults to 10) and start with all uses remaining
+    max_uses = 10;
+    if (actionLoaded && contains("uses") && (*this)["uses"].is_number_integer())
+    {
+        max_uses = (*this)["uses"].get<int>();
+    }
+    remaining_uses = max_uses;
+
     // Load loop_animation flag if present in action.json, otherwise keep the default (play once)
     if (actionLoaded && contains("loop_animation") && (*this)["loop_animation"].is_boolean())
     {
@@ -201,7 +213,8 @@ bool Action::loadFromFolder(const std::string &folderPath, float hitboxSize, flo
             // Clean up existing hitbox if any
             if (hitbox)
             {
-                delete hitbox;
+                // TODO properly delete the hitbox, but rn it crashes
+                // delete hitbox;
                 hitbox = nullptr;
             }
 
@@ -305,7 +318,7 @@ void Action::setActive(bool active)
         else
         {
             character->setDoingAction(false);
-            // character->setActiveAction(nullptr);
+            character->setActiveAction(nullptr);
         }
     }
 }
@@ -332,6 +345,19 @@ void Action::doAction()
         printf("Action: Warning - Attempting to doAction while already active\n");
         return;
     }
+    if (remaining_uses > 0)
+    {
+        // TODO dont decrement if holder of item is npc
+        remaining_uses--;
+        printf("Action: Remaining uses of action %s decremented, now %d\n", getAnimation().c_str(), remaining_uses);
+    }
+    else if (remaining_uses == 0)
+    {
+        // TODO flash UI or something
+        printf("Action: Warning - No remaining uses for this action\n");
+        return;
+    } // set to -1 for unlimited uses
+
     setActive(true);
 }
 
@@ -379,7 +405,7 @@ void Action::update(float dt)
     else
     {
         cooldown_timer -= dt;
-        // printf("Action: Cooldown timer: %.3f seconds remaining\n", cooldown_timer);
+        printf("Action: Cooldown timer: %.3f seconds remaining for action %s\n", cooldown_timer, getAnimation().c_str());
         //  Check if cooldown is complete
         if (cooldown_timer <= 0.0f)
         {
@@ -556,19 +582,9 @@ bool Action::getLoopAnimation() const
 
 std::vector<AnimatedDataCharacter *> Action::getCharactersInHitbox()
 {
-    // Get all characters in the hitbox
-    std::vector<AnimatedDataCharacter *> charactersInHitboxList = getCharactersInHitbox();
-
-    // Use a set to prevent duplicates
-    std::unordered_set<AnimatedDataCharacter *> uniqueCharacters(
-        charactersInHitboxList.begin(),
-        charactersInHitboxList.end());
-    // Convert the set back to a vector
-    std::vector<AnimatedDataCharacter *> uniqueCharactersList(
-        uniqueCharacters.begin(),
-        uniqueCharacters.end());
-
-    return uniqueCharactersList;
+    // Delegate to the const version, which uses the level's existing hitbox query
+    // (excludes the acting character; each character is reported at most once)
+    return static_cast<const Action *>(this)->getCharactersInHitbox();
 }
 
 void Action::doDamage(std::vector<AnimatedDataCharacter *> toDamage)

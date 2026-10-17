@@ -65,6 +65,8 @@ public:
     void MoveActionPointerBUp();
     void MoveActionPointerBDown();
 
+    bool is_player = true;
+
 private:
     // The navmesh this player is on (non-owning pointer)
     NavMesh *navmesh;

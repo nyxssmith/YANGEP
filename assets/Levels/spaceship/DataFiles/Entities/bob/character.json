@@ -1,0 +1,12 @@
+{
+    "hitbox_distance": 0,
+    "hitbox_size": 0,
+    "innate_actions": [],
+    "layers": [
+        {
+            "filename": "red_crab.png",
+            "tile_size": 128
+        }
+    ],
+    "name": "bob"
+}

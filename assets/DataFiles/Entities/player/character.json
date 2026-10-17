@@ -8,5 +8,6 @@
       "filename": "red_crab.png",
       "tile_size": 128
     }
-  ]
+  ],
+  "items": ["melee_claw"]
 }

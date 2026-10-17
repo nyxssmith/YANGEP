@@ -109,3 +109,12 @@ AnimatedDataCharacterNavMeshAgent *State::getAgent() const
 {
     return agent;
 }
+StateMachine *State::getStateMachine() const
+{
+    return stateMachine;
+}
+
+void State::setStateMachine(StateMachine *stateMachine)
+{
+    this->stateMachine = stateMachine;
+}

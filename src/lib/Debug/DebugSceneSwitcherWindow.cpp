@@ -57,6 +57,8 @@ void DebugSceneSwitcherWindow::render()
                 m_sceneManager.clickToCreateEntity = true;
                 m_sceneManager.clickToInspectCharacter = true;
                 m_sceneManager.debugHighlightTileUnderCursor = true;
+                m_sceneManager.doEntityProcessing = false;
+                m_sceneManager.ShowLevelEditorWindow = true;
                 m_requestedScene = scene;
             }
 

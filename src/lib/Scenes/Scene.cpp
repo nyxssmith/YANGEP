@@ -16,6 +16,9 @@
 #include "DebugCoordinatorWindow.h"
 #include "DebugInputInfoWindow.h"
 #include "DebugSceneSwitcherWindow.h"
+#include "DebugLevelEditorWindow.h"
+#include "DebugEntityEditorWindow.h"
+#include "DebugStateMachineEditorWindow.h"
 #include "OnScreenChecks.h"
 #include "Coordinator.h"
 #include "Utils.h"
@@ -161,10 +164,10 @@ int Scene::setupLevel()
     }
 
     // add debug items to the player
-    Item itemA("assets/DataFiles/Items/item-a.json");
-    Item itemB("assets/DataFiles/Items/item-b.json");
-    playerCharacter.getInventory().addItem(itemA);
-    playerCharacter.getInventory().addItem(itemB);
+    // Item itemA("/assets/DataFiles/Items/melee_claw.json");
+    // Item itemB("assets/DataFiles/Items/item-b.json");
+    // playerCharacter.getInventory().addItem(itemA);
+    // playerCharacter.getInventory().addItem(itemB);
     bool hud_inventory_open = false;
 
     // HUD init (loads atlas/background)
@@ -589,6 +592,15 @@ void Scene::mainLoopLevel()
                 printf("Player triggered action A\n");
             }
         }
+        // use keys 1,2 for right and left claws
+        if (cf_key_just_pressed(CF_KEY_1))
+        {
+            playerCharacter.doRightClawAction();
+        }
+        if (cf_key_just_pressed(CF_KEY_2))
+        {
+            playerCharacter.doLeftClawAction();
+        }
 
         // Handle B key or controller B button to trigger action B
         if (cf_key_just_pressed(CF_KEY_B) ||
@@ -666,19 +678,6 @@ void Scene::mainLoopLevel()
         printf("NavMesh points visualization: %s\n", showNavMeshPoints ? "ON" : "OFF");
     }
 
-    // Place/update NavMesh point at player position
-    if (cf_key_just_pressed(CF_KEY_P))
-    {
-        // Remove existing point if it exists
-        if (level->getNavMesh().getPoint("player_marker") != nullptr)
-        {
-            level->getNavMesh().removePoint("player_marker");
-        }
-        // Add new point at player position
-        level->getNavMesh().addPoint("player_marker", playerPosition);
-        printf("NavMesh point placed at player position (%.1f, %.1f)\n", playerPosition.x, playerPosition.y);
-    }
-
     // Camera zoom controls (Q/E) and reset (R)
     if (cf_key_just_pressed(CF_KEY_Q))
     {
@@ -725,9 +724,12 @@ void Scene::mainLoopLevel()
     {
         fpsWindow->markSection("Player Input");
     }
-    level->updateAgents(dt);
-    level->updateProjectiles(dt);
-
+    // skip entity and projectile updates if doEntityProcessing is false
+    if (doEntityProcessing)
+    {
+        level->updateAgents(dt);
+        level->updateProjectiles(dt);
+    }
     if (fpsWindow)
     {
         fpsWindow->markSection("Agent Update");
@@ -751,9 +753,21 @@ void Scene::mainLoopLevel()
     }
     // Render debug windows
     debugWindows.renderAll();
-    if (debugSceneSwitcherWindow)
+    if (ShowSceneSwitcherWindow)
     {
         debugSceneSwitcherWindow->render();
+    }
+    if (ShowLevelEditorWindow)
+    {
+        debugLevelEditorWindow->render();
+    }
+    if (debugEntityEditorWindow)
+    {
+        debugEntityEditorWindow->render();
+    }
+    if (debugStateMachineEditorWindow)
+    {
+        debugStateMachineEditorWindow->render();
     }
 
     if (atlas_labeler_open)

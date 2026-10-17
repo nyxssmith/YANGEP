@@ -23,23 +23,25 @@ private:
     DataFile actionAuxData;
     bool hasHitbox;
     HitBox *hitbox;
-    float hitboxSize;
+    float hitboxSize = 32.0f;
     float hitboxDistance;
-    bool isActive;
+    bool isActive = false;
     AnimatedDataCharacter *character; // Pointer to the character this action belongs to
 
     // Timing members
-    float warmup_timer;
-    float cooldown_timer;
-    bool in_cooldown;
+    float warmup_timer = 0.0f;
+    float cooldown_timer = 0.0f;
+    bool in_cooldown = false;
 
     // Damage
     Damage *damage;
-    bool hasDamage;
+    bool hasDamage = false;
 
     // Animation to play while this action is executing
     std::string animation;
-    bool loopAnimation;
+    bool loopAnimation = false;
+    int max_uses = 10;
+    int remaining_uses = 10;
     ActionType type = tile;
     ProjectilesData *projectilesData = nullptr; // only set for projectile actions
 
@@ -95,6 +97,9 @@ public:
     // Global cooldown support
     float getGlobalCooldown() const;           // Get global_cooldown value from action.json (in ms, 0 if not set)
     void applyCooldown(float cooldownSeconds); // Apply cooldown only if less than current cooldown
+
+    int getMaxUses() const { return max_uses; }
+    int getRemainingUses() const { return remaining_uses; }
 
     ActionType getType() const { return type; }
 };

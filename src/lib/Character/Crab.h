@@ -14,22 +14,22 @@ public:
     bool init(const std::string &folderPath);
 
     // Get left claw item (nullptr if empty)
-    Item* getLeftClaw();
+    Item *getLeftClaw();
 
     // Set left claw item
-    void setLeftClaw(Item* item);
+    void setLeftClaw(Item *item);
 
     // Get right claw item (nullptr if empty)
-    Item* getRightClaw();
+    Item *getRightClaw();
 
     // Set right claw item
-    void setRightClaw(Item* item);
+    void setRightClaw(Item *item);
 
     // Get the left claw slot (for internal use)
-    std::optional<Item>& getLeftClawSlot();
+    Item *&getLeftClawSlot();
 
     // Get the right claw slot (for internal use)
-    std::optional<Item>& getRightClawSlot();
+    Item *&getRightClawSlot();
 
     // Remove left claw item
     bool removeLeftClaw();
@@ -37,18 +37,27 @@ public:
     // Remove right claw item
     bool removeRightClaw();
 
-private:
-    // Claw slots for inventory (2 slots)
-    std::vector<std::optional<Item>> clawSlots;
+    void doClawAction(int clawIndex);
 
-    // Internal method to add item to a specific slot
-    void addItem(std::vector<std::optional<Item>> &slots, size_t index, const Item &itemToAdd);
+    // Tick the provided actions of equipped claws (they live in the items)
+    void updateItemActions(float dt) override;
+
+    void applyGlobalCooldown(float globalCooldownSeconds) override;
+    void doRightClawAction();
+    void doLeftClawAction();
+
+    // Add an item to the inventory (currently defers to the parent)
+    bool addItemToInventory(std::string fullPath) override;
+
+private:
+    // Non-owning pointers to inventory items (2 slots)
+    std::vector<Item *> clawSlots;
 
     // Get available slot count for claw management
     size_t getAvailableSlotCount() const;
 
     // Internal method to add item to a claw slot
-    void addClawItem(size_t index, const Item &itemToAdd);
+    void addClawItem(size_t index, Item *itemToAdd);
 };
 
 #endif // CRAB_H

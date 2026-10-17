@@ -1,0 +1,39 @@
+{
+  "type": "object",
+  "properties": {
+    "entities": {
+      "type": "array",
+      "description": "The entities placed in this level.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "A name identifying this entity instance."
+          },
+          "position": {
+            "type": "object",
+            "description": "The entity's position in level coordinates.",
+            "properties": {
+              "x": {
+                "type": "integer",
+                "description": "The horizontal coordinate of the entity."
+              },
+              "y": {
+                "type": "integer",
+                "description": "The vertical coordinate of the entity."
+              }
+            },
+            "required": ["x", "y"]
+          },
+          "path": {
+            "type": "string",
+            "description": "The path to the entity's data files."
+          }
+        },
+        "required": ["name", "position", "path"]
+      }
+    }
+  },
+  "required": ["entities"]
+}

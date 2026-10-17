@@ -10,7 +10,7 @@
 
 // Forward declaration
 class AnimatedDataCharacterNavMeshAgent;
-
+class StateMachine;
 class State
 {
 public:
@@ -52,6 +52,11 @@ public:
     // Get the name of the state
     const std::string &getName() const;
     void setName(const std::string &name);
+
+    // Get/Set the state machine this state belongs to
+    StateMachine *getStateMachine() const;
+    void setStateMachine(StateMachine *stateMachine);
+    StateMachine *stateMachine; // Non-owning pointer to the state machine this state belongs to
 
 protected:
     // Common initialization from json data

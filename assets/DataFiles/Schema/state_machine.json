@@ -1,0 +1,22 @@
+{
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The name used to identify this state machine."
+    },
+    "states": {
+      "type": "array",
+      "description": "The ordered list of states this machine cycles through. TODO can be any one of the default states with inputs provided",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "inputs": { "type": "object" }
+        },
+        "required": ["name"]
+      }
+    }
+  },
+  "required": ["name", "states"]
+}
