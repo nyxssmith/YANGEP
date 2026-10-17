@@ -592,6 +592,15 @@ void Scene::mainLoopLevel()
                 printf("Player triggered action A\n");
             }
         }
+        // use keys 1,2 for right and left claws
+        if (cf_key_just_pressed(CF_KEY_1))
+        {
+            playerCharacter.doRightClawAction();
+        }
+        if (cf_key_just_pressed(CF_KEY_2))
+        {
+            playerCharacter.doLeftClawAction();
+        }
 
         // Handle B key or controller B button to trigger action B
         if (cf_key_just_pressed(CF_KEY_B) ||

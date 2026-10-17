@@ -44,7 +44,7 @@ static bool getPNGDimensions(const std::string &path, uint32_t &width, uint32_t 
 
 // Constructor
 Crab::Crab()
-    : AnimatedDataCharacter(), clawSlots(2) // Initialize with 2 claw slots
+    : AnimatedDataCharacter(), clawSlots(2, nullptr) // 2 non-owning claw slots pointing into the inventory
 {
     // Initialize input state using accessors
     for (int i = 0; i < 4; i++)
@@ -57,8 +57,8 @@ Crab::Crab()
     }
 
     // Set default claw slots as empty
-    clawSlots[0] = std::nullopt;
-    clawSlots[1] = std::nullopt;
+    clawSlots[0] = nullptr;
+    clawSlots[1] = nullptr;
 }
 
 // Destructor
@@ -71,15 +71,7 @@ Crab::~Crab()
         delete hitbox;
     }
 
-    // Clean up claw item pointers if they exist
-    if (getLeftClaw())
-    {
-        delete getLeftClaw();
-    }
-    if (getRightClaw())
-    {
-        delete getRightClaw();
-    }
+    // Claw slots are non-owning pointers into the inventory, nothing to free
 }
 
 // Initialize the crab character with a folder path containing character.json
@@ -91,65 +83,50 @@ bool Crab::init(const std::string &folderPath)
         return false;
     }
 
-    // Initialize claw slots as empty (already done in constructor, but explicit here for clarity)
-    clawSlots[0] = std::nullopt;
-    clawSlots[1] = std::nullopt;
-
-    setInitialized(true);  // Use setter to set initialized state
+    // Claw slots are filled during the parent init (via addItemToInventory), so don't reset them here
+    setInitialized(true);
     return true;
 }
 
 // Get left claw item (nullptr if empty)
-Item* Crab::getLeftClaw()
+Item *Crab::getLeftClaw()
 {
     if (clawSlots.empty())
     {
         return nullptr;
     }
 
-    // Check if left claw slot is occupied
-    if (!clawSlots[0].has_value())
-    {
-        return nullptr;
-    }
-
-    return &(*clawSlots[0]);
+    return clawSlots[0];
 }
 
 // Set left claw item
-void Crab::setLeftClaw(Item* item)
-{
-    if (item)
-    {
-        // Add new item to slot 0
-        addClawItem(0, *item);
-    }
-}
-
-// Get right claw item (nullptr if empty)
-Item* Crab::getRightClaw()
-{
-    if (clawSlots.empty())
-    {
-        return nullptr;
-    }
-
-    // Check if right claw slot is occupied
-    if (!clawSlots[1].has_value())
-    {
-        return nullptr;
-    }
-
-    return &(*clawSlots[1]);
-}
-
-// Set right claw item
-void Crab::setRightClaw(Item* item)
+void Crab::setLeftClaw(Item *item)
 {
     if (item)
     {
         // Add new item to slot 1
-        addClawItem(1, *item);
+        addClawItem(1, item);
+    }
+}
+
+// Get right claw item (nullptr if empty)
+Item *Crab::getRightClaw()
+{
+    if (clawSlots.empty())
+    {
+        return nullptr;
+    }
+
+    return clawSlots[1];
+}
+
+// Set right claw item
+void Crab::setRightClaw(Item *item)
+{
+    if (item)
+    {
+        // Add new item to slot 0
+        addClawItem(0, item);
     }
 }
 
@@ -161,14 +138,12 @@ bool Crab::removeLeftClaw()
         return false;
     }
 
-    if (!clawSlots[0].has_value())
+    if (!clawSlots[0])
     {
         return false;
     }
 
-    Item* existingItem = &(*clawSlots[0]);
-    clawSlots[0] = std::nullopt;
-    delete existingItem;
+    clawSlots[0] = nullptr;
 
     printf("Crab: Removed left claw item\n");
     return true;
@@ -182,43 +157,19 @@ bool Crab::removeRightClaw()
         return false;
     }
 
-    if (!clawSlots[1].has_value())
+    if (!clawSlots[1])
     {
         return false;
     }
 
-    Item* existingItem = &(*clawSlots[1]);
-    clawSlots[1] = std::nullopt;
-    delete existingItem;
+    clawSlots[1] = nullptr;
 
     printf("Crab: Removed right claw item\n");
     return true;
 }
 
-// Helper method to add an item to a specific slot in the claw slots vector
-void Crab::addItem(std::vector<std::optional<Item>> &slots, size_t index, const Item &itemToAdd)
-{
-    if (index >= slots.size())
-    {
-        printf("Crab: WARNING - Cannot add item to slot %zu, max slots: %zu\n", index, slots.size());
-        return;
-    }
-
-    // If slot is occupied, remove the existing item first
-    if (slots[index].has_value())
-    {
-        Item* existingItem = &(*slots[index]);
-        printf("Crab: Slot %zu was occupied, removing existing item\n", index);
-        delete existingItem;
-        slots[index] = std::nullopt;
-    }
-
-    // Add new item to the slot
-    slots[index] = Item(itemToAdd);
-}
-
 // Internal helper - add item to claw slot
-void Crab::addClawItem(size_t index, const Item &itemToAdd)
+void Crab::addClawItem(size_t index, Item *itemToAdd)
 {
     if (index >= clawSlots.size())
     {
@@ -226,17 +177,30 @@ void Crab::addClawItem(size_t index, const Item &itemToAdd)
         return;
     }
 
-    // If slot is occupied, remove the existing item first
-    if (clawSlots[index].has_value())
+    if (clawSlots[index])
     {
-        Item* existingItem = &(*clawSlots[index]);
-        printf("Crab: Slot %zu was occupied, removing existing item\n", index);
-        delete existingItem;
-        clawSlots[index] = std::nullopt;
+        printf("Crab: Slot %zu was occupied, replacing claw item\n", index);
     }
 
-    // Add new item to the slot
-    clawSlots[index] = Item(itemToAdd);
+    clawSlots[index] = itemToAdd;
+
+    // The provided action needs to know its owner to drive animations and cooldowns
+    if (itemToAdd && itemToAdd->hasProvidedAction())
+    {
+        itemToAdd->getProvidedAction()->setCharacter(this);
+    }
+}
+
+void Crab::applyGlobalCooldown(float globalCooldownSeconds)
+{
+    AnimatedDataCharacter::applyGlobalCooldown(globalCooldownSeconds);
+    for (Item *claw : clawSlots)
+    {
+        if (claw && claw->hasProvidedAction())
+        {
+            claw->getProvidedAction()->applyCooldown(globalCooldownSeconds);
+        }
+    }
 }
 
 // Get available slot count for claw management
@@ -245,10 +209,108 @@ size_t Crab::getAvailableSlotCount() const
     return clawSlots.size();
 }
 
-std::optional<Item>& Crab::getLeftClawSlot() {
+Item *&Crab::getLeftClawSlot()
+{
     return clawSlots[0];
 }
 
-std::optional<Item>& Crab::getRightClawSlot() {
+Item *&Crab::getRightClawSlot()
+{
     return clawSlots[1];
+}
+
+bool Crab::addItemToInventory(std::string fullPath)
+{
+    // get size of inventory before adding
+    size_t inventorySizeBefore = getInventory().getItemCount();
+    // try to add the item
+    bool added_successfully = AnimatedDataCharacter::addItemToInventory(fullPath);
+
+    // TODO different path for item pickup etc
+    //  this will only be called during init, add by index is used to pick up items
+    if (added_successfully)
+    {
+        // get the inventory item in the slot it was added to
+        Item *addedItem = getInventory().getItemPtr(inventorySizeBefore);
+        if (!addedItem)
+        {
+            return added_successfully;
+        }
+        // add to left or right claw (non-owning pointer into the inventory)
+        if (inventorySizeBefore == 0)
+        {
+            setActionPointerA(inventorySizeBefore);
+            setRightClaw(addedItem);
+        }
+        else if (inventorySizeBefore == 1)
+        {
+            setActionPointerB(inventorySizeBefore);
+            setLeftClaw(addedItem);
+        }
+        else
+        {
+            printf("Crab: Inventory slot %zu does not correspond to a claw slot and will not be accessible via claw actions\n", inventorySizeBefore);
+        }
+    }
+    return added_successfully;
+}
+void Crab::doRightClawAction()
+{
+    doClawAction(1);
+}
+
+void Crab::doLeftClawAction()
+{
+    doClawAction(0);
+}
+
+void Crab::updateItemActions(float dt)
+{
+    for (Item *claw : clawSlots)
+    {
+        if (claw && claw->hasProvidedAction())
+        {
+            Action *action = claw->getProvidedAction();
+            if (action->getIsActive())
+            {
+                action->update(dt);
+            }
+        }
+    }
+}
+
+void Crab::doClawAction(int clawIndex)
+{
+    if (clawIndex >= clawSlots.size())
+    {
+        printf("Crab: Invalid claw index %d\n", clawIndex);
+        return;
+    }
+
+    if (clawSlots[clawIndex])
+    {
+        printf("Crab: Performing action with claw %d\n", clawIndex);
+        bool success = false;
+        switch (clawIndex)
+        {
+        case 0:
+            success = getLeftClaw()->doProvidedAction();
+            break;
+        case 1:
+            success = getRightClaw()->doProvidedAction();
+            break;
+
+        default:
+            break;
+        }
+
+        if (!success)
+        {
+            printf("Crab: Action with claw %d failed, perhaps that item doesnt provide an action\n", clawIndex);
+        }
+    }
+    else
+    {
+        printf("Crab: No item in claw %d to perform action\n", clawIndex);
+    }
 }

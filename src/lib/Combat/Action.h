@@ -25,21 +25,21 @@ private:
     HitBox *hitbox;
     float hitboxSize;
     float hitboxDistance;
-    bool isActive;
+    bool isActive = false;
     AnimatedDataCharacter *character; // Pointer to the character this action belongs to
 
     // Timing members
-    float warmup_timer;
-    float cooldown_timer;
-    bool in_cooldown;
+    float warmup_timer = 0.0f;
+    float cooldown_timer = 0.0f;
+    bool in_cooldown = false;
 
     // Damage
     Damage *damage;
-    bool hasDamage;
+    bool hasDamage = false;
 
     // Animation to play while this action is executing
     std::string animation;
-    bool loopAnimation;
+    bool loopAnimation = false;
     int max_uses = 10;
     int remaining_uses = 10;
     ActionType type = tile;

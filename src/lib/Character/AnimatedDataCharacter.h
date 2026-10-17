@@ -47,6 +47,9 @@ public:
     // Update demo state with a move vector
     void update(float dt, v2 moveVector);
 
+    // Hook for ticking actions owned by items rather than by actionsList
+    virtual void updateItemActions(float dt) {}
+
     // Render the demo
     void render();
 
@@ -110,7 +113,7 @@ public:
     bool addAction(const std::string &folderPath);
     bool removeAction(const std::string &actionName);
     const std::vector<Action> &getActions() const;
-
+    bool addActionDirectly(Action &action);
     // Action pointer management
     virtual void setActionPointerA(size_t index);
     virtual void setActionPointerB(size_t index);
@@ -118,7 +121,7 @@ public:
     Action *getActionPointerB() const;
 
     // Apply global cooldown to all actions
-    void applyGlobalCooldown(float globalCooldownSeconds);
+    virtual void applyGlobalCooldown(float globalCooldownSeconds);
 
     // Hit handling
     void OnHit(AnimatedDataCharacter *character, Damage damage);
@@ -147,6 +150,11 @@ public:
     // projectiles need access to these
     Direction currentDirection;
     LevelV1 *level; // Pointer to level for agent queries
+
+    // inventory management to be used by crabs
+    virtual bool addItemToInventory(std::string fullPath);
+
+    bool is_player = false;
 
 protected:
     // Inventory - character's item inventory

@@ -97,7 +97,7 @@ bool AnimatedDataCharacter::init(const std::string &folderPath)
                 std::string itemName = itemPath;
                 // Build full path to item folder
                 std::string fullPath = "/assets/DataFiles/Items/" + itemName + ".json";
-                if (getInventory().addItem(fullPath))
+                if (addItemToInventory(fullPath))
                 {
                     printf("AnimatedDataCharacter: Loaded item '%s' from '%s'\n", itemName.c_str(), fullPath.c_str());
                 }
@@ -214,6 +214,7 @@ bool AnimatedDataCharacter::init(const std::string &folderPath)
     frameTimer = 0.0f;
 
     initialized = true;
+    is_player = true;
     return true;
 }
 
@@ -259,11 +260,20 @@ void AnimatedDataCharacter::update(float dt, v2 moveVector)
     // Update all actions (even inactive ones need to tick down cooldowns from global cooldown)
     for (auto &action : actionsList)
     {
+        if (is_player)
+        {
+            printf("AnimatedDataCharacter: Updating action %s is_active=%d\n", action.getAnimation().c_str(), action.getIsActive());
+        }
         if (action.getIsActive())
         {
+            if (is_player)
+            {
+                printf("AnimatedDataCharacter: Executing active action %s\n", action.getAnimation().c_str());
+            }
             action.update(dt);
         }
     }
+    updateItemActions(dt);
 
     demoTime += dt; // Calculate movement magnitude to determine if we're moving
     float moveMagnitude = sqrt(moveVector.x * moveVector.x + moveVector.y * moveVector.y);
@@ -312,6 +322,10 @@ void AnimatedDataCharacter::update(float dt, v2 moveVector)
     if (isDoingAction && activeAction && !activeAction->getInCooldown())
     {
         const std::string &actionAnimation = activeAction->getAnimation();
+        if (!animationTable->hasAnimation(actionAnimation))
+        {
+            printf("AnimatedDataCharacter: Action animation '%s' is not in this character's animation table\n", actionAnimation.c_str());
+        }
         if (animationTable->hasAnimation(actionAnimation) && currentAnimation != actionAnimation)
         {
             currentAnimation = actionAnimation;
@@ -338,28 +352,8 @@ void AnimatedDataCharacter::handleInput()
     if (!initialized)
         return;
 
-    // Animation controls (1, 2) - manual override of auto-switching
-    bool animKey1 = key_just_pressed(CF_KEY_1); // Switch to idle
-    bool animKey2 = key_just_pressed(CF_KEY_2); // Switch to walkcycle
-
-    // Additional controls
+    // Keys 1 and 2 are the claw action keys, so they no longer force animations here
     bool rPressed = key_just_pressed(CF_KEY_R); // Reset position
-
-    // Handle manual animation input (overrides auto-switching)
-    if (animKey1)
-    {
-        currentAnimation = "idle";
-        currentFrame = 0;
-        frameTimer = 0.0f;
-        currentAnimationLoops = true;
-    }
-    else if (animKey2)
-    {
-        currentAnimation = "walkcycle";
-        currentFrame = 0;
-        frameTimer = 0.0f;
-        currentAnimationLoops = true;
-    }
 
     // Handle R key - reset position
     if (rPressed)
@@ -891,6 +885,15 @@ bool AnimatedDataCharacter::removeAction(const std::string &actionName)
     return false;
 }
 
+bool AnimatedDataCharacter::addActionDirectly(Action &action)
+{
+    // tell action about self
+    action.setCharacter(this);
+    // add to list
+    actionsList.push_back(action);
+    return true;
+}
+
 // Get the actions list
 const std::vector<Action> &AnimatedDataCharacter::getActions() const
 {
@@ -1042,4 +1045,26 @@ void AnimatedDataCharacter::setAnimationKeys(int index, bool pressed)
 {
     if (index >= 0 && index < 2)
         animationKeys[index] = pressed;
+}
+
+// Inventory management to be used by crabs
+bool AnimatedDataCharacter::addItemToInventory(std::string fullPath)
+{
+    size_t lastAddedItemIndex = inventory.getItemCount();
+    // add it to the character's inventory
+    bool success = inventory.addItem(fullPath);
+    // add items provided actions to actionlist
+    if (success)
+    {
+        std::optional<Item> added_item = inventory.getItem(lastAddedItemIndex);
+        if (added_item && added_item->hasProvidedAction())
+        {
+            Action *providedAction = added_item->getProvidedAction();
+            if (providedAction)
+            {
+                addActionDirectly(*providedAction);
+            }
+        }
+    }
+    return success;
 }

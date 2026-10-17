@@ -318,7 +318,7 @@ void Action::setActive(bool active)
         else
         {
             character->setDoingAction(false);
-            // character->setActiveAction(nullptr);
+            character->setActiveAction(nullptr);
         }
     }
 }
@@ -349,6 +349,7 @@ void Action::doAction()
     {
         // TODO dont decrement if holder of item is npc
         remaining_uses--;
+        printf("Action: Remaining uses of action %s decremented, now %d\n", getAnimation().c_str(), remaining_uses);
     }
     else if (remaining_uses == 0)
     {
@@ -404,7 +405,7 @@ void Action::update(float dt)
     else
     {
         cooldown_timer -= dt;
-        // printf("Action: Cooldown timer: %.3f seconds remaining\n", cooldown_timer);
+        printf("Action: Cooldown timer: %.3f seconds remaining for action %s\n", cooldown_timer, getAnimation().c_str());
         //  Check if cooldown is complete
         if (cooldown_timer <= 0.0f)
         {
@@ -582,7 +583,7 @@ bool Action::getLoopAnimation() const
 std::vector<AnimatedDataCharacter *> Action::getCharactersInHitbox()
 {
     // Get all characters in the hitbox
-    std::vector<AnimatedDataCharacter *> charactersInHitboxList = getCharactersInHitbox();
+    std::vector<AnimatedDataCharacter *> charactersInHitboxList; // = getCharactersInHitbox();
 
     // Use a set to prevent duplicates
     std::unordered_set<AnimatedDataCharacter *> uniqueCharacters(

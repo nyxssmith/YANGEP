@@ -25,6 +25,9 @@ public:
     // Get item by index
     std::optional<Item> getItem(size_t index) const;
 
+    // Get a pointer to the item in a slot (nullptr if empty); invalidated by changeSize
+    Item *getItemPtr(size_t index);
+
     // Get inventory capacity
     size_t getCapacity() const;
 

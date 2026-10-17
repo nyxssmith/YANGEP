@@ -72,6 +72,15 @@ size_t Inventory::getCapacity() const
     return capacity;
 }
 
+Item *Inventory::getItemPtr(size_t index)
+{
+    if (index >= items.size() || !items[index].has_value())
+    {
+        return nullptr;
+    }
+    return &(*items[index]);
+}
+
 // Get number of items currently in inventory
 size_t Inventory::getItemCount() const
 {
