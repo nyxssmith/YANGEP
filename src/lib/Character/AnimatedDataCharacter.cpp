@@ -260,16 +260,16 @@ void AnimatedDataCharacter::update(float dt, v2 moveVector)
     // Update all actions (even inactive ones need to tick down cooldowns from global cooldown)
     for (auto &action : actionsList)
     {
-        if (is_player)
-        {
-            printf("AnimatedDataCharacter: Updating action %s is_active=%d\n", action.getAnimation().c_str(), action.getIsActive());
-        }
+        // if (is_player)
+        //{
+        //     printf("AnimatedDataCharacter: Updating action %s is_active=%d\n", action.getAnimation().c_str(), action.getIsActive());
+        // }
         if (action.getIsActive())
         {
-            if (is_player)
-            {
-                printf("AnimatedDataCharacter: Executing active action %s\n", action.getAnimation().c_str());
-            }
+            // if (is_player)
+            //{
+            //     printf("AnimatedDataCharacter: Executing active action %s\n", action.getAnimation().c_str());
+            // }
             action.update(dt);
         }
     }

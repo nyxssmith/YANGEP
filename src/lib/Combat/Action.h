@@ -23,7 +23,7 @@ private:
     DataFile actionAuxData;
     bool hasHitbox;
     HitBox *hitbox;
-    float hitboxSize;
+    float hitboxSize = 32.0f;
     float hitboxDistance;
     bool isActive = false;
     AnimatedDataCharacter *character; // Pointer to the character this action belongs to

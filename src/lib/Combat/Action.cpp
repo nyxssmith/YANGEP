@@ -582,19 +582,9 @@ bool Action::getLoopAnimation() const
 
 std::vector<AnimatedDataCharacter *> Action::getCharactersInHitbox()
 {
-    // Get all characters in the hitbox
-    std::vector<AnimatedDataCharacter *> charactersInHitboxList; // = getCharactersInHitbox();
-
-    // Use a set to prevent duplicates
-    std::unordered_set<AnimatedDataCharacter *> uniqueCharacters(
-        charactersInHitboxList.begin(),
-        charactersInHitboxList.end());
-    // Convert the set back to a vector
-    std::vector<AnimatedDataCharacter *> uniqueCharactersList(
-        uniqueCharacters.begin(),
-        uniqueCharacters.end());
-
-    return uniqueCharactersList;
+    // Delegate to the const version, which uses the level's existing hitbox query
+    // (excludes the acting character; each character is reported at most once)
+    return static_cast<const Action *>(this)->getCharactersInHitbox();
 }
 
 void Action::doDamage(std::vector<AnimatedDataCharacter *> toDamage)
