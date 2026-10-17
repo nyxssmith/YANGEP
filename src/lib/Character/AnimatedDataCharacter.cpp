@@ -226,7 +226,6 @@ bool AnimatedDataCharacter::init(const std::string &folderPath)
     frameTimer = 0.0f;
 
     initialized = true;
-    is_player = true;
     return true;
 }
 

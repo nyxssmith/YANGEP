@@ -211,7 +211,7 @@ public:
      * @param player Pointer to the player character
      */
     void setPlayer(const AnimatedDataCharacter *player);
-
+    AnimatedDataCharacter *getPlayer();
     /**
      * Get all entities (agents) at a specific tile coordinate
      * Uses rendering coordinate system: tile_x=0 is left, tile_y=0 is bottom
