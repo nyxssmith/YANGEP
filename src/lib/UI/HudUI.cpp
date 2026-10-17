@@ -26,6 +26,12 @@ struct HudUIAssets {
 	ImTextureData* paper_tex = nullptr;
 	int paper_w = 0;
 	int paper_h = 0;
+
+	// Optional standalone icons loaded from assets/GUI/{heart,missing_heart,shield,missing_shield}.png
+	ImTextureData* heart = nullptr;
+	ImTextureData* missing_heart = nullptr;
+	ImTextureData* shield = nullptr;
+	ImTextureData* missing_shield = nullptr;
 };
 
 static std::string s_map_vfs_path(const std::string& path)
@@ -74,6 +80,15 @@ static HudUIAssets& s_assets()
 {
 	static HudUIAssets a;
 	return a;
+}
+
+static void s_load_status_icon(const char* file, ImTextureData*& out)
+{
+	std::vector<unsigned char> pixels;
+	int w = 0, h = 0;
+	if (s_load_png_rgba8(s_map_vfs_path(std::string("/assets/Art/HudIcons/") + file), pixels, w, h)) {
+		out = s_create_imgui_texture(pixels, w, h);
+	}
 }
 
 static void s_load_assets_once()
@@ -129,6 +144,11 @@ static void s_load_assets_once()
 		a.paper_h = ph;
 		a.paper_tex = s_create_imgui_texture(paper_pixels, pw, ph);
 	}
+
+	s_load_status_icon("heart.png", a.heart);
+	s_load_status_icon("heart_missing.png", a.missing_heart);
+	s_load_status_icon("shield.png", a.shield);
+	s_load_status_icon("shield_missing.png", a.missing_shield);
 }
 
 static bool s_get_rect(const char* name, HudAtlasRect& out)
@@ -149,6 +169,50 @@ static void s_uv_from_rect(const HudAtlasRect& r, int w, int h, ImVec2& uv0, ImV
 void HudUI::initialize()
 {
 	s_load_assets_once();
+}
+
+void HudUI::renderTopRow(float padding, float icon_size, int max_health, int current_health, int max_shields, int current_shields)
+{
+	s_load_assets_once();
+	const float margin = 12.0f;
+	const int count_heart = max_health < 0 ? 0 : max_health;
+	const int count_shield = max_shields < 0 ? 0 : max_shields;
+	const int total_count = count_heart + count_shield;
+	if (total_count <= 0) return;
+	const float size = icon_size;
+	const float total_w = total_count * size + (total_count - 1) * padding;
+
+	ImGui::SetNextWindowPos(ImVec2(margin, margin));
+	ImGui::SetNextWindowSize(ImVec2(total_w, size));
+	ImGui::SetNextWindowBgAlpha(0.0f);
+	ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+	                         ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
+	                         ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoDecoration |
+	                         ImGuiWindowFlags_NoScrollWithMouse;
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 0.0f));
+	ImGui::Begin("HUD_TopRow", nullptr, flags);
+
+	HudUIAssets& a = s_assets();
+	for (int i = 0; i < total_count; ++i) {
+		const bool is_heart = i < count_heart;
+		const bool full = is_heart ? (i < current_health) : ((i - count_heart) < current_shields);
+		const char* icon_name = is_heart ? (full ? "heart" : "missing_heart")
+		                                 : (full ? "shield" : "missing_shield");
+		ImTextureData* tex = is_heart ? (full ? a.heart : a.missing_heart)
+		                              : (full ? a.shield : a.missing_shield);
+		ImGui::PushID(i);
+		if (tex) {
+			ImGui::Image(tex->GetTexRef(), ImVec2(size, size));
+		} else {
+			ImGui::Button(icon_name, ImVec2(size, size));
+		}
+		if (i < total_count - 1) ImGui::SameLine(0.0f, padding);
+		ImGui::PopID();
+	}
+
+	ImGui::End();
+	ImGui::PopStyleVar(2);
 }
 
 void HudUI::renderLeftColumn(const std::vector<Icon>& icons, float iconSize, float padding)

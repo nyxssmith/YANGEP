@@ -25,6 +25,8 @@ public:
 
 	// Initialize (placeholder - no hard asset dependency).
 	void initialize();
+	// Render top row of heart and shield icons; icons swap to the *_missing variant when current < max.
+	void renderTopRow(float padding, float icon_size, int max_health, int current_health, int max_shields, int current_shields);
 	// Render left column of icons.
 	void renderLeftColumn(const std::vector<Icon>& icons, float iconSize = 48.0f, float padding = 6.0f);
 	// Render bottom row of icons.

@@ -776,8 +776,10 @@ void Scene::mainLoopLevel()
     }
     // Render HUD UI overlays
     std::vector<HudUI::Icon> hud_icons(5);
-    hud_ui.renderLeftColumn(hud_icons, 0.0f, 8.0f);
-    hud_ui.renderBottomRow(hud_icons, 0.0f, 8.0f);
+    hud_ui.renderTopRow(8.0f, 64.0f, playerCharacter.maxHealth, playerCharacter.currentHealth,
+                        playerCharacter.maxShields, playerCharacter.currentShields);
+    // hud_ui.renderLeftColumn(hud_icons, 0.0f, 8.0f);
+    // hud_ui.renderBottomRow(hud_icons, 0.0f, 8.0f);
     hud_ui.renderInventoryWindow(&playerCharacter.getInventory(), &hud_inventory_open, 5, 64.0f, 6.0f);
 
     if (fpsWindow)
