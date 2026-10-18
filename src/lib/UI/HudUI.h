@@ -7,6 +7,7 @@
 #include <optional>
 
 class Inventory;
+class Item;
 
 // Simple HUD/UI renderer using Dear ImGui.
 class HudUI
@@ -28,12 +29,11 @@ public:
 	// Render top row of heart and shield icons; icons swap to the *_missing variant when current < max.
 	void renderTopRow(float padding, float icon_size, int max_health, int current_health, int max_shields, int current_shields);
 	// Render left column of icons.
-	void renderLeftColumn(const std::vector<Icon>& icons, float iconSize = 48.0f, float padding = 6.0f);
+	void renderLeftColumn(const std::vector<Icon> &icons, float iconSize = 48.0f, float padding = 6.0f);
 	// Render bottom row of icons.
-	void renderBottomRow(const std::vector<Icon>& icons, float iconSize = 48.0f, float padding = 8.0f);
+	void renderBottomRow(float padding, float iconSize = 48.0f, Item *leftClawItem = nullptr, Item *rightClawItem = nullptr);
 	// Render Inventory window with edge/background art (placeholder if textures missing).
-	void renderInventoryWindow(const Inventory* inventory, bool* open, int cols = 4, float slotSize = 48.0f, float slotPad = 6.0f);
+	void renderInventoryWindow(const Inventory *inventory, bool *open, int cols = 4, float slotSize = 48.0f, float slotPad = 6.0f);
 };
 
 #endif // HUD_UI_H
-
