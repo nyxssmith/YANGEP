@@ -659,3 +659,7 @@ void Action::applyCooldown(float cooldownSeconds)
         warmup_timer = 0.0f; // Skip warmup phase since we're going straight to cooldown
     }
 }
+float Action::getCooldownTimer()
+{
+    return cooldown_timer;
+}

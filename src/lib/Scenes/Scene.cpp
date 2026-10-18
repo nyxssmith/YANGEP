@@ -593,11 +593,11 @@ void Scene::mainLoopLevel()
             }
         }
         // use keys 1,2 for right and left claws
-        if (cf_key_just_pressed(CF_KEY_1))
+        if (cf_key_just_pressed(CF_KEY_2))
         {
             playerCharacter.doRightClawAction();
         }
-        if (cf_key_just_pressed(CF_KEY_2))
+        if (cf_key_just_pressed(CF_KEY_1))
         {
             playerCharacter.doLeftClawAction();
         }

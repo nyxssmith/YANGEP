@@ -38,6 +38,7 @@ bool Item::init()
             printf("Item: WARNING: Failed to load provided action '%s' from '%s'\n", actionName.c_str(), fullPath.c_str());
         }
     }
+    initialized = true;
     return true;
 }
 
@@ -52,6 +53,10 @@ std::string Item::provides_action() const
 
 std::string Item::icon() const
 {
+    if (!initialized)
+    {
+        return "";
+    }
     if (this->contains("icon") && (*this)["icon"].is_string())
     {
         return (*this)["icon"].get<std::string>();

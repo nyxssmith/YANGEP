@@ -101,4 +101,6 @@ public:
     int getRemainingUses() const { return remaining_uses; }
 
     ActionType getType() const { return type; }
+
+    float getCooldownTimer();
 };

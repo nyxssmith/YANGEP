@@ -27,4 +27,5 @@ public:
 
 private:
     bool has_provided_action = false;
+    bool initialized = false;
 };

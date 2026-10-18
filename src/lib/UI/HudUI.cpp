@@ -1,3 +1,4 @@
+#include <cute.h>
 #include "HudUI.h"
 #include "../Items/Inventory.h"
 #include <imgui.h>
@@ -8,15 +9,6 @@
 #include <fstream>
 #include <cstdio>
 #include <cstring>
-
-struct HudAtlasRect
-{
-	int x = 0;
-	int y = 0;
-	int w = 0;
-	int h = 0;
-};
-
 struct HudUIAssets
 {
 	bool loaded = false;
@@ -29,13 +21,21 @@ struct HudUIAssets
 	int paper_w = 0;
 	int paper_h = 0;
 
-	// Optional standalone icons loaded from assets/GUI/{heart,missing_heart,shield,missing_shield}.png
 	ImTextureData *heart = nullptr;
 	ImTextureData *missing_heart = nullptr;
 	ImTextureData *shield = nullptr;
 	ImTextureData *missing_shield = nullptr;
+
+	// Cache for dynamically loaded path textures
+	std::unordered_map<std::string, ImTextureData *> texture_cache;
 };
 
+// Singleton asset accessor inside the implementation file
+static HudUIAssets &s_assets()
+{
+	static HudUIAssets assets;
+	return assets;
+}
 static std::string s_map_vfs_path(const std::string &path)
 {
 	if (path.rfind("/assets/", 0) == 0)
@@ -97,12 +97,6 @@ static ImTextureData *s_create_imgui_texture(const std::vector<unsigned char> &p
 	memcpy(dst, pixels.data(), (size_t)w * h * 4);
 	ImGui::RegisterUserTexture(tex);
 	return tex;
-}
-
-static HudUIAssets &s_assets()
-{
-	static HudUIAssets a;
-	return a;
 }
 
 static void s_load_status_icon(const char *file, ImTextureData *&out)
@@ -317,50 +311,106 @@ void HudUI::renderLeftColumn(const std::vector<Icon> &icons, float iconSize, flo
 
 void HudUI::renderBottomRow(float padding, float iconSize, Item *leftClawItem, Item *rightClawItem)
 {
-	s_load_assets_once();
 	const float margin = 12.0f;
 
+	// Optional background rect size fallback
 	HudAtlasRect rect;
 	const bool has_rect = s_get_rect("icon_background_large", rect);
 	const float size = (iconSize > 0.0f) ? iconSize : (has_rect ? (float)rect.w : 48.0f);
-	const float total_w = 2 * size + padding;
+
+	const float total_w = (2.0f * size) + padding;
 	ImVec2 display = ImGui::GetIO().DisplaySize;
 
 	ImGui::SetNextWindowPos(ImVec2((display.x - total_w) * 0.5f, display.y - size - margin));
 	ImGui::SetNextWindowSize(ImVec2(total_w, size));
 	ImGui::SetNextWindowBgAlpha(0.0f);
+
 	ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
 							 ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
 							 ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoDecoration |
 							 ImGuiWindowFlags_NoScrollWithMouse;
+
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 0.0f));
 	ImGui::Begin("HUD_BottomRow", nullptr, flags);
 
-	if (has_rect && s_assets().atlas_tex)
+	// Group items into an array to easily loop through them (0 = left, 1 = right)
+	Item *clawItems[2] = {leftClawItem, rightClawItem};
+
+	for (int i = 0; i < 2; ++i)
 	{
-		ImVec2 uv0, uv1;
-		s_uv_from_rect(rect, s_assets().atlas_w, s_assets().atlas_h, uv0, uv1);
-		ImTextureRef texref = s_assets().atlas_tex->GetTexRef();
-		for (int i = 0; i < 2; ++i)
+		ImGui::PushID(i);
+		Item *item = clawItems[i];
+
+		bool renderedCustomIcon = false;
+
+		if (item)
 		{
-			ImGui::PushID(i);
-			ImGui::ImageButton("icon", texref, ImVec2(size, size), uv0, uv1);
-			if (i < 2 - 1)
-				ImGui::SameLine(0.0f, padding);
-			ImGui::PopID();
+			const std::string iconPath = item->icon();
+			if (!iconPath.empty())
+			{
+				void *itemTexID = nullptr;
+				if (HudUI::get_texture(iconPath, itemTexID))
+				{
+					ImGui::ImageButton("icon", ((ImTextureData *)itemTexID)->GetTexRef(), ImVec2(size, size));
+					renderedCustomIcon = true;
+				}
+			}
 		}
-	}
-	else
-	{
-		for (int i = 0; i < 2; ++i)
+
+		// Fallback: If no item, no path, or texture failed to load, fallback to atlas/default button
+		if (!renderedCustomIcon)
 		{
-			ImGui::PushID(i);
-			ImGui::Button("icon", ImVec2(size, size));
-			if (i < 2 - 1)
-				ImGui::SameLine(0.0f, padding);
-			ImGui::PopID();
+			if (has_rect && s_assets().atlas_tex)
+			{
+				ImVec2 uv0, uv1;
+				s_uv_from_rect(rect, s_assets().atlas_w, s_assets().atlas_h, uv0, uv1);
+				ImTextureRef texref = s_assets().atlas_tex->GetTexRef();
+				ImGui::ImageButton("icon", texref, ImVec2(size, size), uv0, uv1);
+			}
+			else
+			{
+				ImGui::Button("icon", ImVec2(size, size));
+			}
 		}
+
+		if (item)
+		{
+			// TODO: replace placeholders with real values
+			const char *usesText = std::to_string(item->getProvidedAction()->getRemainingUses()).c_str();
+			const char *cooldownText;
+			if (item->getProvidedAction()->getInCooldown())
+			{
+				cooldownText = std::to_string(item->getProvidedAction()->getCooldownTimer()).c_str();
+			}
+			else
+			{
+				cooldownText = "";
+			}
+
+			const ImVec2 bmin = ImGui::GetItemRectMin();
+			const ImVec2 bmax = ImGui::GetItemRectMax();
+			ImDrawList *dl = ImGui::GetWindowDrawList();
+			const ImU32 shadow = IM_COL32(0, 0, 0, 255);
+			const ImU32 white = IM_COL32(255, 255, 255, 255);
+
+			// Uses remaining: bottom-right corner
+			const ImVec2 usesSize = ImGui::CalcTextSize(usesText);
+			const ImVec2 usesPos(bmax.x - usesSize.x - 4.0f, bmax.y - usesSize.y - 2.0f);
+			dl->AddText(ImVec2(usesPos.x + 1, usesPos.y + 1), shadow, usesText);
+			dl->AddText(usesPos, white, usesText);
+
+			// Cooldown: centered on the button
+			const ImVec2 cdSize = ImGui::CalcTextSize(cooldownText);
+			const ImVec2 cdPos((bmin.x + bmax.x - cdSize.x) * 0.5f, (bmin.y + bmax.y - cdSize.y) * 0.5f);
+			dl->AddText(ImVec2(cdPos.x + 1, cdPos.y + 1), shadow, cooldownText);
+			dl->AddText(cdPos, IM_COL32(255, 200, 80, 255), cooldownText);
+		}
+
+		if (i < 1)
+			ImGui::SameLine(0.0f, padding);
+
+		ImGui::PopID();
 	}
 
 	ImGui::End();
@@ -487,4 +537,32 @@ void HudUI::renderInventoryWindow(const Inventory *inventory, bool *open, int co
 	}
 
 	ImGui::End();
+}
+
+bool HudUI::get_texture(const std::string &path, void *&out)
+{
+	HudUIAssets &a = s_assets();
+
+	// 1. Check if the texture is already in our cache
+	auto it = a.texture_cache.find(path);
+	if (it != a.texture_cache.end() && it->second != nullptr)
+	{
+		// Convert the cached ImTextureData pointer to a generic void* (ImTextureID)
+		out = (void *)it->second;
+		return true;
+	}
+
+	// Item icons live in /assets/Art/ItemIcons/
+	std::vector<unsigned char> pixels;
+	int w = 0, h = 0;
+	if (!s_load_png_rgba8(s_map_vfs_path("/assets/Art/ItemIcons/" + path), pixels, w, h))
+	{
+		printf("HudUI: failed to load item icon '%s'\n", path.c_str());
+		a.texture_cache[path] = nullptr;
+		return false;
+	}
+	ImTextureData *tex = s_create_imgui_texture(pixels, w, h);
+	a.texture_cache[path] = tex;
+	out = (void *)tex;
+	return true;
 }

@@ -1,12 +1,12 @@
 #pragma once
 
+#include <cute.h>
 #include "AnimatedDataCharacterNavMeshPlayer.h"
 #include "AtlasLabelerWindow.h"
 #include "DataFile.h"
 #include "DebugWindowList.h"
 #include "HudUI.h"
 #include "LevelV1.h"
-#include <cute.h>
 #include <fstream>
 #include <memory>
 #include <string>

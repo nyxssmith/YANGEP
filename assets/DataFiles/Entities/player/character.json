@@ -11,5 +11,5 @@
       "tile_size": 128
     }
   ],
-  "items": ["melee_claw"]
+  "items": ["melee_claw", "turret_claw"]
 }
