@@ -32,7 +32,7 @@
     "highlightLayers": ["structure 1"],
     "highlightLayerBorders": [],
     "highlightLayerOuterBorders": [],
-    "highlightCharacterHitboxes": true,
+    "highlightCharacterHitboxes": false,
     "highlightCoordinatorInfo": false,
     "EntityScale": 2.0,
     "ShowFPSMetrics": true,
