@@ -1,5 +1,6 @@
 {
   "state_machines": [
+    "wander",
     {
       "name": "turret_test",
       "states": [

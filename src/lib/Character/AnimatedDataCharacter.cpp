@@ -340,7 +340,8 @@ void AnimatedDataCharacter::update(float dt, v2 moveVector)
         {
             printf("AnimatedDataCharacter: Action animation '%s' is not in this character's animation table\n", actionAnimation.c_str());
         }
-        if (animationTable->hasAnimation(actionAnimation) && currentAnimation != actionAnimation)
+        // if (animationTable->hasAnimation(actionAnimation) && currentAnimation != actionAnimation)
+        if (animationTable->hasAnimation(actionAnimation))
         {
             currentAnimation = actionAnimation;
             currentFrame = 0;

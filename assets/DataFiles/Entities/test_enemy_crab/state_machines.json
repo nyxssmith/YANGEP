@@ -9,7 +9,24 @@
         { "name": "wander_new_position", "inputs": { "tiles_radius": 10 } },
         { "name": "move_to_position" }
       ]
+    },
+    {
+      "name": "melee_test",
+      "states": [
+        { "name": "face_direction", "inputs": { "direction": "down" } },
+        { "name": "wait", "inputs": { "ms": 3000 } },
+        { "name": "do_action", "inputs": { "action": "OneTile" } },
+        { "name": "face_direction", "inputs": { "direction": "right" } },
+        { "name": "wait", "inputs": { "ms": 3000 } },
+        { "name": "do_action", "inputs": { "action": "OneTile" } },
+        { "name": "face_direction", "inputs": { "direction": "up" } },
+        { "name": "wait", "inputs": { "ms": 3000 } },
+        { "name": "do_action", "inputs": { "action": "OneTile" } },
+        { "name": "face_direction", "inputs": { "direction": "left" } },
+        { "name": "wait", "inputs": { "ms": 3000 } },
+        { "name": "do_action", "inputs": { "action": "OneTile" } }
+      ]
     }
   ],
-  "default_state_machine": "wander"
+  "default_state_machine": "melee_test"
 }
