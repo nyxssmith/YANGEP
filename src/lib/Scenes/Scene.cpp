@@ -593,11 +593,11 @@ void Scene::mainLoopLevel()
             }
         }
         // use keys 1,2 for right and left claws
-        if (cf_key_just_pressed(CF_KEY_1))
+        if (cf_key_just_pressed(CF_KEY_2))
         {
             playerCharacter.doRightClawAction();
         }
-        if (cf_key_just_pressed(CF_KEY_2))
+        if (cf_key_just_pressed(CF_KEY_1))
         {
             playerCharacter.doLeftClawAction();
         }
@@ -776,8 +776,11 @@ void Scene::mainLoopLevel()
     }
     // Render HUD UI overlays
     std::vector<HudUI::Icon> hud_icons(5);
-    hud_ui.renderLeftColumn(hud_icons, 0.0f, 8.0f);
-    hud_ui.renderBottomRow(hud_icons, 0.0f, 8.0f);
+    hud_ui.renderTopRow(8.0f, 64.0f, playerCharacter.maxHealth, playerCharacter.currentHealth,
+                        playerCharacter.maxShields, playerCharacter.currentShields);
+    hud_ui.renderBottomRow(8.0f, 128.0f, playerCharacter.getLeftClaw(), playerCharacter.getRightClaw());
+    // hud_ui.renderLeftColumn(hud_icons, 0.0f, 8.0f);
+    // hud_ui.renderBottomRow(hud_icons, 0.0f, 8.0f);
     hud_ui.renderInventoryWindow(&playerCharacter.getInventory(), &hud_inventory_open, 5, 64.0f, 6.0f);
 
     if (fpsWindow)

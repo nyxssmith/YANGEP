@@ -1,5 +1,6 @@
 #include "DoActionState.h"
 #include <cstdio>
+#include "AnimatedDataCharacterNavMeshAgent.h"
 
 DoActionState::DoActionState()
     : State(), action("")
@@ -34,7 +35,23 @@ void DoActionState::update(float dt)
         return;
     }
     // TODO tell agent to do the action specified by 'action'
-
+    printf("DoActionState: Performing action '%s'\n", action.c_str());
+    bool actionFound = false;
+    // this->getAgent()->doAction(action);
+    std::vector<Action> &agent_actions = getAgent()->getActions();
+    for (auto &a : agent_actions)
+    {
+        if (a.getpath().find(action) != std::string::npos)
+        {
+            a.doAction();
+            actionFound = true;
+            break;
+        }
+    }
+    if (!actionFound)
+    {
+        printf("DoActionState: Action '%s' not do-able by agent\n", action.c_str());
+    }
     // Mark as complete
     setIsRunning(false);
 }

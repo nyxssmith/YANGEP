@@ -2,6 +2,8 @@
   "name": "player",
   "hitbox_size": 32,
   "hitbox_distance": 0,
+  "health": 5,
+  "shields": 2,
   "innate_actions": ["projectile_test"],
   "layers": [
     {
@@ -9,5 +11,5 @@
       "tile_size": 128
     }
   ],
-  "items": ["melee_claw"]
+  "items": ["melee_claw", "turret_claw"]
 }

@@ -3,8 +3,8 @@
   "type": "tile",
   "version": "1.0.0",
   "description": "A test action for demonstration purposes",
-  "warmup": 500,
-  "cooldown": 3000,
+  "warmup": 1000,
+  "cooldown": 2000,
   "uses": 10,
   "damage": 1.0,
   "animation": "melee_right_claw"

@@ -124,6 +124,18 @@ bool AnimatedDataCharacter::init(const std::string &folderPath)
     {
         entityScaleMultiplier = datafile["entity_scale"];
     }
+    // set health and shields
+    if (datafile.contains("health") && datafile["health"].is_number())
+    {
+        currentHealth = datafile["health"];
+        maxHealth = datafile["health"];
+    }
+
+    if (datafile.contains("shields") && datafile["shields"].is_number())
+    {
+        currentShields = datafile["shields"];
+        maxShields = datafile["shields"];
+    }
 
     // Create default character hitbox - a single tile at the bottom of the sprite
     // This represents the character's physical footprint
@@ -214,7 +226,6 @@ bool AnimatedDataCharacter::init(const std::string &folderPath)
     frameTimer = 0.0f;
 
     initialized = true;
-    is_player = true;
     return true;
 }
 
@@ -249,6 +260,9 @@ void AnimatedDataCharacter::update(float dt, v2 moveVector)
     // Don't update if Dying or Dead
     if (stageOfLife == StageOfLife::Dying || stageOfLife == StageOfLife::Dead)
         return;
+
+    // Update shield recharge
+    updateShieldRecharge(dt);
 
     // Don't allow movement if doing an action in warmup phase
     // Allow movement during cooldown
@@ -326,7 +340,8 @@ void AnimatedDataCharacter::update(float dt, v2 moveVector)
         {
             printf("AnimatedDataCharacter: Action animation '%s' is not in this character's animation table\n", actionAnimation.c_str());
         }
-        if (animationTable->hasAnimation(actionAnimation) && currentAnimation != actionAnimation)
+        // if (animationTable->hasAnimation(actionAnimation) && currentAnimation != actionAnimation)
+        if (animationTable->hasAnimation(actionAnimation))
         {
             currentAnimation = actionAnimation;
             currentFrame = 0;
@@ -344,6 +359,19 @@ void AnimatedDataCharacter::update(float dt, v2 moveVector)
 
     // Update animation
     updateAnimation(dt);
+}
+
+void AnimatedDataCharacter::updateShieldRecharge(float dt)
+{
+    if (currentShields < maxShields)
+    {
+        shieldRechargerTimer += dt;
+        if (shieldRechargerTimer >= timeBetweenShieldRecharge)
+        {
+            currentShields = std::min(currentShields + 1, maxShields);
+            shieldRechargerTimer = 0.0f;
+        }
+    }
 }
 
 // Handle input for demo controls
@@ -900,6 +928,11 @@ const std::vector<Action> &AnimatedDataCharacter::getActions() const
     return actionsList;
 }
 
+std::vector<Action> &AnimatedDataCharacter::getActions()
+{
+    return actionsList;
+}
+
 // Set action pointer A to a specific index
 void AnimatedDataCharacter::setActionPointerA(size_t index)
 {
@@ -960,12 +993,39 @@ void AnimatedDataCharacter::applyGlobalCooldown(float globalCooldownSeconds)
 // Handle hit from another character
 void AnimatedDataCharacter::OnHit(AnimatedDataCharacter *character, Damage damage)
 {
-    // Trigger red flash effect when hit
-    triggerEffect("red", 3, 1.0f, 0.80f, [this]()
-                  { this->setStageOfLife(StageOfLife::Dying); });
+
+    // TODO damage multiplier thats not 1?
+
+    //  calculate the amount of shield damage
+    int shieldDamage = Cute::min(currentShields, damage.getDamageTo(1, this));
+    currentShields -= shieldDamage;
+    // health damage subtracts shield damage
+    int healthDamage = max(0, damage.getDamageTo(1, this) - shieldDamage);
+    currentHealth -= healthDamage;
+
+    if (shieldDamage > 0 && healthDamage <= 0)
+    {
+        // Trigger blue flash effect when hit if dmg was only shields
+        triggerEffect("blue", 3, 1.0f, 0.80f, [this]() {});
+    }
+
+    if (shieldDamage >= 0 && healthDamage > 0)
+    {
+        if (currentHealth > 0)
+        {
+            // Trigger red flash effect when hit if dmg affected health but do nothing else after if still alive
+            triggerEffect("red", 3, 1.0f, 0.80f, [this]() {});
+        }
+        else
+        {
+            // Trigger red flash effect when hit and also die
+            triggerEffect("red", 3, 1.0f, 0.80f, [this]()
+                          { this->setStageOfLife(StageOfLife::Dying); });
+        }
+    }
 
     // Print debug message
-    printf("AnimatedDataCharacter: Hit by character with damage value: %.2f\n", damage.value);
+    printf("AnimatedDataCharacter: Hit by character with damage value: %d   \n", damage.value);
     // TODO call damage.DoDamage(this);
     // Implement health system, reactions, etc.
 

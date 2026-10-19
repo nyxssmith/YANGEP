@@ -15,6 +15,7 @@
 #include "States/GetDistanceFromPlayerState.h"
 #include "States/GetEntitiesInBoxState.h"
 #include "States/JumpState.h"
+#include "States/FaceDirectionState.h"
 #include <cstdio>
 
 StateLibrary::StateLibrary()
@@ -102,7 +103,9 @@ void StateLibrary::initializeBuiltInStates()
     // Register SayInBubbleState
     registerState("say_in_bubble", []() -> std::unique_ptr<State>
                   { return std::make_unique<SayInBubbleState>(); });
-
+    // Register FaceDirectionState
+    registerState("face_direction", []() -> std::unique_ptr<State>
+                  { return std::make_unique<FaceDirectionState>(); });
     // Register DoActionState
     registerState("do_action", []() -> std::unique_ptr<State>
                   { return std::make_unique<DoActionState>(); });

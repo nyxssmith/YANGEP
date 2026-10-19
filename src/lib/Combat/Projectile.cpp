@@ -25,13 +25,34 @@ void Projectile::update(float dt, v2 ignoredMoveVector)
         setStageOfLife(StageOfLife::Dying);
         return;
     }
+    bool playerInArea = false;
+    AnimatedDataCharacter *player = nullptr;
+    // check if the player is in the area if sender not player
+    if (!sender->is_player)
+    {
+        // get if the player is in the area
+        player = level->getPlayer();
+        if (player && cf_overlaps(characterHitbox->getBoundingBox(currentDirection, position),
+                                  player->getCharacterHitbox()->getBoundingBox(player->getCurrentDirection(), player->getPosition())))
+        {
+            playerInArea = true;
+        }
+    }
     // Check if this character is inside any active action hitbox in warmup phase
     std::vector<AnimatedDataCharacter *> agentsInArea = level->getAgentsInArea(characterHitbox->getBoxes(currentDirection, position),
                                                                                characterHitbox->getBoundingBox(currentDirection, position), this);
     if (agentsInArea.empty())
     {
-        // exit early
-        return;
+        // exit early if not overlapping the player
+        if (!playerInArea)
+        {
+            return;
+        }
+    }
+    // if player in area, add to agentsInArea
+    if (playerInArea)
+    {
+        agentsInArea.push_back(player);
     }
     // for each agent in the area, apply the action
     for (AnimatedDataCharacter *agent : agentsInArea)

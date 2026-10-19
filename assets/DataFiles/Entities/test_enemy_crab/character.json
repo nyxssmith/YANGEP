@@ -2,6 +2,8 @@
   "entity_scale": 0.5,
   "hitbox_distance": 0,
   "hitbox_size": 32,
+  "health": 2,
+  "shields": 2,
   "innate_actions": ["OneTile"],
   "items": [],
   "layers": [

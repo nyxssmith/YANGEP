@@ -65,7 +65,7 @@ public:
     void MoveActionPointerBUp();
     void MoveActionPointerBDown();
 
-    bool is_player = true;
+    bool init(const std::string &folderPath) override;
 
 private:
     // The navmesh this player is on (non-owning pointer)

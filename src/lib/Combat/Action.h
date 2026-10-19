@@ -21,8 +21,8 @@ class Action : public DataFile
 {
 private:
     DataFile actionAuxData;
-    bool hasHitbox;
-    HitBox *hitbox;
+    bool hasHitbox = false;
+    HitBox *hitbox = nullptr;
     float hitboxSize = 32.0f;
     float hitboxDistance;
     bool isActive = false;
@@ -50,7 +50,6 @@ public:
     Action(const std::string &folderPath);
     Action(const std::string &folderPath, float hitboxSize, float hitboxDistance);
     ~Action();
-
     // Copy constructor and copy assignment operator for deep copying
     Action(const Action &other);
     Action &operator=(const Action &other);
@@ -102,4 +101,6 @@ public:
     int getRemainingUses() const { return remaining_uses; }
 
     ActionType getType() const { return type; }
+
+    float getCooldownTimer();
 };

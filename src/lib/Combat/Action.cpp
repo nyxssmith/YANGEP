@@ -23,7 +23,7 @@ Action::Action(const std::string &folderPath, float hitboxSize, float hitboxDist
 // Destructor
 Action::~Action()
 {
-    if (hitbox)
+    if (hasHitbox && hitbox)
     {
         delete hitbox;
         hitbox = nullptr;
@@ -59,9 +59,12 @@ Action::Action(const Action &other)
       projectilesData(other.projectilesData ? new ProjectilesData(*other.projectilesData) : nullptr)
 {
     // Deep copy the hitbox if it exists
-    if (other.hitbox && hasHitbox)
+    if (type == ActionType::tile)
     {
-        hitbox = HitBox::createHitBoxFromJson(actionAuxData, hitboxSize, hitboxDistance);
+        if (other.hitbox && hasHitbox)
+        {
+            hitbox = HitBox::createHitBoxFromJson(actionAuxData, hitboxSize, hitboxDistance);
+        }
     }
     // Deep copy the damage if it exists
     if (other.damage && hasDamage)
@@ -114,12 +117,12 @@ Action &Action::operator=(const Action &other)
         {
             projectilesData = new ProjectilesData(*other.projectilesData);
         }
-
-        // Deep copy the hitbox if it exists
-        if (other.hitbox && hasHitbox)
-        {
-            hitbox = HitBox::createHitBoxFromJson(actionAuxData, hitboxSize, hitboxDistance);
-        }
+        if (type == ActionType::tile)
+            // Deep copy the hitbox if it exists
+            if (other.hitbox && hasHitbox)
+            {
+                hitbox = HitBox::createHitBoxFromJson(actionAuxData, hitboxSize, hitboxDistance);
+            }
 
         // Deep copy the damage if it exists
         if (other.damage && hasDamage)
@@ -345,18 +348,21 @@ void Action::doAction()
         printf("Action: Warning - Attempting to doAction while already active\n");
         return;
     }
-    if (remaining_uses > 0)
+    if (getCharacter()->is_player)
     {
-        // TODO dont decrement if holder of item is npc
-        remaining_uses--;
-        printf("Action: Remaining uses of action %s decremented, now %d\n", getAnimation().c_str(), remaining_uses);
+        if (remaining_uses > 0)
+        {
+            // TODO dont decrement if holder of item is npc
+            remaining_uses--;
+            printf("Action: Remaining uses of action %s decremented, now %d\n", getAnimation().c_str(), remaining_uses);
+        }
+        else if (remaining_uses == 0)
+        {
+            // TODO flash UI or something
+            printf("Action: Warning - No remaining uses for this action\n");
+            return;
+        } // set to -1 for unlimited uses
     }
-    else if (remaining_uses == 0)
-    {
-        // TODO flash UI or something
-        printf("Action: Warning - No remaining uses for this action\n");
-        return;
-    } // set to -1 for unlimited uses
 
     setActive(true);
 }
@@ -652,4 +658,8 @@ void Action::applyCooldown(float cooldownSeconds)
         isActive = true;     // Activate the action so it gets updated and cooldown ticks down
         warmup_timer = 0.0f; // Skip warmup phase since we're going straight to cooldown
     }
+}
+float Action::getCooldownTimer()
+{
+    return cooldown_timer;
 }

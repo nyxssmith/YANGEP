@@ -1021,6 +1021,11 @@ void LevelV1::setPlayer(const AnimatedDataCharacter *playerCharacter)
     }
 }
 
+AnimatedDataCharacter *LevelV1::getPlayer()
+{
+    return const_cast<AnimatedDataCharacter *>(player);
+}
+
 std::vector<AnimatedDataCharacterNavMeshAgent *> LevelV1::get_entities_at(int tile_x, int tile_y) const
 {
     std::vector<AnimatedDataCharacterNavMeshAgent *> entities_at_tile;

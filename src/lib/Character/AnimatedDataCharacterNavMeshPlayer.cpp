@@ -9,8 +9,19 @@ AnimatedDataCharacterNavMeshPlayer::AnimatedDataCharacterNavMeshPlayer()
 {
     // Player has an inventory of size 4
     inventory.changeSize(4);
+    is_player = true;
 }
+bool AnimatedDataCharacterNavMeshPlayer::init(const std::string &folderPath)
+{
+    // Call parent init first (Crab extends AnimatedDataCharacter)
+    if (!Crab::init(folderPath))
+    {
+        return false;
+    }
+    is_player = true;
 
+    return true;
+}
 // Destructor
 AnimatedDataCharacterNavMeshPlayer::~AnimatedDataCharacterNavMeshPlayer()
 {
