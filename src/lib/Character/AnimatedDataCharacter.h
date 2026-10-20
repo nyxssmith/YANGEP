@@ -150,6 +150,8 @@ public:
     bool getAnimationKeys(int index) const;
     void setAnimationKeys(int index, bool pressed);
     // projectiles need access to these
+    bool lockDirection = false;
+    void setLockDirection(bool lock);
     Direction currentDirection;
     LevelV1 *level; // Pointer to level for agent queries
 
