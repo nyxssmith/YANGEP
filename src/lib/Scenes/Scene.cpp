@@ -461,6 +461,16 @@ void Scene::mainLoopLevel()
         lastPressedDirection = 4; // right
     }
 
+    // Lock direction if the player is holding the shift key
+    if (cf_key_down(CF_KEY_LSHIFT))
+    {
+        playerCharacter.setLockDirection(true);
+    }
+    else
+    {
+        playerCharacter.setLockDirection(false);
+    }
+
     // If the last pressed key is no longer held, find another held key
     bool lastKeyStillHeld = false;
     switch (lastPressedDirection)

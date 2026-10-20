@@ -294,7 +294,7 @@ void AnimatedDataCharacter::update(float dt, v2 moveVector)
     bool isMoving = moveMagnitude > 0.01f; // Small threshold to avoid floating point issues
 
     // Update direction based on move vector
-    if (isMoving)
+    if (isMoving && !lockDirection)
     {
         // Determine direction based on the dominant axis
         if (cf_abs(moveVector.x) > cf_abs(moveVector.y))
@@ -654,6 +654,11 @@ Direction AnimatedDataCharacter::getCurrentDirection() const
 void AnimatedDataCharacter::setDirection(Direction direction)
 {
     currentDirection = direction;
+}
+
+void AnimatedDataCharacter::setLockDirection(bool lock)
+{
+    lockDirection = lock;
 }
 
 void AnimatedDataCharacter::setLevel(LevelV1 *levelPtr)
